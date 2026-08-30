@@ -1,11 +1,11 @@
 # SECOP Monitor MVP
 
-Sistema que detecta automaticamente oportunidades de contratacion publica en SECOP II relevantes para un cliente especifico y envia notificaciones por correo electronico.
+Sistema de monitoreo automatico de oportunidades de contratacion publica en SECOP II. Detecta procesos relevantes, los almacena en base de datos y envia notificaciones por correo electronico.
 
 ## Arquitectura
 
 ```
-GitHub Actions Cron (3x/dia: 10:00, 15:00, 20:00 COT)
+GitHub Actions (3x/dia: 10:00, 15:00, 20:00 COT)
         |
         v
 Python Script (src/main.py)
@@ -34,26 +34,23 @@ Python Script (src/main.py)
 
 ---
 
-## Costos y Servicios Externos
+## Costos y Servicios
 
 ### SECOP / datos.gov.co
 
 - **Fuente:** `https://www.datos.gov.co/resource/p6dx-8zbt.json`
 - **Costo:** Gratuito (datos abiertos, licencia CC BY-SA 4.0)
-- **Límites:** Rate limiting. App token gratuito mejora limits
-- **Actualización:** Diaria (~12:00-14:00 COT). Latencia: 1-2 dias desde community.secop.gov.co
-- **App Token:** Opcional. Registro gratuito en `https://www.datos.gov.co/profile/edit/developer_settings`
+- **Actualizacion:** Diaria (~12:00-14:00 COT). Latencia: 1-2 dias
+- **App Token:** Opcional. Registro gratuito para mejorar limites
 
 ### Neon (PostgreSQL)
 
 - **Plan:** Free
 - **Storage:** 0.5 GB por proyecto
-- **Compute:** 100 CU-hours/mes (~3.3 horas de 1 CU)
+- **Compute:** 100 CU-hours/mes
 - **Scale-to-zero:** Si, despues de 5 minutos de inactividad
 - **Cold start:** ~300-500ms
-- **Limitos:** 10 ramas/proyecto, 5 GB egress/mes, sin SLA
-- **Región recomendada:** aws-sa-east-1 (Sao Paulo, cercana a Colombia)
-- **Cuándo genera costos:** Si se supera 0.5 GB storage o 100 CU-hours
+- **Region recomendada:** aws-sa-east-1 (Sao Paulo, cercana a Colombia)
 
 ### Brevo (Email)
 
@@ -61,23 +58,18 @@ Python Script (src/main.py)
 - **Limite:** 300 emails/dia (~9,000/mes)
 - **Remitente:** Requiere verificacion de dominio (SPF/DKIM)
 - **Limites:** Marca de agua Brevo en emails gratuitos
-- **SDK:** `pip install brevo-python`
-- **Cuándo genera costos:** Al superar 300 emails/dia o al upgrade a Starter ($9/mes)
 
-### GitHub Actions (Hosting/Cron)
+### GitHub Actions (Cron)
 
-- **Plan:** Free (2000 min/month para repos privados, ilimitado para public)
-- **Cron jobs:** Nativo via `schedule` en workflows YAML
-- **2000 minutos/mes** para repos privados (3 ejecuciones/dia = ~15 min/mes)
-- **Deploy:** GitHub integration, auto-deploy on push
+- **Plan:** Free (2000 min/mes para repos privados)
+- **Ejecucion:** 3 veces al dia = ~15 min/mes
 - **Limitos:** 1000 ejecuciones/dia, 6 horas max por ejecucion
-- **Cuándo genera costos:** Si se supera 2000 min/mes (no aplica para nuestro caso)
 
 ### WhatsApp (Funcionalidad Futura)
 
-**Estado:** Actualmente el sistema envía notificaciones por correo electrónico. WhatsApp está diseñado como una mejora futura.
+**Estado:** Actualmente el sistema envia notificaciones por correo electronico. WhatsApp esta disenado como una mejora futura.
 
-**¿Cómo funciona WhatsApp Business?**
+**Como funciona WhatsApp Business?**
 
 Para enviar mensajes de WhatsApp de forma automatizada, se necesita:
 
@@ -90,7 +82,7 @@ Para enviar mensajes de WhatsApp de forma automatizada, se necesita:
 - Cada mensaje de WhatsApp cuesta aproximadamente $20 COP
 - Con 36 notificaciones diarias, el costo mensual seria ~$21,600 COP (~$5 USD)
 
-**¿Por que no esta implementado todavia?**
+**Por que no esta implementado todavia?**
 - Requiere verificacion de negocio (1-5 dias)
 - Cada mensaje tiene costo (a diferencia del correo que es gratis)
 - Para el MVP actual, el correo electronico es suficiente
@@ -98,123 +90,70 @@ Para enviar mensajes de WhatsApp de forma automatizada, se necesita:
 **Configuracion necesaria:**
 ```json
 {
-  "phone_whatsapp": "+57XXXXXXXXXX",  // Numero verificado en Meta
+  "phone_whatsapp": "+57XXXXXXXXXX",
   "whatsapp_enabled": true
 }
 ```
 
 ---
 
-## Setup
+## Como Ejecutar
 
-### 1. Crear cuenta Neon (PostgreSQL)
+### Ejecucion Local
 
-1. Ir a `https://neon.tech`
-2. Crear cuenta (gratis, sin tarjeta)
-3. Crear proyecto (region: aws-sa-east-1)
-4. Copiar la `DATABASE_URL` que Neon te da
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/mmanoslasva/secop-monitor.git
+cd secop-monitor
 
-### 2. Crear tablas en Neon
+# 2. Crear entorno virtual
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
 
-En el SQL Editor de Neon, ejecutar:
+# 3. Instalar dependencias
+pip install -r requirements.txt
 
-```sql
-CREATE TABLE processes (
-    id TEXT PRIMARY KEY,
-    entity_name TEXT,
-    entity_nit TEXT,
-    department TEXT,
-    city TEXT,
-    name TEXT,
-    description TEXT,
-    status TEXT,
-    phase TEXT,
-    contract_type TEXT,
-    modality TEXT,
-    base_price NUMERIC,
-    publication_date TIMESTAMPTZ,
-    deadline TIMESTAMPTZ,
-    unspsc_code TEXT,
-    url TEXT,
-    detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    notified BOOLEAN DEFAULT FALSE,
-    content_hash TEXT
-);
+# 4. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
 
-CREATE TABLE notifications (
-    id SERIAL PRIMARY KEY,
-    process_id TEXT NOT NULL REFERENCES processes(id),
-    channel TEXT NOT NULL CHECK (channel IN ('email', 'whatsapp')),
-    status TEXT NOT NULL CHECK (status IN ('pending', 'sent', 'failed')),
-    sent_at TIMESTAMPTZ,
-    error_message TEXT,
-    retry_count INT DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE job_runs (
-    id SERIAL PRIMARY KEY,
-    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    completed_at TIMESTAMPTZ,
-    status TEXT CHECK (status IN ('running', 'success', 'failed')),
-    processes_found INT DEFAULT 0,
-    processes_matched INT DEFAULT 0,
-    notifications_sent INT DEFAULT 0,
-    notifications_failed INT DEFAULT 0,
-    error_message TEXT
-);
-
-CREATE TABLE client_config (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone_whatsapp TEXT,
-    departments JSONB NOT NULL DEFAULT '[]',
-    keywords JSONB NOT NULL DEFAULT '[]',
-    unspsc_codes JSONB NOT NULL DEFAULT '[]',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_processes_status ON processes(status);
-CREATE INDEX idx_processes_department ON processes(department);
-CREATE INDEX idx_processes_detected ON processes(detected_at);
-CREATE INDEX idx_processes_notified ON processes(notified);
-CREATE INDEX idx_notifications_process ON notifications(process_id);
-CREATE INDEX idx_notifications_status ON notifications(status);
-CREATE INDEX idx_job_runs_started ON job_runs(started_at);
+# 5. Ejecutar
+python -m src.main
 ```
 
-### 3. Crear cuenta Brevo (Email)
+### Ejecucion en GitHub Actions (Produccion)
 
-1. Ir a `https://www.brevo.com`
-2. Crear cuenta (gratis)
-3. Ir a "Transactional Emails" > "Senders"
-4. Agregar tu email de envio
-5. Seguir instrucciones para verificar dominio (SPF/DKIM)
-6. Copiar la API Key de Settings > API Keys
+El cron esta configurado en `.github/workflows/secop.yml`:
 
-### 4. Crear cuenta GitHub y activar Actions
-
-1. Ir a `https://github.com`
-2. Crear cuenta (si no tienes)
-3. Crear repositorio `secop-monitor`
-4. Subir codigo (ver paso 1 en "Deploy a Produccion")
-5. Ir a pestaña "Actions" en el repositorio
-6. Click "I understand my workflows, go ahead and enable them"
-7. Los cron jobs se ejecutaran automaticamente segun el schedule definido en `.github/workflows/secop.yml`
-
-### 5. Variables de Entorno
-
+```yaml
+schedule:
+  - cron: '0 15 * * *'  # 10:00 AM COT
+  - cron: '0 20 * * *'  # 3:00 PM COT
+  - cron: '0 1 * * *'   # 8:00 PM COT
 ```
-DATABASE_URL=postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-BREVO_API_KEY=your-brevo-api-key
-SECOP_APP_TOKEN=your-socrata-app-token
-SENDER_EMAIL=notificaciones@tudominio.com
-SENDER_NAME=SECOP Monitor
-ADMIN_EMAIL=admin@tudominio.com
-STEALTH_MODE=true
-```
+
+**Ejecucion manual:**
+1. Ir al repositorio en GitHub
+2. Pestaña "Actions"
+3. Seleccionar "SECOP Monitor"
+4. Click "Run workflow"
+
+**Verificar ejecucion:**
+1. En la pestaña "Actions", click en la ejecucion
+2. Ver logs de cada paso
+3. Verificar en Neon: tablas `job_runs`, `processes`, `notifications`
+
+### Variables de Entorno
+
+| Variable | Descripcion | Ejemplo |
+|----------|-------------|---------|
+| `DATABASE_URL` | URL de conexion a Neon | `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require` |
+| `BREVO_API_KEY` | API key de Brevo | `xkeysib-...` |
+| `SENDER_EMAIL` | Email remitente verificado | `whoami_jay@proton.me` |
+| `SENDER_NAME` | Nombre del remitente | `SECOP Monitor` |
+| `ADMIN_EMAIL` | Email del administrador | `meriyei.manfer@gmail.com` |
+| `STEALTH_MODE` | `true` = sin envio, `false` = envio real | `false` |
 
 ---
 
@@ -225,32 +164,27 @@ Archivo `config/client_config.json`:
 ```json
 {
   "name": "Cliente Textil Caribe",
-  "email": "cliente@empresa.com",
+  "email": "meriyei.manfer@gmail.com",
+  "phone_whatsapp": "+573001234567",
   "departments": ["Atlantico", "Bolivar", "Magdalena", "Cordoba", "Sucre", "La Guajira", "Cesar"],
-  "keywords": ["uniforme", "uniformes", "ropa deportiva", "vestuario", "confeccion", "prendas", "textil"],
-  "unspsc_codes": ["V1.53102700", "V1.53102710", "V1.53102715", "V1.53102720", "V1.53102900"]
+  "keywords": ["uniforme", "uniformes", "ropa deportiva", "vestuario", "confeccion", "prendas", "textil", "sportswear", "camiseta", "pantalon", "chaqueta", "calzado"],
+  "unspsc_codes": ["V1.53102700", "V1.53102710", "V1.53102715", "V1.53102720", "V1.53102900", "V1.53102901", "V1.53102902", "V1.53100000", "V1.53101500", "V1.53101600", "V1.53101800", "V1.53103000", "V1.53110000", "V1.53111600"]
 }
 ```
 
-### Campos de filtrado
+### Logica de Filtrado
 
-- **departments:** Lista de departamentos de la region Caribe
-- **keywords:** Palabras clave para buscar en nombre y descripcion del proceso
-- **unspsc_codes:** Codigos UNSPSC de categorias relevantes
-
-### Logica de filtrado
-
-Un proceso coincide si:
-1. Su departamento esta en la lista del cliente, Y
-2. Cumple AL MENOS UNO de:
-   - Su codigo UNSPSC esta en la lista del cliente
-   - Su nombre o descripcion contiene una keyword del cliente
+Un proceso se notifica si:
+1. Su departamento esta en la lista, Y
+2. Cumple AL MENOS UNO:
+   - Su codigo UNSPSC esta en la lista
+   - Su nombre o descripcion contiene una keyword
 
 ---
 
 ## Monitoring
 
-### Consultas SQL utiles
+### Consultas SQL Utiles
 
 ```sql
 -- Ultima ejecucion
@@ -276,178 +210,58 @@ GROUP BY DATE(detected_at)
 ORDER BY day DESC;
 ```
 
-### Logs
+---
 
-Los logs se estructuran en JSON para facilitar el monitoreo:
+## Estructura del Proyecto
 
-```json
-{
-  "timestamp": "2026-08-29T15:00:00Z",
-  "level": "info",
-  "event": "job_completed",
-  "processes_found": 127,
-  "processes_matched": 3,
-  "notifications_sent": 3
-}
+```
+secop-monitor/
+├── .github/workflows/secop.yml   # Cron de GitHub Actions
+├── config/client_config.json     # Configuracion del cliente
+├── src/
+│   ├── main.py                   # Punto de entrada
+│   ├── config.py                 # Variables de entorno
+│   ├── sources/secop.py          # Conexion con SECOP API
+│   ├── filters/engine.py         # Motor de filtros
+│   ├── database/connection.py    # Conexion a Neon
+│   ├── database/models.py        # Operaciones CRUD
+│   └── notifications/email.py    # Envio de correos via Brevo
+├── tests/                        # Tests unitarios
+├── Dockerfile                    # Para Docker (opcional)
+├── requirements.txt              # Dependencias
+├── .env.example                  # Ejemplo de variables
+└── README.md                     # Esta documentacion
 ```
 
 ---
 
-## Deploy a Produccion
-
-### 1. Subir codigo a GitHub
-
-```bash
-cd /home/mery/projects/mvp_SECOP
-git init
-git add .
-git commit -m "feat: MVP funcional - SECOP monitor con email"
-git remote add origin https://github.com/TU_USUARIO/secop-monitor.git
-git push -u origin main
-```
-
-### 2. Configurar GitHub Secrets
-
-1. Ir al repositorio en GitHub
-2. Settings > Secrets and variables > Actions
-3. Click "New repository secret"
-4. Agregar cada secret:
-
-| Secret | Valor |
-|--------|-------|
-| `DATABASE_URL` | URL de Neon |
-| `BREVO_API_KEY` | API key de Brevo |
-| `SENDER_EMAIL` | `whoami_jay@proton.me` |
-| `SENDER_NAME` | `SECOP Monitor` |
-| `ADMIN_EMAIL` | `meriyei.manfer@gmail.com` |
-| `STEALTH_MODE` | `false` (para envio real) |
-
-**Nota:** Los secrets son write-only. No puedes verlos despues de crearlos, solo actualizarlos.
-
-### 3. Verificar primera ejecucion
-
-1. En GitHub, ir a pestaña "Actions" del repositorio
-2. Seleccionar el workflow "SECOP Monitor"
-3. Click "Run workflow" para ejecutar manualmente
-4. Esperar a que complete (ver check verde ✓)
-5. Click en la ejecucion para ver logs
-6. Verificar tablas en Neon:
-   - `job_runs` → status = "success"
-   - `processes` → registros nuevos
-   - `notifications` → emails enviados/fallidos
-
-### 4. Activar envio de emails
-
-Cuando confirmes que funciona:
-1. En GitHub, ir a Settings > Secrets and variables > Actions
-2. Actualizar `STEALTH_MODE` a `false`
-3. Ejecutar workflow manualmente
-4. Verificar que llegan correos
-
----
-
-## Configuracion Dominio Propio en Brevo (Reducir Spam)
+## Configuracion Dominio Propio en Brevo
 
 ### Por que llegan a spam?
 
 Brevo free tier usa dominio compartido `brevosend.com`. Gmail ve ese dominio como remitente y clasifica como spam. Con dominio propio, los emails llegan desde `tudominio.com` → confianza → inbox.
 
-### Que es DNS?
+### Pasos
 
-DNS es el sistema que traduce nombres a direcciones. Cuando configuras dominio propio, agregas registros DNS que le dicen a Gmail: "este servidor esta autorizado para enviar emails en nombre de tudominio.com".
-
-### Paso 1: Comprar dominio (~$10/año)
-
-Opciones economicas:
-- **Namecheap:** ~$8-12/año (.com, .co, .net)
-- **Google Domains:** ~$12/año
-- **Cloudflare Registrar:** ~$8/año (al costo, sin markup)
-- **Porkbun:** ~$8-10/año
-
-Recomendacion: `.com` o `.co` (Colombia). Evitar extensiones raras.
-
-### Paso 2: Verificar dominio en Brevo
-
-1. Ir a `https://app.brevo.com/settings/keys/sending`
-2. Click "Add a domain"
-3. Ingresar tu dominio (ej: `tumonitor.com`)
-4. Brevo te da 3 registros DNS para agregar:
-
-| Tipo | Nombre | Valor | Funcion |
-|------|--------|-------|---------|
-| TXT | `smtp._domainkey` | `k=rsa; p=MIGfMA0...` | DKIM - firma digital |
-| TXT | `@` | `v=spf1 include:brevo.com ~all` | SPF - autoriza envio |
-| CNAME | `brevo.code` | `send.brevo.com` | Tracking |
-
-### Paso 3: Agregar registros en tu proveedor DNS
-
-En Namecheap (ejemplo):
-1. Dashboard > Domain List > Manage > Advanced DNS
-2. Agregar registros uno por uno
-3. Esperar propagacion (5 minutos - 48 horas, usualmente 1-2 horas)
-
-En Cloudflare (ejemplo):
-1. Dashboard > DNS > Records
-2. Agregar registros (proxy OFF para email)
-
-### Paso 4: Confirmar verificacion en Brevo
-
-1. Volver a `https://app.brevo.com/settings/keys/sending`
-2. Click "Verify" junto al dominio
-3. Si propagation termino → verde ✓
-4. Si no → esperar mas tiempo y reintentar
-
-### Paso 5: Configurar sender con dominio propio
-
-1. En Brevo > Senders > Add a sender
-2. Email: `notificaciones@tudominio.com`
-3. Nombre: `SECOP Monitor`
-4. Verificar email (Brevo envia codigo)
-5. Actualizar `.env`:
-   ```
-   SENDER_EMAIL=notificaciones@tudominio.com
-   ```
+1. **Comprar dominio** (~$10/año) - Namecheap, Cloudflare, Porkbun
+2. **Verificar dominio en Brevo** - Agregar registros DNS (TXT, CNAME)
+3. **Agregar registros en proveedor DNS** - Esperar propagacion (1-2 horas)
+4. **Confirmar verificacion en Brevo** - Click "Verify"
+5. **Configurar sender** - `notificaciones@tudominio.com`
 
 ### Resultado
 
 | Antes | Despues |
 |-------|---------|
-| `SECOP Monitor <whoami_jay@12002987.brevosend.com>` | `SECOP Monitor <notificaciones@tudominio.com>` |
+| `whoami_jay@12002987.brevosend.com` | `notificaciones@tudominio.com` |
 | 30-40% va a spam | <5% va a spam |
 | Sin credibilidad | Dominio profesional |
-
-### Costo total
-
-| Item | Costo |
-|------|-------|
-| Dominio | ~$10/año |
-| Brevo free tier | $0 |
-| Total | ~$10/año |
-
----
-
-## Fases de Validacion
-
-### Fase 1: Stealth Mode (1 semana)
-
-1. Configurar `STEALTH_MODE=true`
-2. El sistema detecta y guarda procesos pero NO envia emails
-3. Revisar resultados en la BD
-4. Ajustar keywords/filtros segun feedback del cliente
-
-### Fase 2: Produccion
-
-1. Configurar `STEALTH_MODE=false`
-2. Activar envio de emails
-3. Monitorear ejecuciones en tabla `job_runs`
 
 ---
 
 ## Funcionalidades Futuras
 
-Estas funcionalidades estan disenadas pero no implementadas en el MVP:
-
-1. **WhatsApp** - Notificaciones por WhatsApp via Meta Cloud API
+1. **WhatsApp** - Notificaciones via Meta Cloud API
 2. **Multi-tenant** - Multiples clientes con diferentes filtros
 3. **Dashboard** - Panel web para gestionar filtros y ver historial
 4. **Deteccion de cambios** - Notificar actualizaciones a procesos existentes
@@ -455,111 +269,17 @@ Estas funcionalidades estan disenadas pero no implementadas en el MVP:
 6. **Filtro por entidad** - Incluir/excluir entidades especificas
 7. **Filtro por modalidad** - Licitacion publica, seleccion abreviada, etc.
 8. **Filtro por fecha limite** - Excluir procesos vencidos
-9. **Web scraping de community.secop.gov.co** - Para menor latencia
-10. **API OCDS** - Fuente alternativa mas rapida
-
----
-
-## Estructura del Proyecto
-
-```
-secop-monitor/
-├── Dockerfile
-├── requirements.txt
-├── .env.example
-├── .env (no commitear - contiene secrets)
-├── .gitignore
-├── .github/
-│   └── workflows/
-│       └── secop.yml
-├── README.md
-├── config/
-│   └── client_config.json
-├── src/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── config.py
-│   ├── sources/
-│   │   ├── base.py
-│   │   └── secop.py
-│   ├── filters/
-│   │   └── engine.py
-│   ├── database/
-│   │   ├── connection.py
-│   │   └── models.py
-│   ├── notifications/
-│   │   ├── base.py
-│   │   └── email.py
-│   └── models/
-│       └── process.py
-└── tests/
-    ├── test_filters.py
-    ├── test_secop_source.py
-    ├── test_database.py
-    └── test_notification.py
-```
 
 ---
 
 ## Troubleshooting
 
-### Error: `can't adapt type 'dict'`
-
-**Causa:** Campo `urlproceso` de SECOP API devuelve dict `{'url': '...'}`, no string.
-
-**Solucion:** Verificar que `secop.py` maneja correctamente:
-```python
-"url": raw.get("urlproceso", {}).get("url", "") if isinstance(raw.get("urlproceso"), dict) else str(raw.get("urlproceso", "")),
-```
-
-### Error: `ModuleNotFoundError: No module named 'structlog'`
-
-**Causa:** Dependencias no instaladas.
-
-**Solucion:**
-```bash
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-### Error: `psycopg2.OperationalError: connection timeout`
-
-**Causa:** Neon database en sleep mode (scale-to-zero).
-
-**Solucion:** Neon tarda ~300-500ms en despertar. Normal en free tier. Si persiste, verificar `DATABASE_URL` y que Neon project esta activo.
-
-### Emails van a spam
-
-**Causa:** Brevo free tier usa dominio compartido `brevosend.com`.
-
-**Solucion:** Configurar dominio propio (ver seccion "Configuracion Dominio Propio en Brevo").
-
-### Error: `email_failed status=401`
-
-**Causa:** API key de Brevo incorrecta o expirada.
-
-**Solucion:** Verificar `BREVO_API_KEY` en `.env` y en `https://app.brevo.com/settings/keys/api`.
-
-### Error: `email_failed status=400`
-
-**Causa:** Email remitente no verificado en Brevo.
-
-**Solucion:** Verificar `SENDER_EMAIL` en Brevo > Senders. Debe coincidir exactamente.
-
-### Neon: `remaining_compute_hours` bajo
-
-**Causa:** Free tier limit: 100 CU-hours/mes.
-
-**Solucion:** Cada ejecucion usa ~0.1 CU-hour. 3 ejecuciones/dia = ~9 CU-hours/mes. Suficiente para MVP.
-
-### GitHub Actions no se ejecuta
-
-**Causa:** Cron jobs en GitHub Actions pueden tardar hasta 15 min en ejecutarse.
-
-**Solucion:** Esperar o ejecutar manualmente via "Run workflow". Verificar que el workflow esta habilitado en la pestaña "Actions".
-
-### GitHub Actions falla con error de permisos
-
-**Causa:** Secrets no configurados o incorrectos.
-
-**Solucion:** Verificar que todos los secrets esten configurados en Settings > Secrets and variables > Actions. Los secrets son write-only, no se pueden ver despues de crearlos.
+| Error | Causa | Solucion |
+|-------|-------|----------|
+| `can't adapt type 'dict'` | Campo `urlproceso` devuelve dict | Verificar `secop.py` maneja dict |
+| `ModuleNotFoundError` | Dependencias no instaladas | `pip install -r requirements.txt` |
+| `connection timeout` | Neon en sleep mode | Esperar ~300ms, verificar URL |
+| Emails van a spam | Dominio compartido Brevo | Configurar dominio propio |
+| `email_failed status=401` | API key incorrecta | Verificar `BREVO_API_KEY` |
+| `email_failed status=400` | Email no verificado | Verificar `SENDER_EMAIL` en Brevo |
+| GitHub Actions no ejecuta | Cron puede tardar 15 min | Ejecutar manualmente via "Run workflow" |
