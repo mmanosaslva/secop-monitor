@@ -1,0 +1,44 @@
+{
+  "name": "Cliente Textil Caribe",
+  "email": "cliente@empresa.com",
+  "phone_whatsapp": "+573001234567",
+  "departments": [
+    "Atlantico",
+    "Bolivar",
+    "Magdalena",
+    "Cordoba",
+    "Sucre",
+    "La Guajira",
+    "Cesar"
+  ],
+  "keywords": [
+    "uniforme",
+    "uniformes",
+    "ropa deportiva",
+    "vestuario",
+    "confeccion",
+    "prendas",
+    "textil",
+    "sportswear",
+    "camiseta",
+    "pantalon",
+    "chaqueta",
+    "calzado"
+  ],
+  "unspsc_codes": [
+    "V1.53102700",
+    "V1.53102710",
+    "V1.53102715",
+    "V1.53102720",
+    "V1.53102900",
+    "V1.53102901",
+    "V1.53102902",
+    "V1.53100000",
+    "V1.53101500",
+    "V1.53101600",
+    "V1.53101800",
+    "V1.53103000",
+    "V1.53110000",
+    "V1.53111600"
+  ]
+}
