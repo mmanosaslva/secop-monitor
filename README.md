@@ -83,6 +83,38 @@ Python Script (src/main.py)
 - **Alternativa BSP:** 360dialog: EUR 49/mes sin markup
 - **Nota:** investigar condiciones actuales de Meta cuando se implemente esta fase. Colombia tiene tarifas de las mas bajas mundialmente
 
+#### Costo estimado para este cliente
+
+| Concepto | Cantidad | Costo unitario | Costo mensual |
+|----------|----------|----------------|---------------|
+| Notificaciones/dia | ~36 | $20 COP/mensaje | ~$21,600 COP |
+| Notificaciones/mes | ~1,080 | $20 COP/mensaje | ~$21,600 COP |
+| **Total estimado** | | | **~$5 USD/mes** |
+
+**Comparacion con email:**
+- Email (Brevo): $0/mes (300 emails/dia gratis)
+- WhatsApp (Meta): ~$21,600 COP/mes (~$5 USD/mes)
+
+#### Requisitos para implementar
+
+1. **Tu cliente** necesita crear:
+   - Cuenta de Meta Business Manager (gratis)
+   - Registrar numero de telefono
+   - Verificar negocio (1-5 dias)
+   - Crear plantillas de mensajes (aprobadas por Meta)
+
+2. **Configuracion en `client_config.json`:**
+   ```json
+   {
+     "phone_whatsapp": "+57XXXXXXXXXX",  // Numero real del cliente
+     "whatsapp_enabled": true
+   }
+   ```
+
+3. **Plantillas ejemplo (aprobadas por Meta):**
+   - Nueva oportunidad detected: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
+   - Recordatorio: "SECOP Monitor: La oportunidad {id} vence en {dias} dias"
+
 ---
 
 ## Setup
