@@ -279,6 +279,137 @@ Los logs se estructuran en JSON para facilitar el monitoreo:
 
 ---
 
+## Deploy a Produccion
+
+### 1. Subir codigo a GitHub
+
+```bash
+cd /home/mery/projects/mvp_SECOP
+git init
+git add .
+git commit -m "feat: MVP funcional - SECOP monitor con email"
+git remote add origin https://github.com/TU_USUARIO/secop-monitor.git
+git push -u origin main
+```
+
+### 2. Crear cuenta Render (Cron Job)
+
+1. Ir a `https://render.com`
+2. Crear cuenta con GitHub (sin tarjeta)
+3. New > Cron Job
+4. Conectar repositorio `secop-monitor`
+5. Configurar:
+   - **Schedule:** `0 15,20,1 * * *` (UTC: 10:00, 15:00, 20:00 COT)
+   - **Start Command:** `pip install -r requirements.txt && python -m src.main`
+   - **Plan:** Free
+6. Agregar Environment Variables (las mismas de tu `.env`):
+   - `DATABASE_URL`
+   - `BREVO_API_KEY`
+   - `SECOP_APP_TOKEN` (dejar vacio si no tienes)
+   - `SENDER_EMAIL=whoami_jay@proton.me`
+   - `SENDER_NAME=SECOP Monitor`
+   - `ADMIN_EMAIL=whoami_jay@proton.me`
+   - `STEALTH_MODE=true` (para primera prueba)
+7. Deploy > Trigger Manual para probar
+
+### 3. Verificar primera ejecucion
+
+1. En Render, ir a Logs del Cron Job
+2. Buscar `"event": "job_completed"`
+3. Verificar tablas en Neon:
+   - `job_runs` → status = "success"
+   - `processes` → registros nuevos
+   - `notifications` → emails enviados/fallidos
+
+### 4. Activar envio de emails
+
+Cuando confirmes que funciona:
+1. En Render, cambiar `STEALTH_MODE=false`
+2. Deploy > Trigger Manual
+3. Verificar que llegan correos
+
+---
+
+## Configuracion Dominio Propio en Brevo (Reducir Spam)
+
+### Por que llegan a spam?
+
+Brevo free tier usa dominio compartido `brevosend.com`. Gmail ve ese dominio como remitente y clasifica como spam. Con dominio propio, los emails llegan desde `tudominio.com` → confianza → inbox.
+
+### Que es DNS?
+
+DNS es el sistema que traduce nombres a direcciones. Cuando configuras dominio propio, agregas registros DNS que le dicen a Gmail: "este servidor esta autorizado para enviar emails en nombre de tudominio.com".
+
+### Paso 1: Comprar dominio (~$10/año)
+
+Opciones economicas:
+- **Namecheap:** ~$8-12/año (.com, .co, .net)
+- **Google Domains:** ~$12/año
+- **Cloudflare Registrar:** ~$8/año (al costo, sin markup)
+- **Porkbun:** ~$8-10/año
+
+Recomendacion: `.com` o `.co` (Colombia). Evitar extensiones raras.
+
+### Paso 2: Verificar dominio en Brevo
+
+1. Ir a `https://app.brevo.com/settings/keys/sending`
+2. Click "Add a domain"
+3. Ingresar tu dominio (ej: `tumonitor.com`)
+4. Brevo te da 3 registros DNS para agregar:
+
+| Tipo | Nombre | Valor | Funcion |
+|------|--------|-------|---------|
+| TXT | `smtp._domainkey` | `k=rsa; p=MIGfMA0...` | DKIM - firma digital |
+| TXT | `@` | `v=spf1 include:brevo.com ~all` | SPF - autoriza envio |
+| CNAME | `brevo.code` | `send.brevo.com` | Tracking |
+
+### Paso 3: Agregar registros en tu proveedor DNS
+
+En Namecheap (ejemplo):
+1. Dashboard > Domain List > Manage > Advanced DNS
+2. Agregar registros uno por uno
+3. Esperar propagacion (5 minutos - 48 horas, usualmente 1-2 horas)
+
+En Cloudflare (ejemplo):
+1. Dashboard > DNS > Records
+2. Agregar registros (proxy OFF para email)
+
+### Paso 4: Confirmar verificacion en Brevo
+
+1. Volver a `https://app.brevo.com/settings/keys/sending`
+2. Click "Verify" junto al dominio
+3. Si propagation termino → verde ✓
+4. Si no → esperar mas tiempo y reintentar
+
+### Paso 5: Configurar sender con dominio propio
+
+1. En Brevo > Senders > Add a sender
+2. Email: `notificaciones@tudominio.com`
+3. Nombre: `SECOP Monitor`
+4. Verificar email (Brevo envia codigo)
+5. Actualizar `.env`:
+   ```
+   SENDER_EMAIL=notificaciones@tudominio.com
+   ```
+
+### Resultado
+
+| Antes | Despues |
+|-------|---------|
+| `SECOP Monitor <whoami_jay@12002987.brevosend.com>` | `SECOP Monitor <notificaciones@tudominio.com>` |
+| 30-40% va a spam | <5% va a spam |
+| Sin credibilidad | Dominio profesional |
+
+### Costo total
+
+| Item | Costo |
+|------|-------|
+| Dominio | ~$10/año |
+| Brevo free tier | $0 |
+| Total | ~$10/año |
+
+---
+
 ## Fases de Validacion
 
 ### Fase 1: Stealth Mode (1 semana)
@@ -320,6 +451,8 @@ secop-monitor/
 ├── Dockerfile
 ├── requirements.txt
 ├── .env.example
+├── .env (no commitear - contiene secrets)
+├── .gitignore
 ├── render.yaml
 ├── README.md
 ├── config/
@@ -347,3 +480,56 @@ secop-monitor/
     ├── test_database.py
     └── test_notification.py
 ```
+
+---
+
+## Troubleshooting
+
+### Error: `can't adapt type 'dict'`
+
+**Causa:** Campo `urlproceso` de SECOP API devuelve dict `{'url': '...'}`, no string.
+
+**Solucion:** Verificar que `secop.py` maneja correctamente:
+```python
+"url": raw.get("urlproceso", {}).get("url", "") if isinstance(raw.get("urlproceso"), dict) else str(raw.get("urlproceso", "")),
+```
+
+### Error: `ModuleNotFoundError: No module named 'structlog'`
+
+**Causa:** Dependencias no instaladas.
+
+**Solucion:**
+```bash
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+### Error: `psycopg2.OperationalError: connection timeout`
+
+**Causa:** Neon database en sleep mode (scale-to-zero).
+
+**Solucion:** Neon tarda ~300-500ms en despertar. Normal en free tier. Si persiste, verificar `DATABASE_URL` y que Neon project esta activo.
+
+### Emails van a spam
+
+**Causa:** Brevo free tier usa dominio compartido `brevosend.com`.
+
+**Solucion:** Configurar dominio propio (ver seccion "Configuracion Dominio Propio en Brevo").
+
+### Error: `email_failed status=401`
+
+**Causa:** API key de Brevo incorrecta o expirada.
+
+**Solucion:** Verificar `BREVO_API_KEY` en `.env` y en `https://app.brevo.com/settings/keys/api`.
+
+### Error: `email_failed status=400`
+
+**Causa:** Email remitente no verificado en Brevo.
+
+**Solucion:** Verificar `SENDER_EMAIL` en Brevo > Senders. Debe coincidir exactamente.
+
+### Neon: `remaining_compute_hours` bajo
+
+**Causa:** Free tier limit: 100 CU-hours/mes.
+
+**Solucion:** Cada ejecucion usa ~0.1 CU-hour. 3 ejecuciones/dia = ~9 CU-hours/mes. Suficiente para MVP.

@@ -44,6 +44,7 @@ def main():
         engine = FilterEngine(config)
         matched = engine.filter_batch(processes)
 
+        new_ids = set()
         new_count = 0
         skip_count = 0
         for process in matched:
@@ -51,6 +52,7 @@ def main():
             is_new = save_process(conn, process, h)
             if is_new:
                 new_count += 1
+                new_ids.add(process["id"])
             else:
                 skip_count += 1
 
@@ -62,15 +64,15 @@ def main():
             sent = 0
             failed = 0
             for process in matched:
-                is_new = save_process(conn, process, compute_hash(process))
-                if is_new:
-                    ok = emailer.send(process, client_email)
-                    if ok:
-                        mark_notified(conn, process["id"], "email", "sent")
-                        sent += 1
-                    else:
-                        mark_notified(conn, process["id"], "email", "failed", "email send failed")
-                        failed += 1
+                if process["id"] not in new_ids:
+                    continue
+                ok = emailer.send(process, client_email)
+                if ok:
+                    mark_notified(conn, process["id"], "email", "sent")
+                    sent += 1
+                else:
+                    mark_notified(conn, process["id"], "email", "failed", "email send failed")
+                    failed += 1
             logger.info("notifications_done", sent=sent, failed=failed)
             complete_job_run(conn, job_id, "success",
                            processes_found=len(processes),

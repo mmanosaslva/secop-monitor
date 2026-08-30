@@ -53,7 +53,7 @@ class SecopDataSource(DataSource):
             "publication_date": raw.get("fecha_de_publicacion_del", ""),
             "deadline": raw.get("fecha_de_recepcion_de", ""),
             "unspsc_code": raw.get("codigo_principal_de_categoria", ""),
-            "url": raw.get("urlproceso", ""),
+            "url": raw.get("urlproceso", {}).get("url", "") if isinstance(raw.get("urlproceso"), dict) else str(raw.get("urlproceso", "")),
         }
 
     def fetch_processes(
