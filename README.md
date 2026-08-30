@@ -73,69 +73,35 @@ Python Script (src/main.py)
 - **Limitos:** 1000 ejecuciones/dia, 6 horas max por ejecucion
 - **Cuándo genera costos:** Si se supera 2000 min/mes (no aplica para nuestro caso)
 
-### WhatsApp (Funcionalidad Futura - NO utilizada en MVP)
+### WhatsApp (Funcionalidad Futura)
 
-- **Estado:** No implementada en el MVP
-- **Proveedor recomendado:** Meta WhatsApp Cloud API (directo, sin BSP)
-- **Costo por mensaje (Colombia):** ~$0.005 USD/mensaje utility, ~$0.0125 USD/mensaje marketing
-- **Costo plataforma:** $0 (Meta Cloud API directa)
-- **Requisitos:** Meta Business Manager, verificacion de negocio (1-5 dias), registro de numero, plantillas aprobadas
-- **Alternativa BSP:** 360dialog: EUR 49/mes sin markup
-- **Nota:** investigar condiciones actuales de Meta cuando se implemente esta fase. Colombia tiene tarifas de las mas bajas mundialmente
+**Estado:** Actualmente el sistema envía notificaciones por correo electrónico. WhatsApp está diseñado como una mejora futura.
 
-#### Condiciones para acceder al servicio de WhatsApp Business API
+**¿Cómo funciona WhatsApp Business?**
 
-**1. Cuenta de Meta Business Manager**
-- Registro gratuito en `https://business.facebook.com`
-- Requiere correo electronico corporativo (no Gmail, Yahoo, etc.)
-- Verificacion de identidad con documento oficial
+Para enviar mensajes de WhatsApp de forma automatizada, se necesita:
 
-**2. Numero de telefono**
-- Debe ser un numero verificado en Meta Business Manager
-- Puede ser un numero nuevo o existente
-- No puede estar vinculado a otra cuenta de WhatsApp Business
+1. **Cuenta de Meta Business Manager** (gratis) - Registro en business.facebook.com
+2. **Numero de telefono verificado** - Puede ser el numero actual del negocio
+3. **Verificacion de negocio** - Meta verifica la identidad del negocio (tarda 1-5 dias)
+4. **Plantillas de mensajes** - Los mensajes deben ser aprobados por Meta antes de enviarlos
 
-**3. Verificacion de negocio**
-- Meta verifica la identidad del negocio (1-5 dias habiles)
-- Requiere documentos: RUT, Camara de Comercio, o_extracto_bancario
-- Sin verificacion, no se puede usar la API
+**Costo estimado:**
+- Cada mensaje de WhatsApp cuesta aproximadamente $20 COP
+- Con 36 notificaciones diarias, el costo mensual seria ~$21,600 COP (~$5 USD)
 
-**4. Plantillas de mensajes**
-- Todos los mensajes iniciales deben usar plantillas aprobadas por Meta
-- Las plantillas tienen costo por envio (incluso si el usuario no lee)
-- Las respuestas del usuario son gratuitas por 24 horas
-- Ejemplo de plantilla: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
+**¿Por que no esta implementado todavia?**
+- Requiere verificacion de negocio (1-5 dias)
+- Cada mensaje tiene costo (a diferencia del correo que es gratis)
+- Para el MVP actual, el correo electronico es suficiente
 
-**5. Limite de mensajes**
-- Sin verificacion: 250 mensajes/dia (business_initiated)
-- Con verificacion: 100,000 mensajes/dia
-- Sin limite real para nuestro caso (36 notificaciones/dia)
-
-#### Costo estimado
-
-| Concepto | Cantidad | Costo unitario | Costo mensual |
-|----------|----------|----------------|---------------|
-| Notificaciones/dia | ~36 | $20 COP/mensaje | ~$21,600 COP |
-| Notificaciones/mes | ~1,080 | $20 COP/mensaje | ~$21,600 COP |
-| **Total estimado** | | | **~$5 USD/mes** |
-
-**Comparacion con email:**
-- Email (Brevo): $0/mes (300 emails/dia gratis)
-- WhatsApp (Meta): ~$21,600 COP/mes (~$5 USD/mes)
-
-#### Configuracion en `client_config.json`
-
+**Configuracion necesaria:**
 ```json
 {
   "phone_whatsapp": "+57XXXXXXXXXX",  // Numero verificado en Meta
   "whatsapp_enabled": true
 }
 ```
-
-#### Plantillas ejemplo (aprobadas por Meta)
-
-- Nueva oportunidad detected: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
-- Recordatorio: "SECOP Monitor: La oportunidad {id} vence en {dias} dias"
 
 ---
 
