@@ -66,10 +66,10 @@ class EmailNotification(NotificationChannel):
         </div>
         """
 
-    def send(self, process: Dict, recipient: str) -> bool:
+    def send(self, process: Dict, recipient: str):
         if not self.api_key:
             logger.error("brevo_api_key_missing")
-            return False
+            return False, "api_key_missing"
 
         subject = f"Nueva oportunidad: {process.get('name', '')[:80]}"
         html = self._format_html(process)
@@ -90,10 +90,11 @@ class EmailNotification(NotificationChannel):
                 )
                 if resp.status_code in (200, 201):
                     logger.info("email_sent", process_id=process["id"], recipient=recipient)
-                    return True
+                    return True, None
                 else:
+                    error_msg = f"status={resp.status_code} body={resp.text[:200]}"
                     logger.error("email_failed", status=resp.status_code, body=resp.text[:200])
-                    return False
+                    return False, error_msg
         except Exception as e:
             logger.error("email_exception", error=str(e))
-            return False
+            return False, str(e)

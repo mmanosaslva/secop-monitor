@@ -66,12 +66,12 @@ def main():
             for process in matched:
                 if process["id"] not in new_ids:
                     continue
-                ok = emailer.send(process, client_email)
+                ok, error_msg = emailer.send(process, client_email)
                 if ok:
                     mark_notified(conn, process["id"], "email", "sent")
                     sent += 1
                 else:
-                    mark_notified(conn, process["id"], "email", "failed", "email send failed")
+                    mark_notified(conn, process["id"], "email", "failed", error_msg)
                     failed += 1
             logger.info("notifications_done", sent=sent, failed=failed)
             complete_job_run(conn, job_id, "success",

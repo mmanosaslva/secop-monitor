@@ -32,7 +32,7 @@ def test_email_send_success():
         with patch("src.notifications.email.BREVO_API_KEY", "test-key"):
             emailer = EmailNotification()
             result = emailer.send(process, "test@example.com")
-            assert result is True
+            assert result == (True, None)
 
 
 def test_email_send_failure():
@@ -50,4 +50,5 @@ def test_email_send_failure():
         with patch("src.notifications.email.BREVO_API_KEY", "test-key"):
             emailer = EmailNotification()
             result = emailer.send(process, "test@example.com")
-            assert result is False
+            assert result[0] is False
+            assert "status=400" in result[1]
