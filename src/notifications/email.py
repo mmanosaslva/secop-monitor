@@ -88,7 +88,7 @@ class EmailNotification(NotificationChannel):
                     headers={"api-key": self.api_key, "Content-Type": "application/json"},
                     json=payload,
                 )
-                if resp.status_code in (200, 201):
+                if resp.status_code in (200, 201, 202):
                     logger.info("email_sent", process_id=process["id"], recipient=recipient)
                     return True, None
                 else:
