@@ -73,7 +73,7 @@ def main():
                 else:
                     mark_notified(conn, process["id"], "email", "failed", error_msg)
                     failed += 1
-                time.sleep(3)
+                break
             logger.info("notifications_done", sent=sent, failed=failed)
             complete_job_run(conn, job_id, "success",
                            processes_found=len(processes),
