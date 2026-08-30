@@ -26,7 +26,7 @@ Cloud Run Job / Python Script
 | Runtime | Python 3.11+ | $0 |
 | Base de datos | Neon PostgreSQL | $0 (free tier) |
 | Email | Brevo | $0 (free tier) |
-| Hosting/Cron | Render | $0 (free tier) |
+| Hosting/Cron | GitHub Actions | $0 (free tier) |
 | Fuente datos | SECOP / datos.gov.co | $0 (datos abiertos) |
 | Codigo fuente | GitHub | $0 |
 
@@ -64,14 +64,14 @@ Cloud Run Job / Python Script
 - **SDK:** `pip install brevo-python`
 - **Cuándo genera costos:** Al superar 300 emails/dia o al upgrade a Starter ($9/mes)
 
-### Render (Hosting/Cron)
+### GitHub Actions (Hosting/Cron)
 
-- **Plan:** Free
-- **Cron jobs:** Nativo, soportado en free tier
-- **750 horas/mes** para servicios web (3 scripts/dia = ~1 hora/mes)
+- **Plan:** Free (2000 min/month para repos privados, ilimitado para public)
+- **Cron jobs:** Nativo via `schedule` en workflows YAML
+- **2000 minutos/mes** para repos privados (3 ejecuciones/dia = ~15 min/mes)
 - **Deploy:** GitHub integration, auto-deploy on push
-- **Limites:** 0.1 CPU, 512 MB RAM por servicio. Free PostgreSQL expira en 90 dias
-- **Cuándo genera costos:** Si se supera 750 horas/mes (no aplica para nuestro caso)
+- **Limitos:** 1000 ejecuciones/dia, 6 horas max por ejecucion
+- **Cuándo genera costos:** Si se supera 2000 min/mes (no aplica para nuestro caso)
 
 ### WhatsApp (Funcionalidad Futura - NO utilizada en MVP)
 
@@ -174,21 +174,15 @@ CREATE INDEX idx_job_runs_started ON job_runs(started_at);
 5. Seguir instrucciones para verificar dominio (SPF/DKIM)
 6. Copiar la API Key de Settings > API Keys
 
-### 4. Crear cuenta Render
+### 4. Crear cuenta GitHub y activar Actions
 
-1. Ir a `https://render.com`
-2. Crear cuenta con GitHub (sin tarjeta)
-3. Conectar repositorio de GitHub
-4. Crear "Cron Job" servicio
-5. Configurar:
-   - Schedule: `0 15,20,1 * * *` (UTC: 10:00, 15:00, 20:00 COT)
-   - Start Command: `python src/main.py`
-6. Agregar Environment Variables:
-   - `DATABASE_URL`: URL de Neon
-   - `BREVO_API_KEY`: API key de Brevo
-   - `SENDER_EMAIL`: email verificado en Brevo
-   - `SENDER_NAME`: SECOP Monitor
-   - `STEALTH_MODE`: true (para pruebas iniciales)
+1. Ir a `https://github.com`
+2. Crear cuenta (si no tienes)
+3. Crear repositorio `secop-monitor`
+4. Subir codigo (ver paso 1 en "Deploy a Produccion")
+5. Ir a pestaña "Actions" en el repositorio
+6. Click "I understand my workflows, go ahead and enable them"
+7. Los cron jobs se ejecutaran automaticamente segun el schedule definido en `.github/workflows/secop.yml`
 
 ### 5. Variables de Entorno
 
@@ -292,31 +286,32 @@ git remote add origin https://github.com/TU_USUARIO/secop-monitor.git
 git push -u origin main
 ```
 
-### 2. Crear cuenta Render (Cron Job)
+### 2. Configurar GitHub Secrets
 
-1. Ir a `https://render.com`
-2. Crear cuenta con GitHub (sin tarjeta)
-3. New > Cron Job
-4. Conectar repositorio `secop-monitor`
-5. Configurar:
-   - **Schedule:** `0 15,20,1 * * *` (UTC: 10:00, 15:00, 20:00 COT)
-   - **Start Command:** `pip install -r requirements.txt && python -m src.main`
-   - **Plan:** Free
-6. Agregar Environment Variables (las mismas de tu `.env`):
-   - `DATABASE_URL`
-   - `BREVO_API_KEY`
-   - `SECOP_APP_TOKEN` (dejar vacio si no tienes)
-   - `SENDER_EMAIL=whoami_jay@proton.me`
-   - `SENDER_NAME=SECOP Monitor`
-   - `ADMIN_EMAIL=whoami_jay@proton.me`
-   - `STEALTH_MODE=true` (para primera prueba)
-7. Deploy > Trigger Manual para probar
+1. Ir al repositorio en GitHub
+2. Settings > Secrets and variables > Actions
+3. Click "New repository secret"
+4. Agregar cada secret:
+
+| Secret | Valor |
+|--------|-------|
+| `DATABASE_URL` | URL de Neon |
+| `BREVO_API_KEY` | API key de Brevo |
+| `SENDER_EMAIL` | `whoami_jay@proton.me` |
+| `SENDER_NAME` | `SECOP Monitor` |
+| `ADMIN_EMAIL` | `meriyei.manfer@gmail.com` |
+| `STEALTH_MODE` | `false` (para envio real) |
+
+**Nota:** Los secrets son write-only. No puedes verlos despues de crearlos, solo actualizarlos.
 
 ### 3. Verificar primera ejecucion
 
-1. En Render, ir a Logs del Cron Job
-2. Buscar `"event": "job_completed"`
-3. Verificar tablas en Neon:
+1. En GitHub, ir a pestaña "Actions" del repositorio
+2. Seleccionar el workflow "SECOP Monitor"
+3. Click "Run workflow" para ejecutar manualmente
+4. Esperar a que complete (ver check verde ✓)
+5. Click en la ejecucion para ver logs
+6. Verificar tablas en Neon:
    - `job_runs` → status = "success"
    - `processes` → registros nuevos
    - `notifications` → emails enviados/fallidos
@@ -324,9 +319,10 @@ git push -u origin main
 ### 4. Activar envio de emails
 
 Cuando confirmes que funciona:
-1. En Render, cambiar `STEALTH_MODE=false`
-2. Deploy > Trigger Manual
-3. Verificar que llegan correos
+1. En GitHub, ir a Settings > Secrets and variables > Actions
+2. Actualizar `STEALTH_MODE` a `false`
+3. Ejecutar workflow manualmente
+4. Verificar que llegan correos
 
 ---
 
@@ -453,7 +449,9 @@ secop-monitor/
 ├── .env.example
 ├── .env (no commitear - contiene secrets)
 ├── .gitignore
-├── render.yaml
+├── .github/
+│   └── workflows/
+│       └── secop.yml
 ├── README.md
 ├── config/
 │   └── client_config.json
@@ -533,3 +531,15 @@ python -m venv .venv
 **Causa:** Free tier limit: 100 CU-hours/mes.
 
 **Solucion:** Cada ejecucion usa ~0.1 CU-hour. 3 ejecuciones/dia = ~9 CU-hours/mes. Suficiente para MVP.
+
+### GitHub Actions no se ejecuta
+
+**Causa:** Cron jobs en GitHub Actions pueden tardar hasta 15 min en ejecutarse.
+
+**Solucion:** Esperar o ejecutar manualmente via "Run workflow". Verificar que el workflow esta habilitado en la pestaña "Actions".
+
+### GitHub Actions falla con error de permisos
+
+**Causa:** Secrets no configurados o incorrectos.
+
+**Solucion:** Verificar que todos los secrets esten configurados en Settings > Secrets and variables > Actions. Los secrets son write-only, no se pueden ver despues de crearlos.
