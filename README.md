@@ -83,7 +83,35 @@ Python Script (src/main.py)
 - **Alternativa BSP:** 360dialog: EUR 49/mes sin markup
 - **Nota:** investigar condiciones actuales de Meta cuando se implemente esta fase. Colombia tiene tarifas de las mas bajas mundialmente
 
-#### Costo estimado para este cliente
+#### Condiciones para acceder al servicio de WhatsApp Business API
+
+**1. Cuenta de Meta Business Manager**
+- Registro gratuito en `https://business.facebook.com`
+- Requiere correo electronico corporativo (no Gmail, Yahoo, etc.)
+- Verificacion de identidad con documento oficial
+
+**2. Numero de telefono**
+- Debe ser un numero verificado en Meta Business Manager
+- Puede ser un numero nuevo o existente
+- No puede estar vinculado a otra cuenta de WhatsApp Business
+
+**3. Verificacion de negocio**
+- Meta verifica la identidad del negocio (1-5 dias habiles)
+- Requiere documentos: RUT, Camara de Comercio, o_extracto_bancario
+- Sin verificacion, no se puede usar la API
+
+**4. Plantillas de mensajes**
+- Todos los mensajes iniciales deben usar plantillas aprobadas por Meta
+- Las plantillas tienen costo por envio (incluso si el usuario no lee)
+- Las respuestas del usuario son gratuitas por 24 horas
+- Ejemplo de plantilla: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
+
+**5. Limite de mensajes**
+- Sin verificacion: 250 mensajes/dia (business_initiated)
+- Con verificacion: 100,000 mensajes/dia
+- Sin limite real para nuestro caso (36 notificaciones/dia)
+
+#### Costo estimado
 
 | Concepto | Cantidad | Costo unitario | Costo mensual |
 |----------|----------|----------------|---------------|
@@ -95,25 +123,19 @@ Python Script (src/main.py)
 - Email (Brevo): $0/mes (300 emails/dia gratis)
 - WhatsApp (Meta): ~$21,600 COP/mes (~$5 USD/mes)
 
-#### Requisitos para implementar
+#### Configuracion en `client_config.json`
 
-1. **Tu cliente** necesita crear:
-   - Cuenta de Meta Business Manager (gratis)
-   - Registrar numero de telefono
-   - Verificar negocio (1-5 dias)
-   - Crear plantillas de mensajes (aprobadas por Meta)
+```json
+{
+  "phone_whatsapp": "+57XXXXXXXXXX",  // Numero verificado en Meta
+  "whatsapp_enabled": true
+}
+```
 
-2. **Configuracion en `client_config.json`:**
-   ```json
-   {
-     "phone_whatsapp": "+57XXXXXXXXXX",  // Numero real del cliente
-     "whatsapp_enabled": true
-   }
-   ```
+#### Plantillas ejemplo (aprobadas por Meta)
 
-3. **Plantillas ejemplo (aprobadas por Meta):**
-   - Nueva oportunidad detected: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
-   - Recordatorio: "SECOP Monitor: La oportunidad {id} vence en {dias} dias"
+- Nueva oportunidad detected: "SECOP Monitor: Nueva oportunidad de {entidad} para {objeto}"
+- Recordatorio: "SECOP Monitor: La oportunidad {id} vence en {dias} dias"
 
 ---
 
