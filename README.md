@@ -5,10 +5,10 @@ Sistema que detecta automaticamente oportunidades de contratacion publica en SEC
 ## Arquitectura
 
 ```
-Cloud Scheduler (3x/dia: 10:00, 15:00, 20:00 COT)
+GitHub Actions Cron (3x/dia: 10:00, 15:00, 20:00 COT)
         |
         v
-Cloud Run Job / Python Script
+Python Script (src/main.py)
         |
         +--> SECOP Source (datos.gov.co SODA API)
         |
