@@ -21,6 +21,20 @@
 
 ---
 
+## 🎯 Resumen de Decisiones Tomadas
+
+| Decisión | Estado |
+|---|---|
+| ✅ Departamentos del Caribe | 7 departamentos configurados |
+| ✅ Palabras clave | Dotación, uniformes, EPP + certificaciones |
+| ✅ Mínima cuantía + Selección Abreviada | Ambas modalidades incluidas |
+| ✅ Cron job 2:30 PM | Alineado con actualización SECOP |
+| ✅ Badges en email | Mujer Líder, Equidad de Género, PYME |
+| ✅ Sección explicativa en email | Texto descriptivo de ventajas |
+| ✅ Preferencia como ventaja | No requisito, sino puntos extras |
+
+---
+
 ## 📁 Archivos a Modificar
 
 ### 1. `config/client_config.json` - Configuración del Cliente
