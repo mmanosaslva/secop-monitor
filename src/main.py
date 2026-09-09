@@ -49,7 +49,9 @@ def main():
         skip_count = 0
         for process in matched:
             h = compute_hash(process)
-            is_new = save_process(conn, process, h)
+            certs = engine.detect_certifications(process)
+            process["certifications"] = certs
+            is_new = save_process(conn, process, h, certs)
             if is_new:
                 new_count += 1
                 new_ids.add(process["id"])
@@ -66,7 +68,8 @@ def main():
             for process in matched:
                 if process["id"] not in new_ids:
                     continue
-                ok, error_msg = emailer.send(process, client_email)
+                certs = process.get("certifications", {})
+                ok, error_msg = emailer.send(process, client_email, certs)
                 if ok:
                     mark_notified(conn, process["id"], "email", "sent")
                     sent += 1

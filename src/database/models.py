@@ -19,15 +19,17 @@ def compute_hash(process: Dict) -> str:
     return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
 
 
-def save_process(conn, process: Dict, content_hash: str) -> bool:
+def save_process(conn, process: Dict, content_hash: str, certifications: Dict = None) -> bool:
+    certifications = certifications or {}
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             INSERT INTO processes (id, entity_name, entity_nit, department, city,
                 name, description, status, phase, contract_type, modality,
-                base_price, publication_date, deadline, unspsc_code, url, content_hash)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                base_price, publication_date, deadline, unspsc_code, url, content_hash,
+                modalidad_seleccion, cuantia, favorece_mujer_lider, favorece_pyme, requiere_equidad_genero)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
             """,
             (
@@ -38,6 +40,10 @@ def save_process(conn, process: Dict, content_hash: str) -> bool:
                 process.get("base_price"), process.get("publication_date") or None,
                 process.get("deadline") or None, process.get("unspsc_code"),
                 process.get("url"), content_hash,
+                process.get("modality"), process.get("base_price"),
+                certifications.get("favorece_mujer_lider", False),
+                certifications.get("favorece_pyme", False),
+                certifications.get("requiere_equidad_genero", False),
             ),
         )
         inserted = cursor.rowcount > 0

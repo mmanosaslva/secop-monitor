@@ -2,9 +2,10 @@ name: SECOP Monitor
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # 10:00 COT (15:00 UTC)
-    - cron: '0 20 * * *'  # 15:00 COT (20:00 UTC)
-    - cron: '0 1 * * *'   # 20:00 COT (01:00 UTC)
+    - cron: '45 5 * * *'   # 00:45 COT (05:45 UTC) - nocturno
+    - cron: '0 15 * * *'   # 10:00 COT (15:00 UTC) - manana
+    - cron: '30 18 * * *'  # 13:30 COT (18:30 UTC) - post actualizacion
+    - cron: '0 1 * * *'    # 20:00 COT (01:00 UTC) - noche
   workflow_dispatch:
 
 jobs:

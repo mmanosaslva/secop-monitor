@@ -2,7 +2,8 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.database.models import compute_hash
+from unittest.mock import MagicMock, patch
+from src.database.models import compute_hash, save_process
 
 
 def test_compute_hash_deterministic():
@@ -40,3 +41,64 @@ def test_compute_hash_changes_with_data():
         "url": "",
     }
     assert compute_hash(process1) != compute_hash(process2)
+
+
+def test_save_process_new():
+    mock_cursor = MagicMock()
+    mock_cursor.rowcount = 1
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+
+    process = {
+        "id": "CO1.REQ.1234567",
+        "entity_name": "Test",
+        "entity_nit": "123",
+        "department": "Atlantico",
+        "city": "Barranquilla",
+        "name": "Test",
+        "description": "Test",
+        "status": "Publicado",
+        "phase": "Presentacion",
+        "contract_type": "Suministros",
+        "modality": "Mínima cuantía",
+        "base_price": 50000,
+        "publication_date": "2026-01-01",
+        "deadline": "2026-12-31",
+        "unspsc_code": "V1.53102700",
+        "url": "http://test.com",
+    }
+    certs = {"favorece_mujer_lider": False, "favorece_pyme": True, "requiere_equidad_genero": False}
+
+    result = save_process(mock_conn, process, "hash123", certs)
+    assert result is True
+    mock_cursor.execute.assert_called_once()
+    mock_conn.commit.assert_called_once()
+
+
+def test_save_process_existing():
+    mock_cursor = MagicMock()
+    mock_cursor.rowcount = 0
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+
+    process = {
+        "id": "CO1.REQ.1234567",
+        "entity_name": "Test",
+        "entity_nit": "123",
+        "department": "Atlantico",
+        "city": "Barranquilla",
+        "name": "Test",
+        "description": "Test",
+        "status": "Publicado",
+        "phase": "Presentacion",
+        "contract_type": "Suministros",
+        "modality": "Mínima cuantía",
+        "base_price": 50000,
+        "publication_date": "2026-01-01",
+        "deadline": "2026-12-31",
+        "unspsc_code": "V1.53102700",
+        "url": "http://test.com",
+    }
+
+    result = save_process(mock_conn, process, "hash123")
+    assert result is False

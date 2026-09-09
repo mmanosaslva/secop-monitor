@@ -22,6 +22,7 @@ class SecopDataSource(DataSource):
         phase: Optional[List[str]] = None,
         opening: str = "Abierto",
         adjudicated: str = "No",
+        modality: Optional[str] = None,
     ) -> str:
         dept_list = ",".join(f"'{d}'" for d in departments)
         phase_list = ",".join(f"'{p}'" for p in (phase or ["Presentacion de oferta", "Fase de ofertas"]))
@@ -34,6 +35,8 @@ class SecopDataSource(DataSource):
             f"estado_de_apertura_del_proceso='{opening}'",
             f"adjudicado='{adjudicated}'",
         ]
+        if modality:
+            parts.append(f"modalidad_de_contratacion='{modality}'")
         return " AND ".join(parts)
 
     def _normalize_process(self, raw: Dict) -> Dict:
@@ -60,8 +63,10 @@ class SecopDataSource(DataSource):
         self,
         departments: List[str],
         limit: int = 5000,
+        max_results: Optional[int] = None,
+        modality: Optional[str] = None,
     ) -> List[Dict]:
-        where = self._build_where_clause(departments)
+        where = self._build_where_clause(departments, modality=modality)
         all_processes = []
         offset = 0
 
@@ -91,6 +96,10 @@ class SecopDataSource(DataSource):
                     all_processes.append(normalized)
 
             logger.info("secop_page_fetched", count=len(raw_data), offset=offset)
+
+            if max_results and len(all_processes) >= max_results:
+                all_processes = all_processes[:max_results]
+                break
 
             if len(raw_data) < limit:
                 break

@@ -1,12 +1,11 @@
 {
   "name": "Cliente Textil Caribe",
   "email": "meriyei.manfer@gmail.com",
-  "phone_whatsapp": "+573001234567",
   "departments": [
-    "Atlantico",
-    "Bolivar",
+    "Atlántico",
+    "Bolívar",
     "Magdalena",
-    "Cordoba",
+    "Córdoba",
     "Sucre",
     "La Guajira",
     "Cesar"
@@ -23,7 +22,13 @@
     "camiseta",
     "pantalon",
     "chaqueta",
-    "calzado"
+    "calzado",
+    "dotacion",
+    "dotación",
+    "epp",
+    "elementos de proteccion personal",
+    "proteccion personal",
+    "equipo de proteccion"
   ],
   "unspsc_codes": [
     "V1.53102700",
@@ -40,5 +45,16 @@
     "V1.53103000",
     "V1.53110000",
     "V1.53111600"
-  ]
+  ],
+  "certification_keywords": [
+    "equidad de genero",
+    "equidad de género",
+    "mujer lider",
+    "mujer líder",
+    "empresa de mujeres",
+    "emprendimiento femenino",
+    "genero",
+    "género"
+  ],
+  "modalidad_keywords": ["mínima cuantía"]
 }

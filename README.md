@@ -5,18 +5,18 @@ Sistema de monitoreo automatico de oportunidades de contratacion publica en SECO
 ## Arquitectura
 
 ```
-GitHub Actions (3x/dia: 10:00, 15:00, 20:00 COT)
+GitHub Actions (4x/dia: 00:45, 10:00, 13:30, 20:00 COT)
         |
         v
 Python Script (src/main.py)
         |
         +--> SECOP Source (datos.gov.co SODA API)
         |
-        +--> Filter Engine (keywords + UNSPSC + ubicacion)
+        +--> Filter Engine (modalidad + keywords + UNSPSC + certificaciones)
         |
         +--> PostgreSQL (Neon) -- persistencia
         |
-        +--> Email Notification (Brevo API)
+        +--> Email Notification (Brevo API) + badges
 ```
 
 ## Stack
@@ -62,7 +62,7 @@ Python Script (src/main.py)
 ### GitHub Actions (Cron)
 
 - **Plan:** Free (2000 min/mes para repos privados)
-- **Ejecucion:** 3 veces al dia = ~15 min/mes
+- **Ejecucion:** 4 veces al dia = ~20 min/mes
 - **Limitos:** 1000 ejecuciones/dia, 6 horas max por ejecucion
 
 ### WhatsApp (Funcionalidad Futura)
@@ -128,9 +128,10 @@ El cron esta configurado en `.github/workflows/secop.yml`:
 
 ```yaml
 schedule:
-  - cron: '0 15 * * *'  # 10:00 AM COT
-  - cron: '0 20 * * *'  # 3:00 PM COT
-  - cron: '0 1 * * *'   # 8:00 PM COT
+  - cron: '45 5 * * *'   # 00:45 COT (05:45 UTC) - nocturno
+  - cron: '0 15 * * *'   # 10:00 COT (15:00 UTC) - manana
+  - cron: '30 18 * * *'  # 13:30 COT (18:30 UTC) - post actualizacion
+  - cron: '0 1 * * *'    # 20:00 COT (01:00 UTC) - noche
 ```
 
 **Ejecucion manual:**
@@ -165,10 +166,11 @@ Archivo `config/client_config.json`:
 {
   "name": "Cliente Textil Caribe",
   "email": "meriyei.manfer@gmail.com",
-  "phone_whatsapp": "+573001234567",
   "departments": ["Atlantico", "Bolivar", "Magdalena", "Cordoba", "Sucre", "La Guajira", "Cesar"],
-  "keywords": ["uniforme", "uniformes", "ropa deportiva", "vestuario", "confeccion", "prendas", "textil", "sportswear", "camiseta", "pantalon", "chaqueta", "calzado"],
-  "unspsc_codes": ["V1.53102700", "V1.53102710", "V1.53102715", "V1.53102720", "V1.53102900", "V1.53102901", "V1.53102902", "V1.53100000", "V1.53101500", "V1.53101600", "V1.53101800", "V1.53103000", "V1.53110000", "V1.53111600"]
+  "keywords": ["uniforme", "uniformes", "ropa deportiva", "vestuario", "confeccion", "prendas", "textil", "sportswear", "camiseta", "pantalon", "chaqueta", "calzado", "dotacion", "dotación", "epp", "elementos de proteccion personal", "proteccion personal", "equipo de proteccion"],
+  "unspsc_codes": ["V1.53102700", "V1.53102710", "V1.53102715", "V1.53102720", "V1.53102900", "V1.53102901", "V1.53102902", "V1.53100000", "V1.53101500", "V1.53101600", "V1.53101800", "V1.53103000", "V1.53110000", "V1.53111600"],
+  "certification_keywords": ["equidad de genero", "equidad de género", "mujer lider", "mujer líder", "empresa de mujeres", "emprendimiento femenino", "genero", "género"],
+  "modalidad_keywords": ["mínima cuantía"]
 }
 ```
 
@@ -176,9 +178,20 @@ Archivo `config/client_config.json`:
 
 Un proceso se notifica si:
 1. Su departamento esta en la lista, Y
-2. Cumple AL MENOS UNO:
+2. Su modalidad contiene "minima cuantía" (normalizado, sin tildes), Y
+3. Cumple AL MENOS UNO:
    - Su codigo UNSPSC esta en la lista
    - Su nombre o descripcion contiene una keyword
+   - Su nombre o descripcion contiene una keyword de certificacion
+
+### Certificaciones
+
+El sistema detecta certificaciones en el proceso y genera badges informativos:
+- **Mujer Lider**: "mujer lider", "empresa de mujeres"
+- **Equidad de Genero**: "equidad de genero", "genero"
+- **PYME**: "pyme", "pequeña empresa"
+
+Las certificaciones NO son requisito, solo ventaja competitiva.
 
 ---
 
@@ -265,10 +278,8 @@ Brevo free tier usa dominio compartido `brevosend.com`. Gmail ve ese dominio com
 2. **Multi-tenant** - Multiples clientes con diferentes filtros
 3. **Dashboard** - Panel web para gestionar filtros y ver historial
 4. **Deteccion de cambios** - Notificar actualizaciones a procesos existentes
-5. **Filtro por valor** - Excluir procesos por monto
-6. **Filtro por entidad** - Incluir/excluir entidades especificas
-7. **Filtro por modalidad** - Licitacion publica, seleccion abreviada, etc.
-8. **Filtro por fecha limite** - Excluir procesos vencidos
+5. **Filtro por entidad** - Incluir/excluir entidades especificas
+6. **Filtro por fecha limite** - Excluir procesos vencidos
 
 ---
 
@@ -283,3 +294,33 @@ Brevo free tier usa dominio compartido `brevosend.com`. Gmail ve ese dominio com
 | `email_failed status=401` | API key incorrecta | Verificar `BREVO_API_KEY` |
 | `email_failed status=400` | Email no verificado | Verificar `SENDER_EMAIL` en Brevo |
 | GitHub Actions no ejecuta | Cron puede tardar 15 min | Ejecutar manualmente via "Run workflow" |
+
+---
+
+## Pruebas
+
+```bash
+# Ejecutar todas las pruebas
+pytest tests/ -v
+
+# Solo unitarios (rápido, sin API)
+pytest tests/test_filters.py tests/test_notification.py tests/test_database.py tests/test_secop_source.py -v
+
+# Solo integración (requiere API SECOP)
+pytest tests/test_integration.py -v
+
+# Solo aceptación
+pytest tests/test_acceptance.py -v
+```
+
+**Estado actual**: 46/46 tests pasando
+
+| Categoría | Tests | Archivo |
+|---|---|---|
+| Filtros | 17 | `test_filters.py` |
+| Notificaciones | 10 | `test_notification.py` |
+| Base de datos | 4 | `test_database.py` |
+| SECOP source | 2 | `test_secop_source.py` |
+| Integración API | 3 | `test_integration.py` |
+| Integración main.py | 2 | `test_main_integration.py` |
+| Aceptación | 8 | `test_acceptance.py` |

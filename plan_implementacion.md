@@ -3,7 +3,7 @@
 ## 🎯 Resumen Ejecutivo
 
 **Objetivo**: Adaptar el MVP existente para cumplir con los requisitos del cliente:
-- Foco en región Caribe, **solo mínima cuantía** (≤ $70,036,200 COP = 40 SMLMV 2026)
+- Foco en región Caribe, **solo mínima cuantía SECOP** (filtro por `modalidad_de_contratacion` normalizado)
 - Productos: dotación, uniformes, elementos de protección personal (EPP)
 - Certificaciones: mujer líder + equidad de género (ventaja competitiva)
 - Stack 100% free
@@ -23,8 +23,8 @@
 **Campos SECOP II relevantes**:
 | Campo API | Descripción | Uso |
 |---|---|---|
-| `modalidad_de_contratacion` | Modalidad de contratación | Filtro mínima cuantía (normalizar texto) |
-| `precio_base` | Precio proyectado (COP) | Filtro cuantía ≤ $70,036,200 |
+| `modalidad_de_contratacion` | Modalidad de contratación | Filtro mínima cuantía (match parcial normalizado) |
+| `precio_base` | Precio proyectado (COP) | Referencia para cliente (visible en email) |
 | `departamento_entidad` | Departamento entidad | Filtro región Caribe |
 | `nombre_del_procedimiento` | Nombre proceso | Filtro keywords + certificaciones |
 | `descripci_n_del_procedimiento` | Descripción proceso | Filtro keywords + certificaciones |
@@ -38,9 +38,8 @@
 |---|---|
 | ✅ Departamentos del Caribe | 7 departamentos configurados |
 | ✅ Palabras clave | Dotación, uniformes, EPP + certificaciones |
-| ✅ Solo Mínima Cuantía | Sin Selección Abreviada (cliente decide) |
-| ✅ Tope cuantía | $70,036,200 COP (40 SMLMV 2026) |
-| ✅ Normalización modalidad | SECOP inconsistente (tildes, mayúsculas) → normalizar texto |
+| ✅ Solo Mínima Cuantía SECOP | Filtro por `modalidad_de_contratacion` normalizado, sin selección abreviada ni contratación directa |
+| ✅ Normalización modalidad | SECOP inconsistente (tildes, mayúsculas) → normalizar texto antes comparar |
 | ✅ Cron job 4 ciclos | 00:45, 10:00, 13:30, 20:00 COT |
 | ✅ Badges en email | Mujer Líder, Equidad de Género, PYME |
 | ✅ Sección explicativa en email | Texto descriptivo de ventajas |
@@ -56,8 +55,7 @@
 - Agregar departamentos del Caribe (7 departamentos)
 - Agregar palabras clave: dotación, EPP, protección personal
 - Agregar palabras clave de certificaciones
-- Solo modalidad: Mínima Cuantía (sin Selección Abreviada)
-- Agregar max_cuantia: $70,036,200 COP (40 SMLMV 2026)
+- Solo modalidad: Mínima Cuantía SECOP (`modalidad_keywords` para match parcial)
 
 **Estructura final**:
 ```json
@@ -88,12 +86,11 @@
     "empresa de mujeres", "emprendimiento femenino",
     "genero", "género"
   ],
-  "modalidad": "minima cuantia",
-  "max_cuantia": 70036200
+  "modalidad_keywords": ["mínima cuantía"]
 }
 ```
 
-**Nota**: `modalidad` es string (no array) porque cliente solo participa en mínima cuantía. `max_cuantia` en COP.
+**Nota**: `modalidad_keywords` usa match parcial flexible contra `modalidad_de_contratacion` normalizado (SECOP usa variaciones: "Mínima cuantía", "mínima cuantía", "MINIMA CUANTIA", etc.). Filtro maneja tildes y mayúsculas con `unicodedata.normalize('NFD')`.
 
 ---
 
@@ -101,7 +98,7 @@
 
 **Cambios**:
 - Agregar campos a tabla `processes`: modalidad_seleccion, cuantia, favorece_mujer_lider, favorece_pyme, requiere_equidad_genero
-- Agregar campos a tabla `client_config`: certification_keywords, modalidad, max_cuantia
+- Agregar campos a tabla `client_config`: certification_keywords, modalidad_keywords
 
 **Migración SQL**:
 ```sql
@@ -114,8 +111,7 @@ ALTER TABLE processes ADD COLUMN IF NOT EXISTS requiere_equidad_genero BOOLEAN D
 
 -- Campos nuevos en client_config
 ALTER TABLE client_config ADD COLUMN IF NOT EXISTS certification_keywords JSONB DEFAULT '[]';
-ALTER TABLE client_config ADD COLUMN IF NOT EXISTS modalidad TEXT DEFAULT 'minima cuantia';
-ALTER TABLE client_config ADD COLUMN IF NOT EXISTS max_cuantia NUMERIC DEFAULT 70036200;
+ALTER TABLE client_config ADD COLUMN IF NOT EXISTS modalidad_keywords JSONB DEFAULT '[]';
 ```
 
 ---
@@ -123,8 +119,7 @@ ALTER TABLE client_config ADD COLUMN IF NOT EXISTS max_cuantia NUMERIC DEFAULT 7
 ### 3. `src/filters/engine.py` - Motor de Filtros
 
 **Cambios**:
-- Agregar filtro por modalidad (normalizado, sin tildes, lowercase)
-- Agregar filtro por cuantía (precio_base ≤ max_cuantia)
+- Agregar filtro por modalidad (normalizado, sin tildes, lowercase, match parcial)
 - Agregar detección de certificaciones en nombre/descripción
 - Agregar palabras clave de certificación como filtro adicional
 
@@ -140,8 +135,7 @@ class FilterEngine:
         self.keywords = [kw.upper() for kw in config.get("keywords", [])]
         self.unspsc_codes = config.get("unspsc_codes", [])
         self.certification_keywords = [kw.upper() for kw in config.get("certification_keywords", [])]
-        self.modalidad = config.get("modalidad", "minima cuantia")  # string, no array
-        self.max_cuantia = config.get("max_cuantia", 70036200)  # 40 SMLMV 2026
+        self.modalidad_keywords = [self.normalize_text(kw) for kw in config.get("modalidad_keywords", [])]
 
     def normalize_text(self, text: str) -> str:
         """Quita tildes, lowercase, espacios extra"""
@@ -154,18 +148,13 @@ class FilterEngine:
         if process.get("department") not in self.departments:
             return False
 
-        # Filtro 2: Modalidad (normalizada)
+        # Filtro 2: Modalidad (match parcial normalizado)
         modality_raw = process.get("modality", "")
         modality_normalized = self.normalize_text(modality_raw)
-        if self.modalidad not in modality_normalized:
+        if not any(kw in modality_normalized for kw in self.modalidad_keywords):
             return False
 
-        # Filtro 3: Cuantía (precio_base ≤ max_cuantia)
-        precio_base = process.get("base_price", 0)
-        if precio_base and precio_base > self.max_cuantia:
-            return False
-
-        # Filtro 4: Código UNSPSC
+        # Filtro 3: Código UNSPSC
         if process.get("unspsc_code") in self.unspsc_codes:
             return True
 
@@ -305,11 +294,10 @@ src/main.py
          ├──► src/filters/engine.py
          │       │
          │       ├── Filtro 1: Departamento (7 del Caribe)
-         │       ├── Filtro 2: Modalidad (normalizada: "minima cuantia")
-         │       ├── Filtro 3: Cuantía (precio_base ≤ $70,036,200)
-         │       ├── Filtro 4: Código UNSPSC
-         │       ├── Filtro 5: Palabras clave (dotación, uniformes, EPP)
-         │       └── Filtro 6: Certificaciones (bonus)
+         │       ├── Filtro 2: Modalidad (match parcial normalizado)
+         │       ├── Filtro 3: Código UNSPSC
+         │       ├── Filtro 4: Palabras clave (dotación, uniformes, EPP)
+         │       └── Filtro 5: Certificaciones (bonus)
          │
          ├──► src/database/models.py
          │       │
@@ -344,13 +332,13 @@ src/main.py
 
 ## ✅ Criterios de Aceptación
 
-1. **Filtros**: El sistema filtra por departamentos del Caribe, modalidad mínima cuantía (normalizada), cuantía ≤ $70,036,200 COP, palabras clave de producto y certificaciones
+1. **Filtros**: El sistema filtra por departamentos del Caribe, modalidad mínima cuantía SECOP (match parcial normalizado contra `modalidad_keywords`), palabras clave de producto y certificaciones
 2. **Certificaciones**: El sistema detecta "mujer líder", "equidad de género" y "PYME" en nombre/descripción del proceso
 3. **Email**: Los emails incluyen badges visuales y sección explicativa de ventaja competitiva
 4. **Cron job**: El sistema ejecuta a las 00:45, 10:00, 1:30 PM y 8:00 PM COT (4 ciclos)
 5. **BD**: Los procesos se guardan con campos de certificaciones
 6. **Free tier**: Todo funciona sin costo (GitHub Actions, Neon, Brevo)
-7. **Normalización**: Filtro modalidad maneja tildes, mayúsculas, variaciones de SECOP
+7. **Normalización**: Filtro modalidad maneja tildes, mayúsculas, variaciones de SECOP usando `unicodedata.normalize('NFD')` + match parcial
 
 ---
 
@@ -374,15 +362,41 @@ tail -f logs/secop.log
 
 ## 📝 Notas Adicionales
 
-- **Mínima cuantía**: Modalidad para contratos ≤ 40 SMLMV ($70,036,200 COP en 2026). Proceso ágil, menos competencia. Cliente solo participa en esta modalidad.
+- **Mínima cuantía SECOP**: Modalidad para contratos ≤ 10% de la menor cuantía de cada entidad pública. Filtro usa `modalidad_de_contratacion` normalizado con match parcial (ej: "Mínima cuantía"). NO se filtra por precio base.
 - **Normalización SECOP**: Campo `modalidad_de_contratacion` viene inconsistente (tildes, mayúsculas). Usar `unicodedata.normalize('NFD')` para quitar tildes + lowercase antes de comparar.
 - **Certificaciones**: La clienta indicó que sus certificaciones "les dan preferencia" (no son requisitos excluyentes). Se implementan como badges informativos.
 - **Actualización SECOP**: Los datos se actualizan entre 12:00-14:00 COT. El cron job a las 1:30 PM captura esta actualización.
 - **Capacidad cliente**: 3,500 prensas/mes, facturación $35-47M COP/mes. Encaja en contratos de mínima cuantía.
-- **API SECOP**: Dataset `p6dx-8zbt` tiene57 campos. Usamos ~16 relevantes. Campo `precio_base` = cuantía del contrato.
+- **API SECOP**: Dataset `p6dx-8zbt` tiene57 campos. Usamos ~16 relevantes. Campo `precio_base` = cuantía del contrato. Campo `modalidad_de_contratacion` = modalidad de contratación (valores: "Mínima cuantía", "Contratación Directa", "Selección Abreviada", etc.).
 
 ---
 
-**Última actualización**: 2026-09-07
+## 📊 Estado de Pruebas (2026-09-08)
+
+| Categoría | Tests | Estado |
+|---|---|---|
+| Unitarios - Filtros | 17 | ✅ Todos pasan |
+| Unitarios - Notificaciones | 10 | ✅ Todos pasan |
+| Unitarios - Base de datos | 4 | ✅ Todos pasan |
+| Unitarios - SECOP source | 2 | ✅ Todos pasan |
+| Integración - API real | 3 | ✅ Todos pasan |
+| Integración - main.py | 2 | ✅ Todos pasan |
+| Aceptación | 8 | ✅ Todos pasan |
+| **Total** | **46** | **✅ 46/46** |
+
+**Archivos de test**:
+- `tests/test_filters.py` — 17 tests unitarios del motor de filtros
+- `tests/test_notification.py` — 10 tests del email y badges
+- `tests/test_database.py` — 4 tests de persistencia
+- `tests/test_secop_source.py` — 2 tests del fetcher API
+- `tests/test_integration.py` — 3 tests con API real de SECOP
+- `tests/test_main_integration.py` — 2 tests del pipeline completo
+- `tests/test_acceptance.py` — 8 tests de aceptación (config, matching, rechazo modalidad, certificaciones)
+
+**Corrección API SECOP**: `fetch_processes` ahora acepta `max_results` para evitar paginación infinita y `modality` para filtrar en WHERE clause directamente.
+
+---
+
+**Última actualización**: 2026-09-08
 **Autor**: Equipo de desarrollo
-**Estado**: Pendiente de implementación
+**Estado**: Implementación completa, 46/46 tests pasando

@@ -33,7 +33,12 @@ def init_db(conn):
             url TEXT,
             detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             notified BOOLEAN DEFAULT FALSE,
-            content_hash TEXT
+            content_hash TEXT,
+            modalidad_seleccion TEXT,
+            cuantia NUMERIC,
+            favorece_mujer_lider BOOLEAN DEFAULT FALSE,
+            favorece_pyme BOOLEAN DEFAULT FALSE,
+            requiere_equidad_genero BOOLEAN DEFAULT FALSE
         );
     """)
     cursor.execute("""
@@ -70,6 +75,8 @@ def init_db(conn):
             departments JSONB NOT NULL DEFAULT '[]',
             keywords JSONB NOT NULL DEFAULT '[]',
             unspsc_codes JSONB NOT NULL DEFAULT '[]',
+            certification_keywords JSONB DEFAULT '[]',
+            modalidad_keywords JSONB DEFAULT '[]',
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
