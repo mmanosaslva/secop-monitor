@@ -38,7 +38,7 @@ def main():
         departments = config.get("departments", [])
 
         source = SecopDataSource(app_token=SECOP_APP_TOKEN)
-        processes = source.fetch_processes(departments=departments)
+        processes = source.fetch_processes(departments=departments, modality="Mínima cuantía")
         logger.info("secop_fetched", count=len(processes))
 
         engine = FilterEngine(config)
