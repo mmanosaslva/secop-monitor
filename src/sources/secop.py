@@ -25,7 +25,7 @@ class SecopDataSource(DataSource):
         modality: Optional[str] = None,
     ) -> str:
         dept_list = ",".join(f"'{d}'" for d in departments)
-        phase_list = ",".join(f"'{p}'" for p in (phase or ["Presentacion de oferta", "Fase de ofertas"]))
+        phase_list = ",".join(f"'{p}'" for p in (phase or ["Presentación de oferta", "Fase de ofertas"]))
 
         parts = [
             f"departamento_entidad IN ({dept_list})",
