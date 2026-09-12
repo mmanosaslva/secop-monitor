@@ -91,7 +91,7 @@ class EmailNotification(NotificationChannel):
             {ventaja}
             <div style="margin-top:25px;">
                 <a href="{process.get('url', '#')}"
-                   style="display:inline-block;padding: 18px 40px;background:#ffc600;color:#1a1a1a;text-decoration:none;border-radius:6px;font-weight:bold;font-size:18px;">
+                   style="display:inline-block;padding: 10px 20px;background:#ffc600;color:#1a1a1a;text-decoration:none;border-radius:6px;font-weight:bold;font-size:18px;">
                     Ver Proceso en SECOP II
                 </a>
             </div>
