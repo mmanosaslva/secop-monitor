@@ -24,7 +24,6 @@
     "chaqueta",
     "calzado",
     "dotacion",
-    "dotación",
     "epp",
     "elementos de proteccion personal",
     "proteccion personal",
@@ -48,13 +47,10 @@
   ],
   "certification_keywords": [
     "equidad de genero",
-    "equidad de género",
     "mujer lider",
-    "mujer líder",
     "empresa de mujeres",
     "emprendimiento femenino",
-    "genero",
-    "género"
+    "genero"
   ],
   "modalidad_keywords": ["mínima cuantía"]
 }

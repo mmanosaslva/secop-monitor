@@ -8,10 +8,10 @@ logger = structlog.get_logger()
 
 class FilterEngine:
     def __init__(self, config: Dict):
-        self.departments = config.get("departments", [])
-        self.keywords = [kw.upper() for kw in config.get("keywords", [])]
+        self.departments = [self.normalize_text(d) for d in config.get("departments", [])]
+        self.keywords = [self.normalize_text(kw) for kw in config.get("keywords", [])]
         self.unspsc_codes = config.get("unspsc_codes", [])
-        self.certification_keywords = [kw.upper() for kw in config.get("certification_keywords", [])]
+        self.certification_keywords = [self.normalize_text(kw) for kw in config.get("certification_keywords", [])]
         self.modalidad_keywords = [self.normalize_text(kw) for kw in config.get("modalidad_keywords", [])]
 
     def normalize_text(self, text: str) -> str:
@@ -20,7 +20,8 @@ class FilterEngine:
         return text.lower().strip()
 
     def matches(self, process: Dict) -> bool:
-        if process.get("department") not in self.departments:
+        department = self.normalize_text(process.get("department", ""))
+        if department not in self.departments:
             return False
 
         modality_raw = process.get("modality", "")
@@ -32,30 +33,30 @@ class FilterEngine:
             logger.info("match_unspsc", process_id=process["id"], code=process.get("unspsc_code"))
             return True
 
-        name_upper = process.get("name", "").upper()
-        desc_upper = process.get("description", "").upper()
+        name_normalized = self.normalize_text(process.get("name", ""))
+        desc_normalized = self.normalize_text(process.get("description", ""))
 
         for kw in self.keywords:
-            if kw in name_upper or kw in desc_upper:
+            if kw in name_normalized or kw in desc_normalized:
                 logger.info("match_keyword", process_id=process["id"], keyword=kw)
                 return True
 
         for kw in self.certification_keywords:
-            if kw in name_upper or kw in desc_upper:
+            if kw in name_normalized or kw in desc_normalized:
                 logger.info("match_certification", process_id=process["id"], keyword=kw)
                 return True
 
         return False
 
     def detect_certifications(self, process: Dict) -> Dict:
-        name_upper = process.get("name", "").upper()
-        desc_upper = process.get("description", "").upper()
-        text = f"{name_upper} {desc_upper}"
+        name_normalized = self.normalize_text(process.get("name", ""))
+        desc_normalized = self.normalize_text(process.get("description", ""))
+        text = f"{name_normalized} {desc_normalized}"
 
         return {
-            "favorece_mujer_lider": any(kw in text for kw in ["MUJER LIDER", "MUJER LÍDER", "EMPRESA DE MUJERES"]),
-            "favorece_pyme": any(kw in text for kw in ["PYME", "PEQUEÑA EMPRESA", "MICROEMPRESA"]),
-            "requiere_equidad_genero": any(kw in text for kw in ["EQUIDAD DE GENERO", "EQUIDAD DE GÉNERO", "GENERO", "GÉNERO"]),
+            "favorece_mujer_lider": any(kw in text for kw in ["mujer lider", "empresa de mujeres"]),
+            "favorece_pyme": any(kw in text for kw in ["pyme", "pequeña empresa", "microempresa"]),
+            "requiere_equidad_genero": any(kw in text for kw in ["equidad de genero", "genero"]),
         }
 
     def filter_batch(self, processes: List[Dict]) -> List[Dict]:

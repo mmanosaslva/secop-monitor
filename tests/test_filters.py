@@ -162,3 +162,54 @@ def test_no_match_empty_modalidad_keywords():
     engine = FilterEngine(config)
     p = make_process()
     assert engine.matches(p) is False
+
+
+def test_keyword_with_accents():
+    config = make_config(keywords=["dotacion"], unspsc_codes=[])
+    engine = FilterEngine(config)
+    p = make_process(name="Dotación de uniformes")
+    assert engine.matches(p) is True
+
+
+def test_keyword_case_insensitive():
+    config = make_config(keywords=["uniforme"], unspsc_codes=[])
+    engine = FilterEngine(config)
+    p = make_process(name="UNIFORMES Deportivos")
+    assert engine.matches(p) is True
+
+
+def test_department_with_accents():
+    config = make_config(departments=["atlantico"], keywords=["uniforme"], unspsc_codes=[])
+    engine = FilterEngine(config)
+    p = make_process(department="Atlántico")
+    assert engine.matches(p) is True
+
+
+def test_department_case_insensitive():
+    config = make_config(departments=["ATLANTICO"], keywords=["uniforme"], unspsc_codes=[])
+    engine = FilterEngine(config)
+    p = make_process(department="atlantico")
+    assert engine.matches(p) is True
+
+
+def test_certification_with_accents():
+    config = make_config(keywords=[], unspsc_codes=[], certification_keywords=["mujer lider"])
+    engine = FilterEngine(config)
+    p = make_process(name="Proceso Mujer Líder")
+    assert engine.matches(p) is True
+
+
+def test_detect_certification_with_accents():
+    config = make_config()
+    engine = FilterEngine(config)
+    p = make_process(name="Mujer Líder con Equidad de Género")
+    certs = engine.detect_certifications(p)
+    assert certs["favorece_mujer_lider"] is True
+    assert certs["requiere_equidad_genero"] is True
+
+
+def test_mixed_accents_and_case():
+    config = make_config(keywords=["vestuario"], unspsc_codes=[])
+    engine = FilterEngine(config)
+    p = make_process(name="VESTUARIO Corporativo")
+    assert engine.matches(p) is True
