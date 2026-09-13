@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECOP Monitor - Servicio Nacional de Aprendizaje SENA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Institucional SENA -->
+    <header class="sena-header">
+        <div class="header-container">
+            <div class="brand-group">
+                <div class="sena-logo-badge">
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="22" r="14" fill="#39A900"/>
+                        <path d="M50 42 C30 42, 15 55, 15 80 L32 80 C32 65, 40 56, 50 56 C60 56, 68 65, 68 80 L85 80 C85 55, 70 42, 50 42 Z" fill="#39A900"/>
+                        <circle cx="50" cy="74" r="7" fill="#00324D"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="institution-name">SENA • Servicio Nacional de Aprendizaje</span>
+                    <h1 class="app-title">SECOP II Monitor <span class="tag-v2">v2.0 Enterprise</span></h1>
+                </div>
+            </div>
+            <div class="system-status-pills">
+                <div class="status-pill active" id="secop-status">
+                    <span class="status-dot"></span>
+                    <span class="status-label">SECOP II API: Conectado</span>
+                </div>
+                <div class="status-pill active" id="db-status">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Neon DB: Operativo</span>
+                </div>
+                <div class="status-pill cron" id="cron-status">
+                    <span class="status-icon">⏱️</span>
+                    <span class="status-label">Cron: 4x/Día</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs-bar">
+        <div class="tabs-container">
+            <button class="nav-tab active" data-tab="dashboard">
+                <span class="tab-icon">📊</span> Panel de Métricas
+            </button>
+            <button class="nav-tab" data-tab="architecture">
+                <span class="tab-icon">🧠</span> ¿Cómo Funciona por Dentro?
+            </button>
+            <button class="nav-tab" data-tab="secop-live">
+                <span class="tab-icon">🌐</span> Monitoreo en Vivo (SECOP II)
+            </button>
+            <button class="nav-tab" data-tab="simulator">
+                <span class="tab-icon">⚡</span> Simulador del Motor
+            </button>
+            <button class="nav-tab" data-tab="config">
+                <span class="tab-icon">⚙️</span> Configuración del Cliente
+            </button>
+            <button class="nav-tab" data-tab="email-preview">
+                <span class="tab-icon">📧</span> Notificación Brevo
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="app-main">
+        
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content active">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Resumen General del Monitoreo</h2>
+                    <p>Estado en tiempo real de la captura de oportunidades de contratación pública en la región Caribe.</p>
+                </div>
+                <button class="btn-sena-action" id="btn-run-manual-sync">
+                    <span>🔄</span> Ejecutar Sincronización Manual
+                </button>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card sena-accent">
+                    <div class="kpi-icon">🔎</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Procesos Analizados Hoy</span>
+                        <span class="kpi-value" id="kpi-analyzed">1,420</span>
+                        <span class="kpi-subtext">Consultados en datos.gov.co</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card sena-green">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Coincidencias Coincidentes</span>
+                        <span class="kpi-value" id="kpi-matched">18</span>
+                        <span class="kpi-subtext">Cumplen criterios de filtro</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card sena-blue">
+                    <div class="kpi-icon">📩</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Notificaciones Enviadas</span>
+                        <span class="kpi-value" id="kpi-notified">18</span>
+                        <span class="kpi-subtext">Vía Brevo API (Stealth Off)</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card sena-purple">
+                    <div class="kpi-icon">🏅</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Con Ventaja Competitiva</span>
+                        <span class="kpi-value" id="kpi-advantages">6</span>
+                        <span class="kpi-subtext">Mujer Líder / PYME / Equidad</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Split Row -->
+            <div class="dash-split-row">
+                <!-- Current Client Overview Card -->
+                <div class="glass-card flex-1">
+                    <div class="card-header-sena">
+                        <h3>🏢 Perfil de Monitoreo Activo</h3>
+                        <span class="badge-sena-outline">client_config.json</span>
+                    </div>
+                    <div class="client-profile-details" id="dashboard-client-info">
+                        <div class="detail-row">
+                            <span class="detail-label">Cliente:</span>
+                            <span class="detail-val highlight" id="dash-client-name">Cliente Textil Caribe</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Correo Destino:</span>
+                            <span class="detail-val" id="dash-client-email">cliente@email.com</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Departamentos (7):</span>
+                            <div class="tags-container" id="dash-client-depts">
+                                <span class="tag-dept">Atlántico</span>
+                                <span class="tag-dept">Bolívar</span>
+                                <span class="tag-dept">Magdalena</span>
+                                <span class="tag-dept">Córdoba</span>
+                                <span class="tag-dept">Sucre</span>
+                                <span class="tag-dept">La Guajira</span>
+                                <span class="tag-dept">Cesar</span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Palabras Clave:</span>
+                            <div class="tags-container" id="dash-client-keywords">
+                                <span class="tag-kw">uniforme</span>
+                                <span class="tag-kw">ropa deportiva</span>
+                                <span class="tag-kw">vestuario</span>
+                                <span class="tag-kw">calzado</span>
+                                <span class="tag-kw">dotacion</span>
+                                <span class="tag-kw">textil</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Timeline -->
+                <div class="glass-card flex-1">
+                    <div class="card-header-sena">
+                        <h3>📜 Registro de Ejecuciones del Job</h3>
+                        <span class="badge-live">Live Logs</span>
+                    </div>
+                    <div class="job-runs-list" id="job-runs-timeline">
+                        <div class="timeline-item success">
+                            <div class="time-mark">Hoy 20:00 COT</div>
+                            <div class="timeline-content">
+                                <strong>Job #104 Completado Exitosamente</strong>
+                                <p>Procesos escaneados: 350 | Coincidencias: 4 | Emails: 4</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item success">
+                            <div class="time-mark">Hoy 13:30 COT</div>
+                            <div class="timeline-content">
+                                <strong>Job #103 Completado Exitosamente</strong>
+                                <p>Procesos escaneados: 410 | Coincidencias: 5 | Emails: 5</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item success">
+                            <div class="time-mark">Hoy 10:00 COT</div>
+                            <div class="timeline-content">
+                                <strong>Job #102 Completado Exitosamente</strong>
+                                <p>Procesos escaneados: 380 | Coincidencias: 6 | Emails: 6</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ARQUITECTURA & CÓMO FUNCIONA POR DENTRO -->
+        <section id="tab-architecture" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>¿Cómo Funciona por Dentro SECOP Monitor?</h2>
+                    <p>Explicación detallada de la arquitectura de software, el flujo de procesamiento de datos y la inteligencia de negocio.</p>
+                </div>
+            </div>
+
+            <!-- Pipeline Visual Diagram -->
+            <div class="pipeline-wrapper">
+                <h3 class="pipeline-title">⚡ Pipeline de Monitoreo en 5 Fases</h3>
+                <div class="pipeline-steps">
+                    
+                    <div class="pipeline-step-card">
+                        <div class="step-num">01</div>
+                        <div class="step-icon">🌐</div>
+                        <h4>Extracción Socrata API</h4>
+                        <p>Consulta a <code>datos.gov.co</code> mediante SODA API (endpoint <code>p6dx-8zbt.json</code>) usando consultas SoQL con filtros de estado y departamentos.</p>
+                        <div class="step-code">secop.py</div>
+                    </div>
+
+                    <div class="pipeline-connector">➡️</div>
+
+                    <div class="pipeline-step-card">
+                        <div class="step-num">02</div>
+                        <div class="step-icon">🔤</div>
+                        <h4>Normalización NFD</h4>
+                        <p>Elimina acentos, convierte tildes (<code>Unicode NFD</code>), fuerza minúsculas y remueve caracteres especiales para garantizar comparaciones precisas.</p>
+                        <div class="step-code">engine.py</div>
+                    </div>
+
+                    <div class="pipeline-connector">➡️</div>
+
+                    <div class="pipeline-step-card">
+                        <div class="step-num">03</div>
+                        <div class="step-icon">⚙️</div>
+                        <h4>Motor de Filtros</h4>
+                        <p>Evalúa coincidencias por departamento, modalidad ("Mínima Cuantía"), palabras clave de objeto y códigos UNSPSC. Detecta badges de preferencia.</p>
+                        <div class="step-code">FilterEngine</div>
+                    </div>
+
+                    <div class="pipeline-connector">➡️</div>
+
+                    <div class="pipeline-step-card">
+                        <div class="step-num">04</div>
+                        <div class="step-icon">🔐</div>
+                        <h4>Deduplicación SHA-256</h4>
+                        <p>Calcula un hash único (SHA-256) sobre el objeto y estado. Evita enviar notificaciones repetidas al cliente mediante la tabla <code>processes</code> en Neon DB.</p>
+                        <div class="step-code">compute_hash()</div>
+                    </div>
+
+                    <div class="pipeline-connector">➡️</div>
+
+                    <div class="pipeline-step-card">
+                        <div class="step-num">05</div>
+                        <div class="step-icon">📧</div>
+                        <h4>Notificación Brevo</h4>
+                        <p>Construye el correo transaccional en HTML interactivo con badges de color y llamado a la acción. Registra el estado del envío en <code>notifications</code>.</p>
+                        <div class="step-code">EmailNotification</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Deep Dive Technical Specs Grid -->
+            <div class="tech-specs-grid">
+                <div class="glass-card">
+                    <h3>🔍 Lógica Estricta de Filtrado</h3>
+                    <p class="specs-desc">Un proceso SECOP II activa una alerta únicamente si cumple las siguientes 3 condiciones:</p>
+                    <ul class="specs-list">
+                        <li><strong>1. Ubicación:</strong> El departamento de la entidad licitante debe pertenecer a la lista del cliente (ej. Atlántico, Bolívar, Magdalena).</li>
+                        <li><strong>2. Modalidad:</strong> Debe corresponder a la modalidad requerida (por defecto <code>Mínima cuantía</code>).</li>
+                        <li><strong>3. Coincidencia de Negocio:</strong> Al menos una palabra clave de producto/servicio (ej: <code>"dotacion"</code>, <code>"uniforme"</code>) O el código UNSPSC coincide exactamente.</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card">
+                    <h3>🏆 Detección de Ventajas Competitivas</h3>
+                    <p class="specs-desc">El motor analiza el texto del objeto y la descripción para catalogar automáticamente los criterios de desempate y ley de compras públicas:</p>
+                    <div class="badge-demo-list">
+                        <div class="badge-item badge-female">
+                            <strong>Preferencia: Mujer Líder</strong>
+                            <p>Detecta empresas lideradas por mujeres o puntaje adicional por género.</p>
+                        </div>
+                        <div class="badge-item badge-pyme">
+                            <strong>PYME Favorable</strong>
+                            <p>Identifica convocatorias limitadas a Mipymes según Decreto 1860.</p>
+                        </div>
+                        <div class="badge-item badge-gender">
+                            <strong>Equidad de Género</strong>
+                            <p>Marca incentivos por políticas de equidad de género empresarial.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MONITOREO EN VIVO (SECOP II) -->
+        <section id="tab-secop-live" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Explorador de Licitaciones en Vivo SECOP II</h2>
+                    <p>Conexión en directo con los datos abiertos de datos.gov.co. Filtra, inspecciona y busca contrataciones públicas.</p>
+                </div>
+                <div class="live-controls">
+                    <button class="btn-sena-action" id="btn-refresh-live">
+                        <span>🔄</span> Consultar API SECOP II
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search & Filters Toolbar -->
+            <div class="toolbar-card">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="live-search-input" placeholder="Buscar por entidad, objeto, ciudad o ID de proceso...">
+                </div>
+                <div class="filter-selectors">
+                    <select id="filter-dept-select">
+                        <option value="">Todos los Departamentos</option>
+                        <option value="Atlantico">Atlántico</option>
+                        <option value="Bolivar">Bolívar</option>
+                        <option value="Magdalena">Magdalena</option>
+                        <option value="Cordoba">Córdoba</option>
+                        <option value="Sucre">Sucre</option>
+                        <option value="La Guajira">La Guajira</option>
+                        <option value="Cesar">Cesar</option>
+                    </select>
+
+                    <select id="filter-match-only">
+                        <option value="all">Todos los Procesos</option>
+                        <option value="matched_only" selected>Solo Coincidencias con Cliente</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Process Feed Table -->
+            <div class="table-container-card">
+                <table class="sena-data-table" id="secop-table">
+                    <thead>
+                        <tr>
+                            <th>ID Proceso</th>
+                            <th>Entidad & Ubicación</th>
+                            <th>Objeto de Contratación</th>
+                            <th>Valor Base (COP)</th>
+                            <th>Modalidad</th>
+                            <th>Badges / Atributos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="secop-table-body">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 4: SIMULADOR DEL MOTOR DE FILTROS -->
+        <section id="tab-simulator" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Simulador Interactivo del Motor de Filtros</h2>
+                    <p>Introduce cualquier objeto o licitación hipotética para probar cómo responde <code>FilterEngine</code> en tiempo real.</p>
+                </div>
+            </div>
+
+            <div class="simulator-split">
+                <!-- Simulator Form -->
+                <div class="glass-card flex-1">
+                    <h3>📝 Datos del Proceso a Probar</h3>
+                    <form id="simulator-form" onsubmit="return false;">
+                        <div class="form-group">
+                            <label>Nombre / Objeto del Procedimiento:</label>
+                            <input type="text" id="sim-name" value="Suministro de dotación textil y calzado de trabajo para personal operativo de la entidad" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción detallada:</label>
+                            <textarea id="sim-desc" rows="3">Adquisición de ropa deportiva, uniformes institucionales y calzado laboral. Proceso con preferencia para Mipyme y certificación mujer lider.</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Departamento:</label>
+                                <select id="sim-dept">
+                                    <option value="Atlantico">Atlántico</option>
+                                    <option value="Bolivar">Bolívar</option>
+                                    <option value="Magdalena">Magdalena</option>
+                                    <option value="Bogota">Bogotá D.C. (Fuera de zona)</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Modalidad:</label>
+                                <input type="text" id="sim-modality" value="Mínima cuantía">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Código UNSPSC:</label>
+                                <input type="text" id="sim-unspsc" value="V1.53102700">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Valor Estimado (COP):</label>
+                                <input type="number" id="sim-price" value="45000000">
+                            </div>
+                        </div>
+
+                        <button class="btn-sena-primary block-btn" id="btn-run-simulation">
+                            ⚡ Evaluar con FilterEngine
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Simulation Output Diagnostic -->
+                <div class="glass-card flex-1">
+                    <h3>🔬 Diagnóstico de Coincidencia en Tiempo Real</h3>
+                    <div id="sim-results-output" class="sim-output-box">
+                        <div class="placeholder-msg">
+                            <span>👈</span> Llena los datos y haz clic en "Evaluar con FilterEngine" para ver el análisis interno.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: CONFIGURACIÓN DEL CLIENTE -->
+        <section id="tab-config" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Gestor de Configuración del Cliente</h2>
+                    <p>Administra las reglas de filtrado de <code>client_config.json</code> directamente desde la interfaz visual.</p>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <form id="config-editor-form" onsubmit="return false;">
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Nombre del Cliente / Empresa:</label>
+                            <input type="text" id="cfg-name" value="Cliente Textil Caribe">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Correo Electrónico de Destino:</label>
+                            <input type="email" id="cfg-email" value="cliente@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Departamentos Monitoreados (Separados por coma):</label>
+                        <input type="text" id="cfg-departments" value="Atlantico, Bolivar, Magdalena, Cordoba, Sucre, La Guajira, Cesar">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Palabras Clave de Productos / Servicios (Separadas por coma):</label>
+                        <input type="text" id="cfg-keywords" value="uniforme, ropa deportiva, vestuario, calzado, dotacion, textil">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Códigos UNSPSC de Interés (Separados por coma):</label>
+                        <input type="text" id="cfg-unspsc" value="V1.53102700, V1.53102710">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Palabras Clave para Atributos Especiales / Certificaciones:</label>
+                        <input type="text" id="cfg-certifications" value="mujer lider, equidad de genero, pyme">
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-sena-primary" id="btn-save-config">
+                            💾 Guardar Cambios en client_config.json
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 6: NOTIFICACIÓN EMAIL (BREVO PREVIEW) -->
+        <section id="tab-email-preview" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Previsualizador de Correo Transaccional (Brevo API)</h2>
+                    <p>Visualización exacta del correo electrónico renderizado en HTML con diseño responsive y badges SENA/Brevo.</p>
+                </div>
+            </div>
+
+            <div class="email-mockup-wrapper">
+                <div class="email-client-bar">
+                    <div class="dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+                    <div class="email-subject-line"><strong>Asunto:</strong> Nueva oportunidad: Suministro de dotación laboral y calzado institucional</div>
+                </div>
+                <div class="email-body-preview" id="email-preview-frame">
+                    <!-- HTML Generated Email will render here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Institucional SENA -->
+    <footer class="sena-footer">
+        <div class="footer-container">
+            <p><strong>SECOP Monitor v2.0</strong> • Desarrollado para el seguimiento automatizado de la contratación pública en Colombia.</p>
+            <p class="sub">Servicio Nacional de Aprendizaje SENA • Ministerio del Trabajo • Gobierno de Colombia</p>
+        </div>
+    </footer>
+
+    <!-- Process Detail Modal -->
+    <div class="modal-overlay" id="process-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Detalle del Proceso SECOP II</h3>
+                <button class="close-modal" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-content">
+                <!-- Modal dynamic contents -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
