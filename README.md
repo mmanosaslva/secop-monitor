@@ -1,6 +1,6 @@
 # SECOP Monitor
 
-Monitoreo automatico de contratacion publica en SECOP II (Colombia). Detecta procesos relevantes por departamento, modalidad y keywords,然後 envia notificaciones por email con badges de certificacion.
+Monitoreo automatico de contratacion publica en SECOP II (Colombia). Detecta procesos relevantes por departamento, modalidad y keywords, y envia notificaciones por email con badges de certificacion.
 
 ## Stack (100% gratis)
 
