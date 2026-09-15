@@ -22,7 +22,7 @@ except ModuleNotFoundError as e:
     print(f"[SECOP WebServer Warning] Dependencias locales no instaladas completamente ({e}). Usando modo interactivo directo.")
 
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8080))
 WEB_DIR = os.path.join(os.path.dirname(__file__), "web")
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "config", "client_config.json")
 

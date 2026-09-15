@@ -9,6 +9,8 @@ __pycache__/
 dist/
 build/
 .eggs/
+.venv/
+venv/
 
 # Pytest
 .pytest_cache/
