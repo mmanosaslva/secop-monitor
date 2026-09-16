@@ -32,10 +32,12 @@ Tres prompts listos para copiar y pegar. El plan de ejecución paso a paso está
    (nav condicionado, métricas de solo lectura, tabla de usuarios, campana de
    notificaciones). Diseñar antes de saber qué componentes existen obliga a
    rehacer artboards.
-2. **El coste de migrar es bajo y ya está medido.** `src/web/styles.css` está
-   tokenizado: los colores SENA solo viven en `:root` (líneas 6, 9 y 23) y el
-   resto de la hoja consume variables. Migrar a Plataforma50 es un remapeo de
-   tokens, no una reescritura.
+2. **El coste de migrar está medido** (corregido el 2026-09-15). La hoja está
+   tokenizada *en parte*: la mayoría de reglas consume variables, pero quedan
+   **16 colores en duro fuera de `:root`** (eran 28 antes de retirar el
+   previsualizador de correo y el simulador). La migración es sobre todo un
+   remapeo de `:root`, más esos 16 casos sueltos que hay que convertir a
+   variables. No es una reescritura, pero tampoco es solo cambiar `:root`.
 3. **`monitoreo` hereda el diseño gratis.** Al crear la rama *después* del
    rediseño, no hay que aplicar `design.md` dos veces ni arriesgar que las dos
    ramas diverjan visualmente.
@@ -216,8 +218,9 @@ NO incluyas en ningún artboard el módulo "Simulador del Motor": ya fue elimina
 
 IMPLEMENTACIÓN EN CÓDIGO (después de aprobados los dos canvas)
 - Sustituye el bloque `:root` de `src/web/styles.css`: los tokens `--sena-*`
-  pasan a `--p50-*`. Como la hoja no tiene hexadecimales fuera de `:root`, la
-  migración de color se concentra ahí.
+  pasan a `--p50-*`. Además quedan 16 colores en duro fuera de `:root` que hay
+  que convertir a variables; localízalos con
+  `awk '/^:root/{r=1} r&&/^}/{r=0;next} !r' src/web/styles.css | grep -nE '#[0-9A-Fa-f]{3,8}'`.
 - Ajusta la escala tipográfica, quita sombras y degradados, deja bordes de 1px.
 - Aplica la regla 2 (nombre fuera de header y footer) en `index.html`.
 - Verifica contraste 4.5:1 en todo texto.

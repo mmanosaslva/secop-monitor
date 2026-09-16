@@ -49,69 +49,91 @@ en la Fase 10.
 
 ## Fase 1 — Base de roles
 
-- [ ] 1.1 Definir el modelo de usuario (id, nombre, correo, rol, estado, último acceso).
-- [ ] 1.2 Pantalla de acceso que fija el rol de la sesión (`admin` / `usuario`).
-- [ ] 1.3 Persistir el rol en la sesión del navegador y exponerlo a `app.js`.
-- [ ] 1.4 Función central `puede(accion)` que resuelva permisos en un solo lugar.
-- [ ] 1.5 Commit: `feat: sistema de roles admin y usuario`.
+> **Cerrada.** Commit `6d0c289`. Sesiones con cookie HttpOnly, mapa PERMISOS
+> en el backend y `puede()` en el frontend. 20 pruebas.
+
+- [x] 1.1 Definir el modelo de usuario (id, nombre, correo, rol, estado, último acceso).
+- [x] 1.2 Pantalla de acceso que fija el rol de la sesión (`admin` / `usuario`).
+- [x] 1.3 Persistir el rol en la sesión del navegador y exponerlo a `app.js`.
+- [x] 1.4 Función central `puede(accion)` que resuelva permisos en un solo lugar.
+- [x] 1.5 Commit: `feat: sistema de roles admin y usuario`.
 
 ## Fase 2 — Permisos en la navegación
 
-- [ ] 2.1 Renderizar el nav según el rol, no ocultar con CSS.
-- [ ] 2.2 Rol `usuario`: solo **Panel de Métricas** y **¿Cómo Funciona por Dentro?**.
-- [ ] 2.3 Rol `admin`: lo anterior + **Monitoreo en Vivo** + **Configuración del Cliente**
+> **Cerrada.** Commit `391545d`. El nav se construye desde el registro MODULOS;
+> lo no autorizado no llega al DOM. Vista de acceso denegado incluida.
+
+- [x] 2.1 Renderizar el nav según el rol, no ocultar con CSS.
+- [x] 2.2 Rol `usuario`: solo **Panel de Métricas** y **¿Cómo Funciona por Dentro?**.
+- [x] 2.3 Rol `admin`: lo anterior + **Monitoreo en Vivo** + **Configuración del Cliente**
       + **Gestión de Usuarios**.
-- [ ] 2.4 Vista de acceso denegado al intentar entrar a un tab no autorizado.
-- [ ] 2.5 Commit: `feat: navegacion condicionada por rol`.
+- [x] 2.4 Vista de acceso denegado al intentar entrar a un tab no autorizado.
+- [x] 2.5 Commit: `feat: navegacion condicionada por rol`.
 
 ## Fase 3 — Métricas de solo lectura para `usuario`
 
-- [ ] 3.1 Quitar del render de `usuario` todo control de escritura (guardar,
+> **Cerrada.** Commit `6948222`. Nuevos `/api/metrics` y `/api/sync`. Se cerró
+> un agujero: el frontend consultaba datos.gov.co directamente cuando la API
+> devolvía error, saltándose el 403 del backend. 7 pruebas.
+
+- [x] 3.1 Quitar del render de `usuario` todo control de escritura (guardar,
       editar, sincronización manual — ver `initManualSync()` en `app.js:454`).
-- [ ] 3.2 Dejar los mismos controles activos para `admin`.
-- [ ] 3.3 Bloquear en `src/web_server.py` los `do_POST` (`/api/config`,
+- [x] 3.2 Dejar los mismos controles activos para `admin`.
+- [x] 3.3 Bloquear en `src/web_server.py` los `do_POST` (`/api/config`,
       `/api/filter/test`) cuando el rol no es `admin`.
-- [ ] 3.4 Tests de permisos del backend (rol no autorizado → rechazo).
-- [ ] 3.5 Commit: `feat: metricas de solo lectura para rol usuario`.
+- [x] 3.4 Tests de permisos del backend (rol no autorizado → rechazo).
+- [x] 3.5 Commit: `feat: metricas de solo lectura para rol usuario`.
 
 ## Fase 4 — Notificaciones como desplegable
 
-- [ ] 4.1 Eliminar el tab "Notificación Brevo" (`index.html:69`) y la sección
+> **Cerrada.** Commit `b39d592`. Campana con badge en el encabezado.
+> `initEmailPreview()` sobrevive como `construirCorreoHtml()`. 7 pruebas.
+
+- [x] 4.1 Eliminar el tab "Notificación Brevo" (`index.html:69`) y la sección
       `#tab-email-preview` (`index.html:504-528`).
-- [ ] 4.2 Añadir campana con badge de conteo en el header.
-- [ ] 4.3 Panel flotante: lista de notificaciones, leída/no leída, estado vacío,
+- [x] 4.2 Añadir campana con badge de conteo en el header.
+- [x] 4.3 Panel flotante: lista de notificaciones, leída/no leída, estado vacío,
       cierre al hacer clic fuera.
-- [ ] 4.4 Reutilizar la lógica de `initEmailPreview()` (`app.js:353`) que siga siendo útil.
-- [ ] 4.5 Disponible para ambos roles.
-- [ ] 4.6 Commit: `feat: notificaciones como desplegable en el header`.
+- [x] 4.4 Reutilizar la lógica de `initEmailPreview()` (`app.js:353`) que siga siendo útil.
+- [x] 4.5 Disponible para ambos roles.
+- [x] 4.6 Commit: `feat: notificaciones como desplegable en el header`.
 
 ## Fase 5 — Gestión y control de usuarios (solo `admin`)
 
-- [ ] 5.1 Nuevo módulo "Gestión de Usuarios" visible solo para `admin`.
-- [ ] 5.2 Tabla de usuarios: avatar, nombre, correo, rol, estado, último acceso.
-- [ ] 5.3 Acciones: crear, editar, activar/desactivar, cambiar rol.
-- [ ] 5.4 Métricas agregadas de uso por usuario (accesos, acciones, estado).
-- [ ] 5.5 Endpoints de backend para el CRUD, protegidos por rol.
-- [ ] 5.6 Tests del CRUD y de su protección por rol.
-- [ ] 5.7 Commit: `feat: panel de gestion y metricas de usuarios para admin`.
+> **Cerrada.** Commit `532fe56`. CRUD completo con salvaguardas de autobloqueo
+> y de último administrador. 17 pruebas.
+
+- [x] 5.1 Nuevo módulo "Gestión de Usuarios" visible solo para `admin`.
+- [x] 5.2 Tabla de usuarios: avatar, nombre, correo, rol, estado, último acceso.
+- [x] 5.3 Acciones: crear, editar, activar/desactivar, cambiar rol.
+- [x] 5.4 Métricas agregadas de uso por usuario (accesos, acciones, estado).
+- [x] 5.5 Endpoints de backend para el CRUD, protegidos por rol.
+- [x] 5.6 Tests del CRUD y de su protección por rol.
+- [x] 5.7 Commit: `feat: panel de gestion y metricas de usuarios para admin`.
 
 ## Fase 6 — Retirar el simulador y cerrar la funcionalidad
+
+> **Cerrada.** Commit `cd61f88`. Verificada antes la rama `simulador`.
 
 > El módulo está a salvo en la rama `simulador`. Antes de borrar, confirmar:
 > `git grep -c 'tab-simulator' simulador -- src/web/index.html`
 
-- [ ] 6.0 Verificar que la rama `simulador` conserva el módulo.
-- [ ] 6.1 Quitar el tab "Simulador del Motor" (`index.html:63`).
-- [ ] 6.2 Quitar la sección `#tab-simulator` (`index.html:379-449`).
-- [ ] 6.3 Quitar `initSimulator()` (`app.js:277`) y `runSimulation()` (`app.js:284`).
-- [ ] 6.4 Quitar los estilos asociados en `styles.css`.
-- [ ] 6.5 Verificar que no queden referencias muertas (`grep -rn simulator src/web`).
-- [ ] 6.6 Commit: `refactor: eliminar el simulador del motor de la interfaz`.
-- [ ] 6.7 **Puerta de calidad:** `pytest` en verde y prueba manual de los dos roles
+- [x] 6.0 Verificar que la rama `simulador` conserva el módulo.
+- [x] 6.1 Quitar el tab "Simulador del Motor" (`index.html:63`).
+- [x] 6.2 Quitar la sección `#tab-simulator` (`index.html:379-449`).
+- [x] 6.3 Quitar `initSimulator()` (`app.js:277`) y `runSimulation()` (`app.js:284`).
+- [x] 6.4 Quitar los estilos asociados en `styles.css`.
+- [x] 6.5 Verificar que no queden referencias muertas (`grep -rn simulator src/web`).
+- [x] 6.6 Commit: `refactor: eliminar el simulador del motor de la interfaz`.
+- [x] 6.7 **Puerta de calidad:** `pytest` en verde y prueba manual de los dos roles
       de punta a punta. No se pasa al bloque de diseño sin esto.
-- [ ] 6.8 **Puerta de estilos:** `grep -nE '#[0-9A-Fa-f]{3,6}' src/web/styles.css`
-      no debe devolver nada fuera del bloque `:root`. Es lo que mantiene barata
-      la Fase 8.
+- [x] 6.8 **Puerta de estilos (corregida).** La afirmación inicial de que
+      `styles.css` estaba totalmente tokenizado era **falsa**: solo se había
+      buscado los dos colores SENA, no todos los hexadecimales. Al empezar había
+      **28** colores en duro fuera de `:root`. Retirar el previsualizador de
+      correo y el simulador dejó **16**. Todo el CSS nuevo de estas fases usa
+      variables, cero hexadecimales.
+      Verificación: `awk '/^:root/{r=1} r&&/^}/{r=0;next} !r' src/web/styles.css | grep -cE '#[0-9A-Fa-f]{3,8}'`
 
 ---
 
