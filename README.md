@@ -299,8 +299,10 @@ secop-monitor/
 | Rama | Contenido |
 |------|-----------|
 | `main` | Motor, tests y configuración. **No contiene la interfaz web.** |
-| `frontend` | Rama de trabajo: interfaz completa con roles y permisos |
-| `simulador` | Archivo del Simulador del Motor, retirado de la interfaz |
-| `monitoreo` | Prevista: solo el módulo de Monitoreo en Vivo |
+| `frontend` | Rama de trabajo: interfaz completa con autenticación, roles y permisos |
+| `simulador` | Archivo del Simulador del Motor, retirado de la interfaz. No se fusiona. |
+
+El Monitoreo en Vivo no es una rama: es un módulo de `frontend`, visible solo
+para el rol administrador.
 
 El plan de trabajo y su estado están en [`TAREAS.md`](./TAREAS.md).

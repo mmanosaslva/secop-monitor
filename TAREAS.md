@@ -2,20 +2,22 @@
 
 Rama base: `frontend`. Rama nueva al final: `monitoreo`.
 
-**Orden: primero la funcionalidad (Fases 0-6), después el diseño (Fases 7-9),
-y por último la derivación de la rama `monitoreo` (Fase 10).**
+**Orden: primero la funcionalidad (Fases 0-6, completadas), después el diseño
+(Fases 7-9).**
 
 Los prompts para ejecutar cada bloque están en [`prompts.md`](./prompts.md).
 
-| Bloque | Fases | Prompt |
-|--------|-------|--------|
-| Funcionalidad | 0 → 6 | Prompt 1 |
-| Diseño y cierre | 7 → 9 | Prompt 2 |
-| Rama `monitoreo` | 10 | Prompt 3 |
+| Bloque | Fases | Prompt | Estado |
+|--------|-------|--------|--------|
+| Funcionalidad | 0 → 6 | Prompt 1 | **Completado** |
+| Diseño y cierre | 7 → 9 | Prompt 2 | Siguiente |
 
-**Ramas:** `main` intocable (no contiene la interfaz web) · `frontend` rama de
-trabajo · `simulador` ya creada como rescate del módulo · `monitoreo` se deriva
-en la Fase 10.
+**Ramas (son tres):** `main` intocable, sin la interfaz web · `frontend` rama de
+trabajo · `simulador` archivo del módulo retirado.
+
+> No hay ni habrá rama `monitoreo`: el plan original la contemplaba y se
+> descartó el 2026-09-16. El Monitoreo en Vivo es un módulo de `frontend`,
+> restringido al rol admin.
 
 ---
 
@@ -189,45 +191,12 @@ en la Fase 10.
 
 ---
 
-# BLOQUE C — Derivación
-
-## Fase 10 — Rama `monitoreo`
-
-- [ ] 10.1 Crear la rama: `git checkout -b monitoreo` (a partir de `frontend`,
-      ya funcional **y** rediseñada; así hereda el diseño sin reaplicarlo).
-- [ ] 10.2 Dejar solo el módulo de Monitoreo en Vivo: `#tab-secop-live`
-      (`index.html:317-378`), `initLiveSECOP()` (`app.js:120`),
-      `loadLiveSecopData()` (`app.js:134`), `renderTable()`, `updateKpis()`,
-      el modal de detalle y el endpoint `/api/secop/live`.
-- [ ] 10.3 Eliminar de esta rama el resto de módulos, su JS y su CSS.
-- [ ] 10.4 Verificar que no queda CSS huérfano de los módulos eliminados y que la
-      pantalla resultante sigue respetando `design.md`.
-- [ ] 10.5 Verificar que la rama arranca y consulta SECOP II de forma autónoma.
-- [ ] 10.6 Push de `monitoreo`.
-
----
-
----
-
-# Fase 11 — Recorte de la rama `simulador` (opcional, sin prisa)
-
-Hoy `simulador` es una copia completa de `frontend` en su estado previo. Cuando
-convenga, se puede depurar. No bloquea nada de lo anterior.
-
-- [ ] 11.1 Dejar en la rama solo el Simulador del Motor: `#tab-simulator`
-      (`index.html:379-449`), `initSimulator()` (`app.js:277`) y
-      `runSimulation()` (`app.js:284`).
-- [ ] 11.2 Eliminar el resto de módulos, su JS y su CSS.
-- [ ] 11.3 Aplicar el diseño copiando el bloque `:root` ya migrado en `frontend`
-      (barato: el CSS está tokenizado, los colores solo viven en `:root`).
-- [ ] 11.4 Verificar que la rama arranca de forma autónoma.
-
----
-
 ## Decisiones tomadas
 
-- **El simulador no se pierde:** rama `simulador` creada antes de empezar.
-- **`monitoreo` queda solo con monitoreo en vivo;** el simulador no se traslada
-  allí, tiene su propia rama.
+- **El simulador no se pierde:** rama `simulador`, creada antes de retirarlo.
+- **No habrá rama `monitoreo`** (2026-09-16). El Monitoreo en Vivo es un módulo
+  de `frontend`, solo para admin.
 - **`main` no se toca en ninguna fase.** Verificado que no contiene `src/web/`,
   así que tampoco sirve como respaldo de la interfaz.
+- **La paleta de `design.md` se usa tal cual** (2026-09-16), asumiendo que sus
+  hex son una propuesta y no los colores reales de Plataforma50.

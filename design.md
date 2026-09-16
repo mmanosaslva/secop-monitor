@@ -3,11 +3,16 @@
 Fuente: https://www.plataforma50.com/ (home, ES-CO)
 Extraído: 2026-09-15
 
-> Nota sobre color: el sitio es un Next.js con hojas de estilo compiladas que no
-> pudieron leerse desde aquí. Los valores hex de abajo son una **propuesta
-> normalizada** a partir de la estructura y el tono del sitio (superficie oscura,
-> un solo acento, mucho neutro). Si me pasas los hex reales —o una captura— los
-> reemplazo y el resto del documento queda intacto.
+> **Nota sobre color — leer antes de usar esta paleta.**
+> El sitio es un Next.js con hojas de estilo compiladas que no pudieron leerse
+> desde aquí. Los valores hex de abajo son una **propuesta normalizada** a partir
+> de la estructura y el tono del sitio (superficie oscura, un solo acento, mucho
+> neutro): **no son los colores reales de la marca.**
+>
+> **Decisión del 2026-09-16:** se usan tal cual, asumiendo conscientemente el
+> coste. Si más adelante aparecen los hex reales —o una captura del sitio—, se
+> reemplazan aquí y se rehace el color del aplicativo. Como todo vive en `:root`
+> de `src/web/styles.css`, rehacerlo es un remapeo de tokens, no una reescritura.
 
 ---
 

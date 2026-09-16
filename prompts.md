@@ -1,24 +1,27 @@
 # Prompts de trabajo — mvp_SECOP
 
-Tres prompts listos para copiar y pegar. El plan de ejecución paso a paso está en
+Dos prompts listos para copiar y pegar. El plan de ejecución paso a paso está en
 [`TAREAS.md`](./TAREAS.md).
 
 **Orden de trabajo: primero la funcionalidad, el diseño al final.**
 
-| # | Prompt | Rama | Qué entrega |
-|---|--------|------|-------------|
-| 1 | Roles, permisos y limpieza | `frontend` | Funcionalidad completa sobre la UI actual |
-| 2 | Diseño visual Plataforma50 | `frontend` | Canvas en Claude Design + migración en código |
-| 3 | Rama de monitoreo | `monitoreo` | Derivación con solo monitoreo en vivo |
+| # | Prompt | Rama | Estado |
+|---|--------|------|--------|
+| 1 | Roles, permisos y limpieza | `frontend` | **Completado** (fases 0-6) |
+| 2 | Diseño visual Plataforma50 | `frontend` | Siguiente |
 
 ### Mapa de ramas
+
+Son tres, y no hay más:
 
 | Rama | Contenido | Estado |
 |------|-----------|--------|
 | `main` | Motor, tests y config. **No contiene la interfaz web** | **INTOCABLE** — no se modifica sin orden explícita |
-| `frontend` | Producto: roles, métricas, notificaciones, gestión de usuarios | Rama de trabajo |
-| `simulador` | Simulador del Motor, preservado íntegro | **Ya creada** (rescate previo a la limpieza) |
-| `monitoreo` | Solo Monitoreo en Vivo SECOP II | Se deriva en el Prompt 3 |
+| `frontend` | Producto completo: roles, autenticación, métricas, notificaciones, gestión de usuarios | Rama de trabajo |
+| `simulador` | Simulador del Motor, preservado íntegro | Archivo — no se fusiona |
+
+El Monitoreo en Vivo **no es una rama**: es un módulo más dentro de `frontend`,
+visible solo para el rol admin.
 
 > **`main` no es respaldo de nada de la interfaz.** Verificado: contiene 33
 > archivos, ninguno bajo `src/web/`. Toda la web vive solo en `frontend`. Por eso
@@ -38,13 +41,9 @@ Tres prompts listos para copiar y pegar. El plan de ejecución paso a paso está
    previsualizador de correo y el simulador). La migración es sobre todo un
    remapeo de `:root`, más esos 16 casos sueltos que hay que convertir a
    variables. No es una reescritura, pero tampoco es solo cambiar `:root`.
-3. **`monitoreo` hereda el diseño gratis.** Al crear la rama *después* del
-   rediseño, no hay que aplicar `design.md` dos veces ni arriesgar que las dos
-   ramas diverjan visualmente.
-
-> **Nota sobre el orden de la rama `monitoreo`:** queda *después* del diseño
-> precisamente por el punto 3. Si prefieres crearla antes, hay que aceptar
-> aplicar `design.md` por separado en cada rama.
+3. **La funcionalidad ya está verificada.** Con 120 pruebas en verde sobre el
+   comportamiento, el rediseño solo puede romper lo visual: cualquier fallo de
+   lógica lo delata la suite, no el ojo.
 
 ---
 
@@ -146,20 +145,25 @@ migres la paleta ni la tipografía todavía.
 
 ---
 
-## Prompt 2 — Diseño visual Plataforma50 (rama `frontend`, después del Prompt 1)
+## Prompt 2 — Diseño visual Plataforma50 (rama `frontend`)
 
 ```
 Diseña el sistema visual completo del aplicativo web SECOP Monitor siguiendo
-ESTRICTAMENTE el sistema de diseño documentado en `design.md` (rama `frontend`),
-y después impleméntalo en código.
+ESTRICTAMENTE el sistema de diseño de `design.md` (rama `frontend`), y después
+impleméntalo en código.
 
-CONTEXTO
-- El Prompt 1 ya está aplicado: existen los dos roles, el nav condicionado, las
-  notificaciones como desplegable y la gestión de usuarios. El simulador ya no
-  existe. Diseña sobre esa estructura, no sobre la anterior.
-- El código está en `src/web/index.html`, `src/web/styles.css`, `src/web/app.js`.
-- La interfaz usa estilo institucional SENA (verde #39A900, azul #00324D,
-  Montserrat). Debe migrar al sistema Plataforma50 de `design.md`.
+CONTEXTO — la estructura ya está terminada, diseña sobre ESTA, no sobre otra
+- Autenticación con correo y contraseña. NO hay selección de rol: el rol lo
+  determina la cuenta. Existen pantalla de acceso, modal de cambio de la propia
+  contraseña y campo de contraseña en el alta/edición de usuarios.
+- Dos roles. El nav del rol USUARIO tiene exactamente dos módulos: Panel de
+  Métricas y ¿Cómo Funciona por Dentro?. El de ADMIN añade Monitoreo en Vivo,
+  Configuración del Cliente y Gestión de Usuarios.
+- Las notificaciones son un desplegable del encabezado, no un módulo del nav.
+- El Simulador del Motor ya no existe en la interfaz.
+- Código en `src/web/index.html`, `src/web/styles.css`, `src/web/app.js`.
+- La interfaz usa estilo SENA (verde #39A900, azul #00324D, Montserrat) y debe
+  migrar por completo a Plataforma50.
 
 REGLAS NO NEGOCIABLES
 1. Lee `design.md` completo y aplícalo literalmente:
@@ -174,92 +178,86 @@ REGLAS NO NEGOCIABLES
      cuerpo 16-18px/1.6, dato o delta 32-48px/600 tabular, numeral `[01]` 13px mono.
    - Layout: 12 columnas, ancho máx ~1280px, gutter 24-32px.
    - Contraste mínimo 4.5:1.
-2. ELIMINA el nombre "SECOP II Monitor" del header y del footer. El header no
-   lleva wordmark de texto: solo el logotipo/marca, las píldoras de estado del
-   sistema y los controles de usuario. El footer queda sin el bloque
-   "SECOP Monitor v2.0"; conserva únicamente la descripción funcional y la línea
-   institucional.
+2. ELIMINA el nombre "SECOP II Monitor" del encabezado y "SECOP Monitor v2.0"
+   del pie. El encabezado no lleva wordmark de texto: solo el logotipo, las
+   píldoras de estado del sistema, la campana de notificaciones y los controles
+   de sesión (nombre, chip de rol, Contraseña, Cerrar sesión). El pie conserva
+   únicamente la descripción funcional.
+   (La línea institucional del SENA y el distintivo "v2.0 Enterprise" ya fueron
+   eliminados; no los reintroduzcas.)
 3. Voz y copy según §2 de `design.md`: segunda persona, titulares de 4-8
    palabras partidos en dos líneas, eyebrow en minúscula sobre cada titular,
    nada de superlativos vacíos, cada dato con número explícito.
+4. `design.md` describe un sitio de marketing; esto es una aplicación de datos.
+   Toma de él color, tipografía, voz y componentes (§3, §4, §2, §6) y DEDUCE
+   los patrones que le faltan —tabla densa, formulario, modal, desplegable,
+   estados de sesión— con las mismas reglas: 1px, sin sombra, un solo acento.
+   NO trasplantes la secuencia de la home (hero con video, casos de éxito,
+   equipo, FAQ, marquee de aliados): aquí no aplica.
 
-ENTREGA EN DOS CANVAS (no todo en uno: 14 artboards en una pasada degradan los
-últimos)
+ENTREGA EN DOS CANVAS (no todo en uno: degradaría los últimos artboards)
 
 CANVAS A — núcleo del sistema
-  0. Tira superior de tokens: paleta, escala tipográfica, botones, chip, tarjeta
-     numerada, fila de comparación, acordeón.
-  1. *Login / selección de rol — CTA único, microcopy tranquilizador debajo.
+  0. Tira de tokens: paleta, escala tipográfica, botón primario y secundario,
+     campo de formulario, chip, tarjeta numerada, fila de comparación,
+     fila de tabla, modal y estado de error.
+  1. *Acceso — formulario de correo y contraseña, con mostrar/ocultar, CTA único
+     y microcopy tranquilizador debajo. Incluye sus tres estados de error:
+     credenciales inválidas, cuenta desactivada y bloqueo por intentos fallidos.
   2. *Panel de Métricas — rol USUARIO (solo lectura): KPIs en tarjetas numeradas
-     `[01]`-`[04]`, sin ningún control de edición ni botones de guardar.
-  3. Panel de Métricas — rol ADMIN: mismos KPIs + controles de edición visibles.
-  4. Estados transversales: barra de navegación en ambos roles (el nav de USUARIO
-     solo muestra Métricas y ¿Cómo Funciona por Dentro?), estado vacío, estado de
-     carga, y mensaje de acceso denegado.
+     `[01]`-`[04]`, distintivo de solo lectura, sin ningún control de edición.
+  3. Panel de Métricas — rol ADMIN: mismos KPIs + sincronización manual.
+  4. Estados transversales: el nav en ambos roles, estado vacío, estado de
+     carga, acceso denegado y el modal de cambio de la propia contraseña.
 
-CANVAS B — módulos (reutiliza los tokens ya fijados en el Canvas A)
-  5. ¿Cómo Funciona por Dentro? — narrativa del motor usando el motivo de marca
-     "Antes / Ahora" (fila de comparación: label izquierda, "Antes" en neutro
-     apagado, "Ahora" en acento).
-  6. *Desplegable de Notificaciones — campana en el header con badge de conteo,
-     panel flotante con lista de notificaciones (leída / no leída), estado vacío
-     y enlace "ver todas". NO es una página ni un módulo del nav.
-  7. Gestión de Usuarios — solo ADMIN: tabla de usuarios (avatar, nombre, correo,
-     rol, estado, último acceso), acciones por fila, métricas agregadas de uso
-     arriba, modal de crear/editar usuario.
+CANVAS B — módulos (reutiliza los tokens fijados en el Canvas A)
+  5. ¿Cómo Funciona por Dentro? — narrativa del motor con el motivo de marca
+     "Antes / Ahora": label a la izquierda, "Antes" en neutro apagado, "Ahora"
+     en acento.
+  6. *Desplegable de Notificaciones — campana con badge de conteo, panel
+     flotante, leída / sin leer, estado vacío. NO es un módulo del nav.
+  7. Gestión de Usuarios — solo ADMIN: métricas agregadas de uso arriba, tabla
+     (avatar, nombre, correo, rol, estado, último acceso, uso), acciones por
+     fila, y modal de crear/editar CON campo de contraseña.
   8. Configuración del Cliente — solo ADMIN.
-  9. Monitoreo en Vivo — pantalla independiente: tabla de procesos SECOP II con
-     buscador, filtro por departamento, filtro por coincidencia y modal de detalle.
+  9. Monitoreo en Vivo — solo ADMIN: tabla de procesos SECOP II con buscador,
+     filtro por departamento, filtro por coincidencia y modal de detalle.
 
 Los marcados * llevan además variante móvil de 390px. Desktop a 1440px.
 Artboards ordenados por flujo dentro de cada canvas.
 
-NO incluyas en ningún artboard el módulo "Simulador del Motor": ya fue eliminado.
-
 IMPLEMENTACIÓN EN CÓDIGO (después de aprobados los dos canvas)
 - Sustituye el bloque `:root` de `src/web/styles.css`: los tokens `--sena-*`
-  pasan a `--p50-*`. Además quedan 16 colores en duro fuera de `:root` que hay
-  que convertir a variables; localízalos con
-  `awk '/^:root/{r=1} r&&/^}/{r=0;next} !r' src/web/styles.css | grep -nE '#[0-9A-Fa-f]{3,8}'`.
+  pasan a `--p50-*`.
+- Convierte a variables los 16 colores en duro que quedan fuera de `:root`:
+  `awk '/^:root/{r=1} r&&/^}/{r=0;next} !r' src/web/styles.css | grep -nE '#[0-9A-Fa-f]{3,8}'`
+- Renombra los 82 selectores con prefijo `.sena-` y sustituye el logotipo.
 - Ajusta la escala tipográfica, quita sombras y degradados, deja bordes de 1px.
-- Aplica la regla 2 (nombre fuera de header y footer) en `index.html`.
+- Aplica la regla 2 en `index.html`.
 - Verifica contraste 4.5:1 en todo texto.
-```
-
----
-
-## Prompt 3 — Rama `monitoreo` (a partir de `frontend` ya funcional y rediseñada)
-
-```
-Crea la rama `monitoreo` a partir de `frontend`, con los Prompts 1 y 2 ya
-aplicados (funcionalidad completa y diseño Plataforma50 migrado).
-
-- En esa rama deja SOLO la funcionalidad de monitoreo en vivo: el tab
-  "Monitoreo en Vivo (SECOP II)" (`#tab-secop-live`), su tabla, filtros,
-  modal de detalle, `initLiveSECOP()` / `loadLiveSecopData()` y el endpoint
-  `/api/secop/live`. Elimina de esa rama el resto de módulos, su JS y su CSS.
-- El sistema de diseño de `design.md` ya viene heredado de `frontend`: NO hay que
-  volver a aplicarlo, solo verificar que la pantalla resultante lo respeta y que
-  no queda CSS huérfano de los módulos eliminados.
-- Verifica que la rama arranca y consulta SECOP II de forma autónoma.
+- `pytest -q` debe seguir en verde: 120 pruebas. El rediseño no cambia
+  comportamiento, así que cualquier fallo señala una regresión real.
 ```
 
 ---
 
 ## Decisiones tomadas
 
-- **El simulador no se pierde.** Se creó la rama `simulador` a partir de
-  `frontend` antes de empezar cualquier trabajo. Conserva el módulo íntegro y
-  funcional. El Prompt 1 lo retira de `frontend` con esa red ya puesta.
-- **`monitoreo` queda solo con monitoreo en vivo.** El simulador no se traslada
-  allí: tiene su propia rama.
-- **`main` no se toca.** Ninguno de los tres prompts escribe en `main`.
+- **El simulador no se pierde.** Rama `simulador`, creada antes de retirarlo de
+  `frontend` y publicada en `origin/simulador`.
+- **`main` no se toca.** Ningún prompt escribe en `main`.
+- **No habrá rama `monitoreo`** (decisión del 2026-09-16). El plan original la
+  contemplaba; se descarta. El Monitoreo en Vivo se queda como módulo de
+  `frontend`, restringido al rol admin. Las ramas del proyecto son tres:
+  `main`, `frontend` y `simulador`.
+- **La paleta de `design.md` se usa tal cual** (decisión del 2026-09-16). Sus
+  valores hex son una propuesta normalizada, no los colores reales de
+  Plataforma50, que no pudieron leerse del sitio. Se asume el coste: si más
+  adelante aparecen los reales, hay que rehacer el color. Como todo vive en
+  `:root`, rehacerlo es un remapeo, no una reescritura.
 
-## Pendiente (sin bloquear el Prompt 1)
+## Pendiente (sin bloquear el Prompt 2)
 
-- **Recortar la rama `simulador`.** Hoy es una copia completa de `frontend`. En
-  algún momento conviene dejar en ella solo el simulador y aplicarle los tokens
-  Plataforma50 (copiar el bloque `:root` ya migrado). Es barato gracias a la
-  tokenización del CSS, y puede hacerse en cualquier momento posterior.
-- **Corregir el upstream de `frontend`.** Apunta a `origin/main` en lugar de a
-  `origin/frontend`. Arreglo: `git branch -u origin/frontend frontend`.
+- **Recortar la rama `simulador`.** Hoy es una copia completa de `frontend` en
+  su estado previo. Cuando convenga, dejar solo el simulador y aplicarle los
+  tokens ya migrados.
