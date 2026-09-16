@@ -36,6 +36,12 @@
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 16px;
+
+    /* Estados de error y avisos de permisos */
+    --danger: #DC2626;
+    --danger-bg: #FEE2E2;
+    --warning: #B45309;
+    --warning-bg: #FEF3C7;
 }
 
 * {
@@ -1062,4 +1068,185 @@ body {
     .pipeline-steps { flex-direction: column; }
     .pipeline-connector { transform: rotate(90deg); margin: 6px 0; }
     .form-row { flex-direction: column; gap: 0; }
+}
+
+
+/* ==========================================================================
+   Pantalla de acceso y control de sesion
+   ========================================================================== */
+
+.login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg-main);
+}
+
+.login-screen[hidden],
+.app-shell[hidden] {
+    display: none;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 40px 36px;
+    box-shadow: var(--shadow-md);
+}
+
+.login-brand {
+    margin-bottom: 20px;
+}
+
+.login-eyebrow {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.login-title {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--sena-navy);
+    margin: 0 0 10px 0;
+}
+
+.login-sub {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0 0 24px 0;
+}
+
+.role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.role-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.role-option:hover {
+    border-color: var(--sena-green);
+}
+
+.role-option:has(input:checked) {
+    border-color: var(--sena-green);
+    background: var(--sena-green-light);
+}
+
+.role-option input {
+    margin-top: 3px;
+    accent-color: var(--sena-green);
+}
+
+.role-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.role-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.role-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.login-error {
+    margin: 14px 0 0 0;
+    padding: 10px 14px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+
+.login-error[hidden] {
+    display: none;
+}
+
+.login-note {
+    margin: 16px 0 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-light);
+    text-align: center;
+}
+
+/* Identidad de la sesion en el encabezado */
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.user-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+}
+
+.user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bg-card);
+}
+
+.user-role-chip {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--sena-navy-light);
+    color: var(--bg-card);
+}
+
+.user-role-chip.is-admin {
+    background: var(--sena-green);
+}
+
+.btn-logout {
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--bg-card);
+    background: transparent;
+    border: 1px solid var(--sena-navy-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-logout:hover {
+    background: var(--sena-navy-light);
 }

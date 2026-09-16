@@ -1,0 +1,245 @@
+"""Control de acceso por rol del servidor web.
+
+Estas pruebas levantan el servidor real en un puerto libre y hablan con el por
+HTTP, para verificar lo que importa: que el backend RECHAZA la peticion cuando
+el rol no autoriza, sin depender de que el frontend haya ocultado el boton.
+"""
+import json
+import shutil
+import socketserver
+import threading
+from http.client import HTTPConnection
+
+import pytest
+
+from src import web_server
+
+
+# ==========================================================================
+# Infraestructura de pruebas
+# ==========================================================================
+@pytest.fixture()
+def usuarios_temporales(tmp_path, monkeypatch):
+    """Copia users.json a un temporal para no mutar el archivo del repo."""
+    destino = tmp_path / "users.json"
+    shutil.copy(web_server.USERS_PATH, destino)
+    monkeypatch.setattr(web_server, "USERS_PATH", str(destino))
+    return destino
+
+
+@pytest.fixture()
+def config_temporal(tmp_path, monkeypatch):
+    """Copia client_config.json para que los POST no toquen el archivo real."""
+    destino = tmp_path / "client_config.json"
+    shutil.copy(web_server.CONFIG_PATH, destino)
+    monkeypatch.setattr(web_server, "CONFIG_PATH", str(destino))
+    return destino
+
+
+@pytest.fixture()
+def servidor(usuarios_temporales, config_temporal):
+    """Servidor real en un puerto efimero, apagado al terminar la prueba."""
+    web_server.SESSIONS.clear()
+    httpd = socketserver.TCPServer(("127.0.0.1", 0), web_server.SecopMonitorHandler)
+    hilo = threading.Thread(target=httpd.serve_forever, daemon=True)
+    hilo.start()
+    yield httpd.server_address[1]
+    httpd.shutdown()
+    httpd.server_close()
+    web_server.SESSIONS.clear()
+
+
+class Cliente:
+    """Cliente HTTP minimo que conserva la cookie de sesion."""
+
+    def __init__(self, puerto):
+        self.puerto = puerto
+        self.cookie = None
+
+    def peticion(self, metodo, ruta, cuerpo=None):
+        conn = HTTPConnection("127.0.0.1", self.puerto, timeout=10)
+        cabeceras = {"Content-Type": "application/json"}
+        if self.cookie:
+            cabeceras["Cookie"] = self.cookie
+        datos = json.dumps(cuerpo or {}) if metodo in ("POST", "PUT") else None
+        conn.request(metodo, ruta, body=datos, headers=cabeceras)
+        resp = conn.getresponse()
+        crudo = resp.read().decode("utf-8")
+        set_cookie = resp.getheader("Set-Cookie")
+        if set_cookie:
+            self.cookie = set_cookie.split(";")[0]
+        conn.close()
+        try:
+            return resp.status, json.loads(crudo)
+        except json.JSONDecodeError:
+            return resp.status, crudo
+
+    def entrar(self, rol, correo=None):
+        cuerpo = {"rol": rol}
+        if correo:
+            cuerpo["correo"] = correo
+        return self.peticion("POST", "/api/auth/login", cuerpo)
+
+
+@pytest.fixture()
+def anonimo(servidor):
+    return Cliente(servidor)
+
+
+@pytest.fixture()
+def cliente_usuario(servidor):
+    c = Cliente(servidor)
+    estado, _ = c.entrar("usuario")
+    assert estado == 200
+    return c
+
+
+@pytest.fixture()
+def cliente_admin(servidor):
+    c = Cliente(servidor)
+    estado, _ = c.entrar("admin")
+    assert estado == 200
+    return c
+
+
+# ==========================================================================
+# Mapa de permisos
+# ==========================================================================
+def test_usuario_no_tiene_permisos_de_escritura():
+    assert not web_server.puede("usuario", "editar_configuracion")
+    assert not web_server.puede("usuario", "editar_metricas")
+    assert not web_server.puede("usuario", "gestionar_usuarios")
+    assert not web_server.puede("usuario", "ver_monitoreo")
+
+
+def test_usuario_tiene_sus_permisos_de_lectura():
+    assert web_server.puede("usuario", "ver_metricas")
+    assert web_server.puede("usuario", "ver_arquitectura")
+    assert web_server.puede("usuario", "ver_notificaciones")
+
+
+def test_admin_hereda_todo_lo_del_usuario():
+    assert web_server.PERMISOS_USUARIO <= web_server.PERMISOS_ADMIN
+
+
+def test_rol_desconocido_no_puede_nada():
+    assert not web_server.puede("superadmin", "ver_metricas")
+    assert not web_server.puede("", "ver_metricas")
+    assert not web_server.puede(None, "ver_metricas")
+
+
+# ==========================================================================
+# Autenticacion
+# ==========================================================================
+def test_login_con_rol_invalido_es_rechazado(anonimo):
+    estado, cuerpo = anonimo.entrar("superadmin")
+    assert estado == 400
+    assert cuerpo["codigo"] == "rol_invalido"
+
+
+def test_login_de_usuario_devuelve_sus_permisos(anonimo):
+    estado, cuerpo = anonimo.entrar("usuario")
+    assert estado == 200
+    assert cuerpo["usuario"]["rol"] == "usuario"
+    assert "ver_metricas" in cuerpo["permisos"]
+    assert "editar_configuracion" not in cuerpo["permisos"]
+
+
+def test_login_de_admin_incluye_permisos_de_escritura(anonimo):
+    estado, cuerpo = anonimo.entrar("admin")
+    assert estado == 200
+    assert cuerpo["usuario"]["rol"] == "admin"
+    assert "editar_configuracion" in cuerpo["permisos"]
+    assert "gestionar_usuarios" in cuerpo["permisos"]
+
+
+def test_cuenta_inactiva_no_puede_entrar(anonimo):
+    # u-004 (Supervisora Regional) esta marcada como inactiva en users.json
+    estado, cuerpo = anonimo.entrar("admin", correo="supervisora@secopmonitor.co")
+    assert estado == 403
+    assert cuerpo["codigo"] == "cuenta_inactiva"
+
+
+def test_login_con_rol_que_no_corresponde_al_usuario(anonimo):
+    estado, cuerpo = anonimo.entrar("admin", correo="cliente@secopmonitor.co")
+    assert estado == 403
+    assert cuerpo["codigo"] == "rol_no_corresponde"
+
+
+def test_sin_sesion_no_hay_identidad(anonimo):
+    estado, cuerpo = anonimo.peticion("GET", "/api/auth/me")
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_la_sesion_se_conserva_entre_peticiones(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/auth/me")
+    assert estado == 200
+    assert cuerpo["usuario"]["rol"] == "usuario"
+
+
+def test_cerrar_sesion_invalida_la_cookie(cliente_admin):
+    estado, _ = cliente_admin.peticion("POST", "/api/auth/logout")
+    assert estado == 200
+    estado, cuerpo = cliente_admin.peticion("GET", "/api/auth/me")
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_el_login_registra_el_acceso(anonimo, usuarios_temporales):
+    anonimo.entrar("usuario")
+    usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
+    cliente = next(u for u in usuarios if u["id"] == "u-002")
+    assert cliente["accesos"] == 1
+    assert cliente["ultimo_acceso"] is not None
+
+
+# ==========================================================================
+# Endpoints protegidos
+# ==========================================================================
+def test_guardar_configuracion_exige_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("POST", "/api/config", {"name": "X"})
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_usuario_no_puede_guardar_configuracion(cliente_usuario, config_temporal):
+    antes = config_temporal.read_text(encoding="utf-8")
+    estado, cuerpo = cliente_usuario.peticion("POST", "/api/config", {"name": "Pirata"})
+    assert estado == 403
+    assert cuerpo["codigo"] == "sin_permiso"
+    # Y sobre todo: el archivo no cambio.
+    assert config_temporal.read_text(encoding="utf-8") == antes
+
+
+def test_admin_si_puede_guardar_configuracion(cliente_admin, config_temporal):
+    estado, cuerpo = cliente_admin.peticion(
+        "POST", "/api/config", {"name": "Cliente de prueba", "keywords": []})
+    assert estado == 200
+    assert cuerpo["status"] == "ok"
+    guardado = json.loads(config_temporal.read_text(encoding="utf-8"))
+    assert guardado["name"] == "Cliente de prueba"
+
+
+def test_usuario_no_puede_probar_filtros(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion(
+        "POST", "/api/filter/test", {"name": "dotacion textil"})
+    assert estado == 403
+    assert cuerpo["codigo"] == "sin_permiso"
+
+
+def test_usuario_no_puede_ver_el_monitoreo_en_vivo(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/secop/live")
+    assert estado == 403
+    assert cuerpo["permiso"] == "ver_monitoreo"
+
+
+def test_usuario_si_puede_leer_el_perfil_del_cliente(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/config")
+    assert estado == 200
+    assert "keywords" in cuerpo
+
+
+def test_leer_el_perfil_exige_sesion(anonimo):
+    estado, _ = anonimo.peticion("GET", "/api/config")
+    assert estado == 401

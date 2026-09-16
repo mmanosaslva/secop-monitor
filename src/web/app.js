@@ -1,16 +1,130 @@
 /**
- * SECOP Monitor - SENA Dashboard Frontend Logic
+ * SECOP Monitor - Frontend
  */
 
+// ==========================================================================
+// 0. Sesion y permisos
+// ==========================================================================
+// Espejo del mapa de permisos del backend (src/web_server.py). El render usa
+// esto para no mostrar lo prohibido; la decision que vale es siempre la del
+// servidor, que rechaza la peticion si el rol no autoriza.
+let sesion = null; // { usuario: {...}, permisos: [...] }
+
+/** Unico lugar donde se resuelve un permiso en el frontend. */
+function puede(accion) {
+    return Boolean(sesion && sesion.permisos.includes(accion));
+}
+
+function esAdmin() {
+    return Boolean(sesion && sesion.usuario.rol === 'admin');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initAcceso();
+    restaurarSesion();
+});
+
+/** Al cargar: si ya hay sesion en el navegador, entra directo. */
+async function restaurarSesion() {
+    try {
+        const resp = await fetch('/api/auth/me');
+        if (resp.ok) {
+            sesion = await resp.json();
+            entrarALaApp();
+            return;
+        }
+    } catch (err) {
+        console.warn('No se pudo consultar la sesion:', err);
+    }
+    mostrarAcceso();
+}
+
+function mostrarAcceso() {
+    document.getElementById('login-screen').hidden = false;
+    document.getElementById('app-shell').hidden = true;
+}
+
+function initAcceso() {
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (btnLogin) {
+        btnLogin.addEventListener('click', iniciarSesion);
+    }
+    if (btnLogout) {
+        btnLogout.addEventListener('click', cerrarSesion);
+    }
+}
+
+async function iniciarSesion() {
+    const btnLogin = document.getElementById('btn-login');
+    const error = document.getElementById('login-error');
+    const seleccion = document.querySelector('input[name="rol-acceso"]:checked');
+
+    error.hidden = true;
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Entrando...';
+
+    try {
+        const resp = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rol: seleccion ? seleccion.value : 'usuario' })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            error.textContent = data.error || 'No se pudo iniciar la sesion.';
+            error.hidden = false;
+            return;
+        }
+
+        sesion = data;
+        entrarALaApp();
+    } catch (err) {
+        error.textContent = 'No hay conexion con el servidor. Levanta src/web_server.py e intenta de nuevo.';
+        error.hidden = false;
+    } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Entrar al monitor';
+    }
+}
+
+async function cerrarSesion() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+        console.warn('Fallo al cerrar sesion en el servidor:', err);
+    }
+    sesion = null;
+    window.location.reload();
+}
+
+/** Arranca la aplicacion con los modulos que el rol autoriza. */
+function entrarALaApp() {
+    document.getElementById('login-screen').hidden = true;
+    document.getElementById('app-shell').hidden = false;
+
+    pintarIdentidad();
+
     initTabNavigation();
     initLiveSECOP();
-    initSimulator();
     initConfigEditor();
     initEmailPreview();
     initModal();
     initManualSync();
-});
+}
+
+function pintarIdentidad() {
+    if (!sesion) return;
+    const nombre = document.getElementById('session-user-name');
+    const chip = document.getElementById('session-user-role');
+    if (nombre) nombre.textContent = sesion.usuario.nombre;
+    if (chip) {
+        chip.textContent = esAdmin() ? 'Administrador' : 'Usuario';
+        chip.classList.toggle('is-admin', esAdmin());
+    }
+}
 
 // ==========================================================================
 // 1. Tab Navigation Controller

@@ -1,0 +1,44 @@
+{
+  "usuarios": [
+    {
+      "id": "u-001",
+      "nombre": "Administrador del Sistema",
+      "correo": "admin@secopmonitor.co",
+      "rol": "admin",
+      "estado": "activo",
+      "ultimo_acceso": null,
+      "accesos": 0,
+      "acciones": 0
+    },
+    {
+      "id": "u-002",
+      "nombre": "Cliente Textil Caribe",
+      "correo": "cliente@secopmonitor.co",
+      "rol": "usuario",
+      "estado": "activo",
+      "ultimo_acceso": null,
+      "accesos": 0,
+      "acciones": 0
+    },
+    {
+      "id": "u-003",
+      "nombre": "Analista de Contratación",
+      "correo": "analista@secopmonitor.co",
+      "rol": "usuario",
+      "estado": "activo",
+      "ultimo_acceso": null,
+      "accesos": 0,
+      "acciones": 0
+    },
+    {
+      "id": "u-004",
+      "nombre": "Supervisora Regional",
+      "correo": "supervisora@secopmonitor.co",
+      "rol": "admin",
+      "estado": "inactivo",
+      "ultimo_acceso": null,
+      "accesos": 0,
+      "acciones": 0
+    }
+  ]
+}

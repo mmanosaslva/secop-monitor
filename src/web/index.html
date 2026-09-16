@@ -14,6 +14,50 @@
 </head>
 
 <body>
+    <!-- Pantalla de acceso: fija el rol de la sesion -->
+    <div class="login-screen" id="login-screen" hidden>
+        <div class="login-card">
+            <div class="login-brand">
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="22" r="14" fill="#39A900" />
+                    <path
+                        d="M50 42 C30 42, 15 55, 15 80 L32 80 C32 65, 40 56, 50 56 C60 56, 68 65, 68 80 L85 80 C85 55, 70 42, 50 42 Z"
+                        fill="#39A900" />
+                    <circle cx="50" cy="74" r="7" fill="#00324D" />
+                </svg>
+            </div>
+            <span class="login-eyebrow">acceso al sistema</span>
+            <h1 class="login-title">Elige con qué rol<br>quieres entrar</h1>
+            <p class="login-sub">El rol determina qué módulos ves y qué puedes modificar.</p>
+
+            <div class="role-options" id="role-options">
+                <label class="role-option">
+                    <input type="radio" name="rol-acceso" value="usuario" checked>
+                    <span class="role-body">
+                        <span class="role-name">Usuario</span>
+                        <span class="role-desc">Panel de métricas y explicación del motor. Solo lectura: no puedes
+                            editar ni sincronizar.</span>
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="rol-acceso" value="admin">
+                    <span class="role-body">
+                        <span class="role-name">Administrador</span>
+                        <span class="role-desc">Todo lo del usuario, más monitoreo en vivo, configuración del cliente y
+                            gestión de usuarios.</span>
+                    </span>
+                </label>
+            </div>
+
+            <button class="btn-sena-primary block-btn" id="btn-login">Entrar al monitor</button>
+            <p class="login-error" id="login-error" hidden></p>
+            <p class="login-note">Tu rol queda fijado en esta sesión del navegador. Puedes cerrarla cuando quieras
+                desde el encabezado.</p>
+        </div>
+    </div>
+
+    <div class="app-shell" id="app-shell" hidden>
+
     <!-- Header Institucional SENA -->
     <header class="sena-header">
         <div class="header-container">
@@ -44,6 +88,13 @@
                     <span class="status-icon">⏱️</span>
                     <span class="status-label">Cron: 4x/Día</span>
                 </div>
+            </div>
+            <div class="user-controls" id="user-controls">
+                <div class="user-identity">
+                    <span class="user-name" id="session-user-name"></span>
+                    <span class="user-role-chip" id="session-user-role"></span>
+                </div>
+                <button class="btn-logout" id="btn-logout" type="button">Cerrar sesión</button>
             </div>
         </div>
     </header>
@@ -533,6 +584,7 @@
             <p class="sub">Servicio Nacional de Aprendizaje SENA • Ministerio del Trabajo • Gobierno de Colombia</p>
         </div>
     </footer>
+    </div><!-- /app-shell -->
 
     <!-- Process Detail Modal -->
     <div class="modal-overlay" id="process-modal">
