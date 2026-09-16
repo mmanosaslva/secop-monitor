@@ -21,32 +21,37 @@
                 <img src="plataforma50_logo.png" alt="Plataforma50" class="marca-logo" width="402" height="107">
             </div>
 
-            <span class="login-eyebrow">acceso al sistema</span>
-            <h1 class="login-title">Entra a tu<br>panel de monitoreo</h1>
-            <p class="login-sub">Usa el correo y la contraseña de tu cuenta.</p>
+            <div class="login-encabezado">
+                <span class="login-eyebrow">acceso al sistema</span>
+                <h1 class="login-title">Entra a tu<br>panel de monitoreo</h1>
+                <p class="login-sub">Usa el correo y la contraseña de tu cuenta.</p>
+            </div>
 
             <form id="login-form" onsubmit="return false;">
-                <div class="form-group">
-                    <label for="login-correo">Correo electrónico</label>
-                    <input type="email" id="login-correo" autocomplete="username"
-                           placeholder="tu@correo.co" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-contrasena">Contraseña</label>
-                    <div class="campo-contrasena">
-                        <input type="password" id="login-contrasena"
-                               autocomplete="current-password" required>
-                        <button type="button" class="btn-ver-contrasena" id="btn-ver-contrasena"
-                                aria-label="Mostrar contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <div class="login-campos">
+                    <div class="form-group">
+                        <label for="login-correo">Correo electrónico</label>
+                        <input type="email" id="login-correo" autocomplete="username"
+                               placeholder="tu@correo.co" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-contrasena">Contraseña</label>
+                        <div class="campo-contrasena">
+                            <input type="password" id="login-contrasena"
+                                   autocomplete="current-password" required>
+                            <button type="button" class="btn-ver-contrasena" id="btn-ver-contrasena"
+                                    aria-label="Mostrar contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
                     </div>
                 </div>
 
-                <button class="btn-primario block-btn" id="btn-login" type="submit">Entrar al monitor</button>
+                <div class="login-acciones">
+                    <button class="btn-primario" id="btn-login" type="submit">Entrar al monitor</button>
+                    <p class="login-error" id="login-error" hidden></p>
+                    <p class="login-note">Tu sesión queda fijada en este navegador. El rol y los
+                        permisos los determina tu cuenta, no tú.</p>
+                </div>
             </form>
-
-            <p class="login-error" id="login-error" hidden></p>
-            <p class="login-note">Tu sesión queda fijada en este navegador. El rol y los
-                permisos los determina tu cuenta, no tú.</p>
         </div>
     </div>
 
@@ -93,8 +98,8 @@
                     <span class="user-name" id="session-user-name"></span>
                     <span class="user-role-chip" id="session-user-role"></span>
                 </div>
-                <button class="btn-logout" id="btn-clave" type="button">Contraseña</button>
-                <button class="btn-logout" id="btn-logout" type="button">Cerrar sesión</button>
+                <button class="btn-sesion" id="btn-clave" type="button">Contraseña</button>
+                <button class="btn-sesion is-atenuado" id="btn-logout" type="button">Cerrar sesión</button>
             </div>
         </div>
     </header>

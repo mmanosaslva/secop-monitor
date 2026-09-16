@@ -203,7 +203,7 @@ body {
 .banner-text h2 {
     font-size: 20px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 }
 
 .banner-text p {
@@ -280,10 +280,6 @@ body {
 
 
 .kpi-numeral {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--p50-accent);
 }
 
 .kpi-title {
@@ -296,16 +292,12 @@ body {
 }
 
 .kpi-value {
-    font-size: 26px;
     font-weight: 600;
-    color: var(--p50-surface);
-    line-height: 1.2;
+    color: var(--p50-text);
     display: block;
 }
 
 .kpi-subtext {
-    font-size: 11px;
-    color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -342,7 +334,7 @@ body {
 .card-header h3 {
     font-size: 16px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 }
 
 .chip-contorno {
@@ -370,8 +362,6 @@ body {
 }
 
 .detail-label {
-    font-size: 12px;
-    font-weight: 600;
     color: var(--p50-text-muted);
     display: block;
     margin-bottom: 4px;
@@ -379,13 +369,9 @@ body {
 
 .detail-val {
     font-size: 14px;
-    color: var(--p50-text);
-    font-weight: 500;
 }
 
 .detail-val.highlight {
-    font-weight: 600;
-    color: var(--p50-surface);
     font-size: 16px;
 }
 
@@ -434,7 +420,7 @@ body {
 
 .timeline-content strong {
     font-size: 13px;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 }
 
 .timeline-content p {
@@ -457,7 +443,7 @@ body {
 .pipeline-title {
     font-size: 18px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
     margin-bottom: 24px;
 }
 
@@ -503,7 +489,7 @@ body {
 .pipeline-step-card h4 {
     font-size: 14px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
     margin-bottom: 6px;
 }
 
@@ -526,7 +512,6 @@ body {
 
 .pipeline-connector {
     font-size: 18px;
-    color: var(--p50-accent);
     font-weight: bold;
 }
 
@@ -705,12 +690,12 @@ body {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 }
 
 .entity-name {
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 
 }
 
@@ -728,11 +713,7 @@ body {
 /* Badges */
 .badge-status {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 12px;
     font-size: 11px;
-    font-weight: 600;
-    margin-right: 4px;
     margin-bottom: 4px;
 }
 
@@ -743,7 +724,6 @@ body {
 
 .btn-view-detail {
     background: var(--p50-surface);
-    color: var(--p50-text);
     border: none;
     padding: 6px 12px;
     border-radius: var(--radius-sm);
@@ -873,11 +853,14 @@ body {
 
 .login-card {
     width: 100%;
-    max-width: 460px;
+    max-width: 452px;
     background: var(--p50-surface);
     border: 1px solid var(--p50-line);
     border-radius: var(--radius-lg);
-    padding: 40px 36px;
+    padding: 44px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
 }
 
 .login-brand {
@@ -890,23 +873,15 @@ body {
     font-weight: 500;
     letter-spacing: 0.08em;
     color: var(--p50-text-muted);
-    margin-bottom: 8px;
-}
-
-.login-title {
-    font-size: 30px;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    color: var(--p50-surface);
     margin: 0 0 10px 0;
 }
 
 .login-sub {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.6;
     color: var(--p50-text-muted);
-    margin: 0 0 24px 0;
+    margin: 10px 0 0 0;
+    text-wrap: pretty;
 }
 
 .login-error {
@@ -923,11 +898,12 @@ body {
 }
 
 .login-note {
-    margin: 16px 0 0 0;
-    font-size: 12px;
+    margin: 0;
+    font-size: 13px;
     line-height: 1.5;
     color: var(--p50-text-muted);
     text-align: center;
+    text-wrap: pretty;
 }
 
 /* Identidad de la sesion en el encabezado */
@@ -948,7 +924,8 @@ body {
 .user-name {
     font-size: 13px;
     font-weight: 600;
-    color: var(--p50-surface);
+    color: var(--p50-text);
+    white-space: nowrap;
 }
 
 .user-role-chip {
@@ -956,34 +933,39 @@ body {
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 2px 8px;
+    padding: 2px 9px;
     border-radius: 999px;
-    background: transparent;
-    border: 1px solid var(--p50-line);
+    background: var(--p50-surface);
     color: var(--p50-text-muted);
+    white-space: nowrap;
 }
 
 .user-role-chip.is-admin {
     background: var(--p50-accent-soft);
-    border-color: var(--p50-accent);
-    color: var(--p50-text);
+    color: var(--p50-accent-hover);
 }
 
-.btn-logout {
-    padding: 7px 14px;
+.btn-sesion {
+    padding: 8px 14px;
+    font-family: inherit;
     font-size: 13px;
     font-weight: 600;
-    font-family: inherit;
-    color: var(--p50-surface);
+    color: var(--p50-text);
     background: transparent;
     border: 1px solid var(--p50-line);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: background 0.15s ease;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.btn-logout:hover {
-    background: var(--p50-line);
+.btn-sesion.is-atenuado {
+    color: var(--p50-text-muted);
+}
+
+.btn-sesion:hover {
+    background: var(--p50-surface);
+    border-color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -1018,15 +1000,13 @@ body {
 .estado-titulo {
     font-size: 28px;
     font-weight: 600;
-    line-height: 1.25;
     letter-spacing: -0.02em;
-    color: var(--p50-surface);
+    color: var(--p50-text);
     margin: 0 0 12px 0;
 }
 
 .estado-texto {
     max-width: 480px;
-    font-size: 15px;
     line-height: 1.6;
     color: var(--p50-text-muted);
     margin: 0 0 24px 0;
@@ -1257,7 +1237,7 @@ body {
 .correo-asunto {
     margin: 6px 0 0 0;
     font-size: 15px;
-    color: var(--p50-surface);
+    color: var(--p50-text);
 }
 
 .correo-badges {
@@ -1310,8 +1290,8 @@ body {
     height: 32px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--p50-surface);
-    background: var(--p50-surface);
+    color: var(--p50-accent);
+    background: var(--p50-accent-soft);
     border-radius: 50%;
 }
 
@@ -1332,7 +1312,7 @@ body {
 }
 
 .chip-rol.es-admin {
-    color: var(--p50-surface);
+    color: var(--p50-text);
     background: var(--p50-accent-soft);
     border-color: var(--p50-accent);
 }
@@ -1439,7 +1419,6 @@ body {
 .form-exito {
     margin: 12px 0 0 0;
     padding: 10px 14px;
-    font-size: 13px;
     color: var(--p50-text-muted);
     background: var(--p50-surface-alt);
     border-radius: var(--radius-sm);
@@ -1465,9 +1444,7 @@ body {
 }
 
 /* Titular de sección: 40-56px / 600 / -0.02em */
-.section-banner h2,
-.login-title,
-.estado-titulo {
+.section-banner h2 {
     font-size: 44px;
     font-weight: 600;
     line-height: 1.08;
@@ -1485,9 +1462,7 @@ body {
 }
 
 /* Cuerpo: 16-18px / 1.6, máximo 65 caracteres por línea */
-.section-banner p,
-.login-sub,
-.estado-texto {
+.section-banner p {
     font-size: 17px;
     font-weight: 400;
     line-height: 1.6;
@@ -1601,4 +1576,113 @@ body {
 }
 
 .estado-icono { color: var(--p50-text-muted); }
-.pipeline-connector { color: var(--p50-line); }
+.pipeline-connector { color: var(--p50-text-muted); }
+
+/* ==========================================================================
+   Pantalla de acceso — valores del artboard 01
+   ========================================================================== */
+
+.login-title {
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--p50-text);
+    margin: 0;
+}
+
+/* Los tres bloques de la tarjeta: marca, encabezado, formulario */
+.login-card > .login-brand {
+    margin: 0;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    text-align: left;
+}
+
+.login-encabezado {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.login-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.login-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#login-form .form-group {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#login-form label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--p50-text);
+    margin: 0;
+}
+
+#login-form input {
+    width: 100%;
+    padding: 14px 15px;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--p50-text);
+    background: var(--p50-ink);
+    border: 1px solid var(--p50-line);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease;
+}
+
+#login-form input::placeholder {
+    color: var(--p50-text-muted);
+}
+
+#login-form input:focus {
+    outline: none;
+    border-color: var(--p50-accent);
+}
+
+#btn-login {
+    width: 100%;
+    padding: 15px 22px;
+    font-size: 16px;
+}
+
+.btn-ver-contrasena {
+    color: var(--p50-text-muted);
+}
+
+.btn-ver-contrasena:hover {
+    color: var(--p50-text);
+}
+
+/* Estado de acceso denegado: valores del artboard 04 */
+.estado-titulo {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--p50-text);
+}
+
+.estado-texto {
+    max-width: 480px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--p50-text-muted);
+    text-wrap: pretty;
+}
