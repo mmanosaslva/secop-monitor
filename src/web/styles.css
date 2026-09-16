@@ -117,16 +117,6 @@ body {
     gap: 10px;
 }
 
-.tag-v2 {
-    font-size: 10px;
-    background: var(--sena-green);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
 .system-status-pills {
     display: flex;
     align-items: center;
@@ -913,12 +903,6 @@ body {
 
 .footer-container p {
     font-size: 13px;
-}
-
-.footer-container p.sub {
-    font-size: 11px;
-    color: var(--sena-accent-yellow);
-    margin-top: 4px;
 }
 
 /* Responsive adjust */
