@@ -1,0 +1,44 @@
+{
+  "notificaciones": [
+    {
+      "id": "n-004",
+      "titulo": "Suministro de dotación laboral textil y prendas deportivas",
+      "entidad": "SENA Regional Atlántico",
+      "ubicacion": "Barranquilla, Atlántico",
+      "valor_base": 55000000,
+      "modalidad": "Mínima cuantía",
+      "fecha": "2026-09-15T20:00:00+00:00",
+      "leida": false
+    },
+    {
+      "id": "n-003",
+      "titulo": "Dotación de calzado y prendas de protección laboral",
+      "entidad": "Alcaldía Municipal de Soledad",
+      "ubicacion": "Soledad, Atlántico",
+      "valor_base": 28500000,
+      "modalidad": "Mínima cuantía",
+      "fecha": "2026-09-15T13:30:00+00:00",
+      "leida": false
+    },
+    {
+      "id": "n-002",
+      "titulo": "Adquisición de uniforme escolar e insumos textiles",
+      "entidad": "Gobernación de Bolívar",
+      "ubicacion": "Cartagena, Bolívar",
+      "valor_base": 45000000,
+      "modalidad": "Mínima cuantía",
+      "fecha": "2026-09-15T10:00:00+00:00",
+      "leida": true
+    },
+    {
+      "id": "n-001",
+      "titulo": "Confección de vestuario institucional para personal operativo",
+      "entidad": "Gobernación del Magdalena",
+      "ubicacion": "Santa Marta, Magdalena",
+      "valor_base": 61200000,
+      "modalidad": "Mínima cuantía",
+      "fecha": "2026-09-14T20:00:00+00:00",
+      "leida": true
+    }
+  ]
+}

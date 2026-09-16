@@ -113,7 +113,7 @@ function entrarALaApp() {
     cargarMetricas();
     if (puede('ver_monitoreo')) initLiveSECOP();
     if (puede('editar_configuracion')) initConfigEditor();
-    if (puede('ver_notificaciones')) initEmailPreview();
+    if (puede('ver_notificaciones')) initNotificaciones();
     if (puede('editar_metricas')) initManualSync();
 }
 
@@ -163,8 +163,7 @@ const MODULOS = [
     { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', icono: '🧠', permiso: 'ver_arquitectura' },
     { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', icono: '🌐', permiso: 'ver_monitoreo' },
     { id: 'simulator', etiqueta: 'Simulador del Motor', icono: '⚡', permiso: 'probar_filtros' },
-    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' },
-    { id: 'email-preview', etiqueta: 'Notificación Brevo', icono: '📧', permiso: 'ver_notificaciones' }
+    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' }
 ];
 
 function modulosAutorizados() {
@@ -583,61 +582,199 @@ function initConfigEditor() {
 }
 
 // ==========================================================================
-// 5. Brevo Email Preview Generator
+// 5. Notificaciones: desplegable del encabezado
 // ==========================================================================
-function initEmailPreview() {
-    const previewContainer = document.getElementById('email-preview-frame');
-    if (!previewContainer) return;
+// Dejo de ser un modulo del nav. Es una campana con badge de conteo y un panel
+// flotante, disponible para los dos roles.
+let notificaciones = [];
 
-    previewContainer.innerHTML = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin: 0 auto;padding:10px;">
-            <div style="background:#00324D;padding:14px;border-radius:6px;margin-bottom:15px;color:white;">
-                <strong style="color:#39A900;font-size:18px;">SENA • SECOP II Monitor</strong>
-                <h3 style="margin:4px 0 0 0;color:white;font-size:16px;">Nueva Oportunidad Detectada para ${escapeHtml(clientConfig.name)}</h3>
-            </div>
-            
-            <div style="margin-bottom:15px;">
-                <span style="display:inline-block;padding: 4px 10px;background:#dbeafe;color:#1e40af;border-radius:12px;font-size:12px;font-weight:bold;margin-right:6px;">Mínima Cuantía</span>
-                <span style="display:inline-block;padding: 4px 10px;background:#fce7f3;color:#be185d;border-radius:12px;font-size:12px;font-weight:bold;margin-right:6px;">Preferencia: Mujer Líder</span>
-                <span style="display:inline-block;padding: 4px 10px;background:#d1fae5;color:#065f46;border-radius:12px;font-size:12px;font-weight:bold;margin-right:6px;">PYME Favorable</span>
+function initNotificaciones() {
+    const boton = document.getElementById('btn-campana');
+    const panel = document.getElementById('panel-notificaciones');
+    const marcarTodas = document.getElementById('btn-marcar-todas');
+    if (!boton || !panel) return;
+
+    boton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const abierto = !panel.hidden;
+        panel.hidden = abierto;
+        boton.setAttribute('aria-expanded', String(!abierto));
+        if (!abierto) cargarNotificaciones();
+    });
+
+    // Cierre al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!panel.hidden && !panel.contains(e.target) && e.target !== boton) {
+            panel.hidden = true;
+            boton.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !panel.hidden) {
+            panel.hidden = true;
+            boton.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    if (marcarTodas) {
+        marcarTodas.addEventListener('click', () => marcarNotificacion(null));
+    }
+
+    cargarNotificaciones();
+}
+
+async function cargarNotificaciones() {
+    try {
+        const resp = await fetch('/api/notifications');
+        if (!resp.ok) {
+            pintarNotificaciones([], 'No se pudieron cargar las notificaciones.');
+            return;
+        }
+        const data = await resp.json();
+        notificaciones = data.notificaciones || [];
+        pintarNotificaciones(notificaciones);
+        actualizarBadge(data.sin_leer || 0);
+    } catch (err) {
+        pintarNotificaciones([], 'Sin conexión con el servidor.');
+    }
+}
+
+function actualizarBadge(sinLeer) {
+    const badge = document.getElementById('campana-badge');
+    if (!badge) return;
+    badge.textContent = sinLeer > 9 ? '9+' : String(sinLeer);
+    badge.hidden = sinLeer === 0;
+}
+
+function pintarNotificaciones(lista, mensajeError) {
+    const contenedor = document.getElementById('panel-lista');
+    const nota = document.getElementById('panel-nota');
+    if (!contenedor) return;
+
+    if (mensajeError) {
+        contenedor.innerHTML = `<div class="panel-vacio">${escapeHtml(mensajeError)}</div>`;
+        if (nota) nota.textContent = '';
+        return;
+    }
+
+    if (lista.length === 0) {
+        contenedor.innerHTML = `<div class="panel-vacio">
+            <span class="panel-vacio-icono">📭</span>
+            <strong>Sin notificaciones</strong>
+            <span>Cuando el motor encuentre una oportunidad que coincida, aparecerá aquí.</span>
+        </div>`;
+        if (nota) nota.textContent = '';
+        return;
+    }
+
+    contenedor.innerHTML = lista.map(n => `
+        <button class="notif-item ${n.leida ? 'leida' : 'sin-leer'}" data-id="${escapeHtml(n.id)}" type="button">
+            <span class="notif-punto" aria-hidden="true"></span>
+            <span class="notif-cuerpo">
+                <span class="notif-titulo">${escapeHtml(n.titulo)}</span>
+                <span class="notif-meta">${escapeHtml(n.entidad)} · ${formatearPesos(n.valor_base)}</span>
+                <span class="notif-fecha">${formatearFecha(n.fecha)}</span>
+            </span>
+        </button>
+    `).join('');
+
+    contenedor.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const id = item.getAttribute('data-id');
+            marcarNotificacion(id);
+            const notif = notificaciones.find(n => n.id === id);
+            if (notif) abrirDetalleNotificacion(notif);
+        });
+    });
+
+    if (nota) {
+        const sinLeer = lista.filter(n => !n.leida).length;
+        nota.textContent = sinLeer > 0
+            ? `${sinLeer} sin leer de ${lista.length}`
+            : `${lista.length} notificaciones, todas leídas`;
+    }
+}
+
+async function marcarNotificacion(id) {
+    try {
+        const resp = await fetch('/api/notifications/read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(id ? { id } : {})
+        });
+        if (resp.ok) cargarNotificaciones();
+    } catch (err) {
+        console.warn('No se pudo marcar la notificacion:', err);
+    }
+}
+
+/** Abre el correo tal como lo recibe el cliente, reutilizando el generador. */
+function abrirDetalleNotificacion(notif) {
+    const modal = document.getElementById('process-modal');
+    const contenido = document.getElementById('modal-content');
+    const titulo = document.getElementById('modal-title');
+    if (!modal || !contenido) return;
+
+    if (titulo) titulo.textContent = 'Notificación enviada al cliente';
+    contenido.innerHTML = construirCorreoHtml(notif);
+    modal.classList.add('active');
+
+    const panel = document.getElementById('panel-notificaciones');
+    if (panel) panel.hidden = true;
+}
+
+/**
+ * Generador del correo transaccional. Viene de initEmailPreview(), que era un
+ * modulo entero del nav; ahora es el detalle de una notificacion concreta.
+ */
+function construirCorreoHtml(notif) {
+    return `
+        <div class="correo-mockup">
+            <div class="correo-cabecera">
+                <strong class="correo-marca">SECOP Monitor</strong>
+                <h3 class="correo-asunto">Nueva oportunidad detectada para ${escapeHtml(clientConfig.name)}</h3>
             </div>
 
-            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
-                <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding: 10px 0;font-weight:bold;color:#374151;">Entidad</td>
-                    <td style="padding: 10px 0;color:#111827;">SENA Regional Atlántico</td>
-                </tr>
-                <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding: 10px 0;font-weight:bold;color:#374151;">Objeto</td>
-                    <td style="padding: 10px 0;color:#111827;">Suministro de dotación laboral textil y prendas deportivas</td>
-                </tr>
-                <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding: 10px 0;font-weight:bold;color:#374151;">Ubicación</td>
-                    <td style="padding: 10px 0;color:#111827;">Barranquilla, Atlántico</td>
-                </tr>
-                <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding: 10px 0;font-weight:bold;color:#374151;">Valor Base</td>
-                    <td style="padding: 10px 0;color:#111827;font-weight:bold;color:#059669;">$55,000,000 COP</td>
-                </tr>
-                <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding: 10px 0;font-weight:bold;color:#374151;">Modalidad</td>
-                    <td style="padding: 10px 0;color:#111827;">Mínima cuantía</td>
-                </tr>
+            <div class="correo-badges">
+                <span class="badge-status badge-minima">${escapeHtml(notif.modalidad || 'Mínima cuantía')}</span>
+            </div>
+
+            <table class="sena-data-table correo-tabla">
+                <tr><td><strong>Entidad</strong></td><td>${escapeHtml(notif.entidad)}</td></tr>
+                <tr><td><strong>Objeto</strong></td><td>${escapeHtml(notif.titulo)}</td></tr>
+                <tr><td><strong>Ubicación</strong></td><td>${escapeHtml(notif.ubicacion)}</td></tr>
+                <tr><td><strong>Valor base</strong></td><td class="price-text">${formatearPesos(notif.valor_base)}</td></tr>
+                <tr><td><strong>Modalidad</strong></td><td>${escapeHtml(notif.modalidad)}</td></tr>
             </table>
 
-            <div style="background:#f0fdf4;border-left:4px solid #22c55e;padding:15px;margin: 20px 0;border-radius:6px;">
-                <strong style="color:#166534;">Ventaja Competitiva para su Empresa</strong><br>
-                <span style="color:#15803d;font-size:12px;">Este proceso valora empresas lideradas por mujeres y certificación PYME. Sus acreditaciones le otorgan preferencia en la adjudicación.</span>
+            <div class="correo-ventaja">
+                <strong>Ventaja competitiva para tu empresa</strong>
+                <p>Este proceso valora empresas lideradas por mujeres y certificación PYME.
+                   Tus acreditaciones te dan preferencia en la adjudicación.</p>
             </div>
 
-            <div style="margin-top:20px;text-align:center;">
-                <a href="https://www.datos.gov.co" target="_blank"
-                   style="display:inline-block;padding: 12px 24px;background:#FFC600;color:#00324D;text-decoration:none;border-radius:6px;font-weight:bold;font-size:15px;">
-                    🔗 Ver Proceso en SECOP II
+            <div class="correo-cta">
+                <a href="https://www.datos.gov.co" target="_blank" rel="noopener" class="btn-sena-action">
+                    Ver proceso en SECOP II
                 </a>
             </div>
         </div>
     `;
+}
+
+function formatearPesos(valor) {
+    if (!valor) return 'No definido';
+    return `$${Number(valor).toLocaleString('es-CO')} COP`;
+}
+
+function formatearFecha(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleString('es-CO', {
+        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+    });
 }
 
 // ==========================================================================

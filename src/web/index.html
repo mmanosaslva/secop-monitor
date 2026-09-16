@@ -90,6 +90,23 @@
                 </div>
             </div>
             <div class="user-controls" id="user-controls">
+                <div class="notificaciones-wrap">
+                    <button class="btn-campana" id="btn-campana" type="button"
+                            aria-haspopup="true" aria-expanded="false" aria-label="Notificaciones">
+                        <span class="campana-icono">🔔</span>
+                        <span class="campana-badge" id="campana-badge" hidden>0</span>
+                    </button>
+                    <div class="panel-notificaciones" id="panel-notificaciones" hidden>
+                        <div class="panel-cabecera">
+                            <span class="panel-titulo">Notificaciones</span>
+                            <button class="panel-accion" id="btn-marcar-todas" type="button">Marcar todas</button>
+                        </div>
+                        <div class="panel-lista" id="panel-lista"></div>
+                        <div class="panel-pie">
+                            <span class="panel-nota" id="panel-nota"></span>
+                        </div>
+                    </div>
+                </div>
                 <div class="user-identity">
                     <span class="user-name" id="session-user-name"></span>
                     <span class="user-role-chip" id="session-user-role"></span>
@@ -546,28 +563,6 @@
             </div>
         </section>
 
-        <!-- TAB 6: NOTIFICACIÓN EMAIL (BREVO PREVIEW) -->
-        <section id="tab-email-preview" class="tab-content">
-            <div class="section-banner">
-                <div class="banner-text">
-                    <h2>Previsualizador de Correo Transaccional (Brevo API)</h2>
-                    <p>Visualización exacta del correo electrónico renderizado en HTML con diseño responsive y badges
-                        SENA/Brevo.</p>
-                </div>
-            </div>
-
-            <div class="email-mockup-wrapper">
-                <div class="email-client-bar">
-                    <div class="dots"><span class="red"></span><span class="yellow"></span><span class="green"></span>
-                    </div>
-                    <div class="email-subject-line"><strong>Asunto:</strong> Nueva oportunidad: Suministro de dotación
-                        laboral y calzado institucional</div>
-                </div>
-                <div class="email-body-preview" id="email-preview-frame">
-                    <!-- HTML Generated Email will render here -->
-                </div>
-            </div>
-        </section>
 
     </main>
 

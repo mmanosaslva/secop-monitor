@@ -37,7 +37,16 @@ def config_temporal(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def servidor(usuarios_temporales, config_temporal):
+def notificaciones_temporales(tmp_path, monkeypatch):
+    """Copia notifications.json para no mutar el archivo del repo."""
+    destino = tmp_path / "notifications.json"
+    shutil.copy(web_server.NOTIFICATIONS_PATH, destino)
+    monkeypatch.setattr(web_server, "NOTIFICATIONS_PATH", str(destino))
+    return destino
+
+
+@pytest.fixture()
+def servidor(usuarios_temporales, config_temporal, notificaciones_temporales):
     """Servidor real en un puerto efimero, apagado al terminar la prueba."""
     web_server.SESSIONS.clear()
     httpd = socketserver.TCPServer(("127.0.0.1", 0), web_server.SecopMonitorHandler)
@@ -307,3 +316,56 @@ def test_la_sincronizacion_cuenta_como_accion_del_usuario(
 def test_la_sincronizacion_sin_sesion_es_rechazada(anonimo):
     estado, _ = anonimo.peticion("POST", "/api/sync")
     assert estado == 401
+
+
+# ==========================================================================
+# Notificaciones (Fase 4) — disponibles para los dos roles
+# ==========================================================================
+def test_las_notificaciones_exigen_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("GET", "/api/notifications")
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_el_usuario_puede_ver_sus_notificaciones(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/notifications")
+    assert estado == 200
+    assert len(cuerpo["notificaciones"]) == 4
+    assert cuerpo["sin_leer"] == 2
+
+
+def test_el_admin_tambien_puede_verlas(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("GET", "/api/notifications")
+    assert estado == 200
+    assert cuerpo["sin_leer"] == 2
+
+
+def test_marcar_una_notificacion_como_leida(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion(
+        "POST", "/api/notifications/read", {"id": "n-004"})
+    assert estado == 200
+    assert cuerpo["sin_leer"] == 1
+
+    _, lista = cliente_usuario.peticion("GET", "/api/notifications")
+    marcada = next(n for n in lista["notificaciones"] if n["id"] == "n-004")
+    assert marcada["leida"] is True
+
+
+def test_marcar_todas_como_leidas(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("POST", "/api/notifications/read")
+    assert estado == 200
+    assert cuerpo["sin_leer"] == 0
+
+
+def test_marcar_una_notificacion_inexistente(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion(
+        "POST", "/api/notifications/read", {"id": "n-999"})
+    assert estado == 404
+    assert cuerpo["codigo"] == "no_encontrada"
+
+
+def test_marcar_sin_sesion_es_rechazado(anonimo, notificaciones_temporales):
+    antes = notificaciones_temporales.read_text(encoding="utf-8")
+    estado, _ = anonimo.peticion("POST", "/api/notifications/read")
+    assert estado == 401
+    assert notificaciones_temporales.read_text(encoding="utf-8") == antes

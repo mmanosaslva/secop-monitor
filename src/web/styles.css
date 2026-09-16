@@ -934,54 +934,6 @@ body {
 }
 
 /* ==========================================================================
-   Email Preview Frame Mockup
-   ========================================================================== */
-
-.email-mockup-wrapper {
-    background: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color);
-    max-width: 700px;
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-.email-client-bar {
-    background: var(--sena-navy);
-    padding: 12px 18px;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.dots {
-    display: flex;
-    gap: 6px;
-}
-
-.dots span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-
-.dots .red { background: #EF4444; }
-.dots .yellow { background: #F59E0B; }
-.dots .green { background: #10B981; }
-
-.email-subject-line {
-    font-size: 12px;
-    color: #E2E8F0;
-}
-
-.email-body-preview {
-    padding: 30px;
-    background: #FFFFFF;
-}
-
-/* ==========================================================================
    Modal Overlay
    ========================================================================== */
 
@@ -1319,4 +1271,236 @@ body {
     text-align: center;
     padding: 30px;
     color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Notificaciones: campana y panel flotante del encabezado
+   ========================================================================== */
+
+.notificaciones-wrap {
+    position: relative;
+}
+
+.btn-campana {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
+    background: transparent;
+    border: 1px solid var(--sena-navy-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-campana:hover {
+    background: var(--sena-navy-light);
+}
+
+.campana-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    color: var(--bg-card);
+    background: var(--danger);
+    border-radius: 999px;
+}
+
+.campana-badge[hidden] {
+    display: none;
+}
+
+.panel-notificaciones {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    overflow: hidden;
+}
+
+.panel-notificaciones[hidden] {
+    display: none;
+}
+
+.panel-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.panel-accion {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sena-green);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.panel-accion:hover {
+    text-decoration: underline;
+}
+
+.panel-lista {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 16px;
+    text-align: left;
+    font-family: inherit;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.notif-item:hover {
+    background: var(--bg-main);
+}
+
+.notif-punto {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--sena-green);
+}
+
+.notif-item.leida .notif-punto {
+    background: var(--border-color);
+}
+
+.notif-cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.notif-titulo {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+}
+
+.notif-item.leida .notif-titulo {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.notif-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.notif-fecha {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+.panel-vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 40px 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.panel-vacio-icono {
+    font-size: 28px;
+}
+
+.panel-pie {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-main);
+}
+
+.panel-nota {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Correo transaccional mostrado al abrir una notificacion */
+.correo-cabecera {
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: var(--sena-navy);
+    border-radius: var(--radius-sm);
+}
+
+.correo-marca {
+    font-size: 13px;
+    color: var(--sena-green);
+    letter-spacing: 0.04em;
+}
+
+.correo-asunto {
+    margin: 6px 0 0 0;
+    font-size: 15px;
+    color: var(--bg-card);
+}
+
+.correo-badges {
+    margin-bottom: 14px;
+}
+
+.correo-tabla {
+    margin-bottom: 16px;
+}
+
+.correo-ventaja {
+    padding: 14px;
+    margin-bottom: 18px;
+    background: var(--sena-green-light);
+    border-left: 3px solid var(--sena-green);
+    border-radius: var(--radius-sm);
+}
+
+.correo-ventaja p {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.correo-cta {
+    text-align: center;
 }

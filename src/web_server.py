@@ -29,6 +29,7 @@ PORT = int(os.environ.get("PORT", 8080))
 WEB_DIR = os.path.join(os.path.dirname(__file__), "web")
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "config", "client_config.json")
 USERS_PATH = os.path.join(PROJECT_ROOT, "config", "users.json")
+NOTIFICATIONS_PATH = os.path.join(PROJECT_ROOT, "config", "notifications.json")
 
 COOKIE_NAME = "secop_sid"
 
@@ -96,6 +97,16 @@ def usuario_publico(usuario: dict) -> dict:
         "accesos": usuario.get("accesos", 0),
         "acciones": usuario.get("acciones", 0),
     }
+
+
+def leer_notificaciones() -> list:
+    with open(NOTIFICATIONS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f).get("notificaciones", [])
+
+
+def guardar_notificaciones(notificaciones: list) -> None:
+    with open(NOTIFICATIONS_PATH, "w", encoding="utf-8") as f:
+        json.dump({"notificaciones": notificaciones}, f, ensure_ascii=False, indent=2)
 
 
 def registrar_accion(user_id: str) -> None:
@@ -188,6 +199,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_live_secop()
         elif path == "/api/metrics":
             self.handle_get_metrics()
+        elif path == "/api/notifications":
+            self.handle_get_notifications()
         else:
             # Fallback to serving static SPA files
             super().do_GET()
@@ -215,6 +228,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_save_config(payload)
         elif path == "/api/sync":
             self.handle_manual_sync()
+        elif path == "/api/notifications/read":
+            self.handle_mark_notification(payload)
         else:
             self.send_json_response({"error": "Endpoint not found"}, 404)
 
@@ -467,6 +482,50 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             "status": "ok",
             "procesos": len(procesos),
             "actualizado": ahora_iso(),
+        })
+
+    def handle_get_notifications(self):
+        """Lista de notificaciones. Disponible para los dos roles."""
+        if self.exigir("ver_notificaciones") is None:
+            return
+        try:
+            notificaciones = leer_notificaciones()
+        except Exception as e:
+            self.send_json_response({"error": str(e)}, 500)
+            return
+        self.send_json_response({
+            "notificaciones": notificaciones,
+            "sin_leer": sum(1 for n in notificaciones if not n.get("leida")),
+        })
+
+    def handle_mark_notification(self, payload: dict):
+        """Marca una notificacion como leida, o todas si no se indica cual."""
+        if self.exigir("ver_notificaciones") is None:
+            return
+        try:
+            notificaciones = leer_notificaciones()
+        except Exception as e:
+            self.send_json_response({"error": str(e)}, 500)
+            return
+
+        objetivo = payload.get("id")
+        if objetivo:
+            if not any(n["id"] == objetivo for n in notificaciones):
+                self.send_json_response(
+                    {"error": "No existe esa notificacion",
+                     "codigo": "no_encontrada"}, 404)
+                return
+            for n in notificaciones:
+                if n["id"] == objetivo:
+                    n["leida"] = True
+        else:
+            for n in notificaciones:
+                n["leida"] = True
+
+        guardar_notificaciones(notificaciones)
+        self.send_json_response({
+            "status": "ok",
+            "sin_leer": sum(1 for n in notificaciones if not n.get("leida")),
         })
 
     def handle_get_stats(self):
