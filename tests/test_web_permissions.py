@@ -369,3 +369,135 @@ def test_marcar_sin_sesion_es_rechazado(anonimo, notificaciones_temporales):
     estado, _ = anonimo.peticion("POST", "/api/notifications/read")
     assert estado == 401
     assert notificaciones_temporales.read_text(encoding="utf-8") == antes
+
+
+# ==========================================================================
+# Gestion de usuarios (Fase 5) — solo admin
+# ==========================================================================
+def test_listar_usuarios_exige_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("GET", "/api/users")
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_el_usuario_no_puede_listar_usuarios(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/users")
+    assert estado == 403
+    assert cuerpo["permiso"] == "gestionar_usuarios"
+
+
+def test_el_admin_lista_usuarios_con_metricas_agregadas(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("GET", "/api/users")
+    assert estado == 200
+    assert len(cuerpo["usuarios"]) == 4
+    assert cuerpo["resumen"]["total"] == 4
+    assert cuerpo["resumen"]["activos"] == 3
+    assert cuerpo["resumen"]["inactivos"] == 1
+    assert cuerpo["resumen"]["administradores"] == 2
+
+
+def test_el_usuario_no_puede_crear_usuarios(cliente_usuario, usuarios_temporales):
+    antes = usuarios_temporales.read_text(encoding="utf-8")
+    estado, _ = cliente_usuario.peticion("POST", "/api/users", {
+        "nombre": "Intruso", "correo": "intruso@x.co", "rol": "admin"})
+    assert estado == 403
+    assert usuarios_temporales.read_text(encoding="utf-8") == antes
+
+
+def test_el_admin_crea_un_usuario(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Nueva Analista", "correo": "nueva@secopmonitor.co",
+        "rol": "usuario", "estado": "activo"})
+    assert estado == 201
+    assert cuerpo["usuario"]["id"] == "u-005"
+    assert cuerpo["usuario"]["accesos"] == 0
+
+
+def test_no_se_admiten_correos_duplicados(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Duplicado", "correo": "admin@secopmonitor.co", "rol": "usuario"})
+    assert estado == 400
+    assert cuerpo["codigo"] == "datos_invalidos"
+
+
+def test_no_se_admite_un_rol_inventado(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Raro", "correo": "raro@secopmonitor.co", "rol": "superadmin"})
+    assert estado == 400
+    assert "rol" in cuerpo["error"].lower()
+
+
+def test_el_admin_cambia_el_rol_de_otro_usuario(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion(
+        "PUT", "/api/users/u-003", {"rol": "admin"})
+    assert estado == 200
+    assert cuerpo["usuario"]["rol"] == "admin"
+
+
+def test_el_admin_desactiva_a_otro_usuario(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion(
+        "PUT", "/api/users/u-002", {"estado": "inactivo"})
+    assert estado == 200
+    assert cuerpo["usuario"]["estado"] == "inactivo"
+
+
+def test_un_admin_no_puede_desactivarse_a_si_mismo(cliente_admin):
+    """Salvaguarda: quien administra no puede dejarse fuera del sistema."""
+    estado, cuerpo = cliente_admin.peticion(
+        "PUT", "/api/users/u-001", {"estado": "inactivo"})
+    assert estado == 409
+    assert cuerpo["codigo"] == "autobloqueo"
+
+
+def test_un_admin_no_puede_degradarse_a_si_mismo(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion(
+        "PUT", "/api/users/u-001", {"rol": "usuario"})
+    assert estado == 409
+    assert cuerpo["codigo"] == "autobloqueo"
+
+
+def test_un_admin_no_puede_eliminarse_a_si_mismo(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("DELETE", "/api/users/u-001")
+    assert estado == 409
+    assert cuerpo["codigo"] == "autobloqueo"
+
+
+def test_el_admin_elimina_a_otro_usuario(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("DELETE", "/api/users/u-003")
+    assert estado == 200
+    assert cuerpo["eliminado"] == "u-003"
+
+    _, lista = cliente_admin.peticion("GET", "/api/users")
+    assert all(u["id"] != "u-003" for u in lista["usuarios"])
+
+
+def test_el_usuario_no_puede_eliminar(cliente_usuario, usuarios_temporales):
+    antes = usuarios_temporales.read_text(encoding="utf-8")
+    estado, _ = cliente_usuario.peticion("DELETE", "/api/users/u-003")
+    assert estado == 403
+    assert usuarios_temporales.read_text(encoding="utf-8") == antes
+
+
+def test_editar_un_usuario_inexistente(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion(
+        "PUT", "/api/users/u-999", {"nombre": "Fantasma"})
+    assert estado == 404
+    assert cuerpo["codigo"] == "no_encontrado"
+
+
+def test_gestionar_usuarios_cuenta_como_accion(cliente_admin, usuarios_temporales):
+    cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Contable", "correo": "contable@secopmonitor.co", "rol": "usuario"})
+    usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
+    admin = next(u for u in usuarios if u["id"] == "u-001")
+    assert admin["acciones"] == 1
+
+
+def test_un_usuario_creado_inactivo_no_puede_entrar(cliente_admin, servidor):
+    cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Pendiente", "correo": "pendiente@secopmonitor.co",
+        "rol": "usuario", "estado": "inactivo"})
+    otro = Cliente(servidor)
+    estado, cuerpo = otro.entrar("usuario", correo="pendiente@secopmonitor.co")
+    assert estado == 403
+    assert cuerpo["codigo"] == "cuenta_inactiva"

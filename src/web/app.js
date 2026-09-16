@@ -115,6 +115,7 @@ function entrarALaApp() {
     if (puede('editar_configuracion')) initConfigEditor();
     if (puede('ver_notificaciones')) initNotificaciones();
     if (puede('editar_metricas')) initManualSync();
+    if (puede('gestionar_usuarios')) initGestionUsuarios();
 }
 
 /**
@@ -163,7 +164,8 @@ const MODULOS = [
     { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', icono: '🧠', permiso: 'ver_arquitectura' },
     { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', icono: '🌐', permiso: 'ver_monitoreo' },
     { id: 'simulator', etiqueta: 'Simulador del Motor', icono: '⚡', permiso: 'probar_filtros' },
-    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' }
+    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' },
+    { id: 'users', etiqueta: 'Gestión de Usuarios', icono: '👥', permiso: 'gestionar_usuarios' }
 ];
 
 function modulosAutorizados() {
@@ -775,6 +777,215 @@ function formatearFecha(iso) {
     return d.toLocaleString('es-CO', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
     });
+}
+
+// ==========================================================================
+// 5b. Gestion y control de usuarios (solo admin)
+// ==========================================================================
+let usuariosCargados = [];
+
+function initGestionUsuarios() {
+    const nuevo = document.getElementById('btn-nuevo-usuario');
+    const cerrar = document.getElementById('btn-close-user-modal');
+    const guardar = document.getElementById('btn-guardar-usuario');
+    const modal = document.getElementById('user-modal');
+
+    if (nuevo) nuevo.addEventListener('click', () => abrirFormularioUsuario(null));
+    if (cerrar) cerrar.addEventListener('click', cerrarFormularioUsuario);
+    if (guardar) guardar.addEventListener('click', guardarUsuario);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarFormularioUsuario();
+        });
+    }
+
+    cargarUsuarios();
+}
+
+async function cargarUsuarios() {
+    const cuerpo = document.getElementById('users-table-body');
+    if (!cuerpo) return;
+    cuerpo.innerHTML = '<tr><td colspan="7" class="tabla-aviso">Cargando usuarios...</td></tr>';
+
+    try {
+        const resp = await fetch('/api/users');
+        if (resp.status === 403 || resp.status === 401) {
+            mostrarAccesoDenegado('Gestión de Usuarios');
+            return;
+        }
+        if (!resp.ok) {
+            cuerpo.innerHTML = '<tr><td colspan="7" class="tabla-aviso">No se pudieron cargar los usuarios.</td></tr>';
+            return;
+        }
+        const data = await resp.json();
+        usuariosCargados = data.usuarios || [];
+        pintarResumenUsuarios(data.resumen || {});
+        pintarTablaUsuarios(usuariosCargados);
+    } catch (err) {
+        cuerpo.innerHTML = '<tr><td colspan="7" class="tabla-aviso">Sin conexión con el servidor.</td></tr>';
+    }
+}
+
+function pintarResumenUsuarios(r) {
+    const asignar = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = valor;
+    };
+    asignar('um-total', r.total ?? '—');
+    asignar('um-activos', r.activos ?? '—');
+    asignar('um-accesos', r.accesos ?? '—');
+    asignar('um-acciones', r.acciones ?? '—');
+    asignar('um-desglose', `${r.administradores ?? 0} administradores · ${r.inactivos ?? 0} inactivos`);
+}
+
+function pintarTablaUsuarios(lista) {
+    const cuerpo = document.getElementById('users-table-body');
+    if (!cuerpo) return;
+
+    if (lista.length === 0) {
+        cuerpo.innerHTML = '<tr><td colspan="7" class="tabla-aviso">Todavía no hay usuarios registrados.</td></tr>';
+        return;
+    }
+
+    cuerpo.innerHTML = lista.map(u => {
+        const activo = u.estado === 'activo';
+        return `
+        <tr>
+            <td>
+                <div class="celda-usuario">
+                    <span class="avatar-usuario">${escapeHtml(iniciales(u.nombre))}</span>
+                    <span class="entity-name">${escapeHtml(u.nombre)}</span>
+                </div>
+            </td>
+            <td>${escapeHtml(u.correo)}</td>
+            <td><span class="chip-rol ${u.rol === 'admin' ? 'es-admin' : ''}">${u.rol === 'admin' ? 'Administrador' : 'Usuario'}</span></td>
+            <td><span class="chip-estado ${activo ? 'es-activo' : 'es-inactivo'}">${activo ? 'Activo' : 'Inactivo'}</span></td>
+            <td class="celda-tenue">${u.ultimo_acceso ? formatearFecha(u.ultimo_acceso) : 'Nunca'}</td>
+            <td class="celda-tenue">${u.accesos} accesos · ${u.acciones} acciones</td>
+            <td>
+                <div class="acciones-fila">
+                    <button class="btn-view-detail" data-accion="editar" data-id="${escapeHtml(u.id)}">Editar</button>
+                    <button class="btn-fila-secundario" data-accion="estado" data-id="${escapeHtml(u.id)}">${activo ? 'Desactivar' : 'Activar'}</button>
+                    <button class="btn-fila-peligro" data-accion="eliminar" data-id="${escapeHtml(u.id)}">Eliminar</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    cuerpo.querySelectorAll('button[data-accion]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const accion = btn.getAttribute('data-accion');
+            const usuario = usuariosCargados.find(u => u.id === id);
+            if (!usuario) return;
+
+            if (accion === 'editar') abrirFormularioUsuario(usuario);
+            else if (accion === 'estado') alternarEstadoUsuario(usuario);
+            else if (accion === 'eliminar') eliminarUsuario(usuario);
+        });
+    });
+}
+
+function iniciales(nombre) {
+    return (nombre || '?')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(p => p[0].toUpperCase())
+        .join('');
+}
+
+function abrirFormularioUsuario(usuario) {
+    const modal = document.getElementById('user-modal');
+    const titulo = document.getElementById('user-modal-title');
+    const error = document.getElementById('uf-error');
+    if (!modal) return;
+
+    document.getElementById('uf-id').value = usuario ? usuario.id : '';
+    document.getElementById('uf-nombre').value = usuario ? usuario.nombre : '';
+    document.getElementById('uf-correo').value = usuario ? usuario.correo : '';
+    document.getElementById('uf-rol').value = usuario ? usuario.rol : 'usuario';
+    document.getElementById('uf-estado').value = usuario ? usuario.estado : 'activo';
+
+    if (titulo) titulo.textContent = usuario ? 'Editar usuario' : 'Crear usuario';
+    if (error) error.hidden = true;
+    modal.classList.add('active');
+}
+
+function cerrarFormularioUsuario() {
+    const modal = document.getElementById('user-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function mostrarErrorUsuario(mensaje) {
+    const error = document.getElementById('uf-error');
+    if (!error) return;
+    error.textContent = mensaje;
+    error.hidden = false;
+}
+
+async function guardarUsuario() {
+    const id = document.getElementById('uf-id').value;
+    const datos = {
+        nombre: document.getElementById('uf-nombre').value.trim(),
+        correo: document.getElementById('uf-correo').value.trim(),
+        rol: document.getElementById('uf-rol').value,
+        estado: document.getElementById('uf-estado').value
+    };
+
+    const resultado = await peticionUsuarios(
+        id ? `/api/users/${id}` : '/api/users',
+        id ? 'PUT' : 'POST',
+        datos
+    );
+    if (resultado.ok) {
+        cerrarFormularioUsuario();
+        cargarUsuarios();
+    } else {
+        mostrarErrorUsuario(resultado.mensaje);
+    }
+}
+
+async function alternarEstadoUsuario(usuario) {
+    const nuevoEstado = usuario.estado === 'activo' ? 'inactivo' : 'activo';
+    const resultado = await peticionUsuarios(
+        `/api/users/${usuario.id}`, 'PUT', { estado: nuevoEstado });
+    if (resultado.ok) cargarUsuarios();
+    else alert(resultado.mensaje);
+}
+
+async function eliminarUsuario(usuario) {
+    if (!confirm(`¿Eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`)) return;
+    const resultado = await peticionUsuarios(`/api/users/${usuario.id}`, 'DELETE');
+    if (resultado.ok) cargarUsuarios();
+    else alert(resultado.mensaje);
+}
+
+/** Envoltura comun: traduce la respuesta del backend a {ok, mensaje}. */
+async function peticionUsuarios(ruta, metodo, cuerpo) {
+    try {
+        const opciones = { method: metodo, headers: { 'Content-Type': 'application/json' } };
+        if (cuerpo) opciones.body = JSON.stringify(cuerpo);
+
+        const resp = await fetch(ruta, opciones);
+        if (resp.status === 403 || resp.status === 401) {
+            const datos = await resp.json().catch(() => ({}));
+            // Un 403 por falta de permiso saca al usuario del modulo; los 409
+            // son salvaguardas de negocio y se muestran en el formulario.
+            if (datos.codigo === 'sin_permiso' || datos.codigo === 'sin_sesion') {
+                mostrarAccesoDenegado('Gestión de Usuarios');
+                return { ok: false, mensaje: datos.error || 'Sin permiso' };
+            }
+            return { ok: false, mensaje: datos.error || 'Sin permiso' };
+        }
+        if (!resp.ok) {
+            const datos = await resp.json().catch(() => ({}));
+            return { ok: false, mensaje: datos.error || 'No se pudo completar la operación.' };
+        }
+        return { ok: true };
+    } catch (err) {
+        return { ok: false, mensaje: 'Sin conexión con el servidor.' };
+    }
 }
 
 // ==========================================================================

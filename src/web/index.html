@@ -509,6 +509,68 @@
             </div>
         </section>
 
+        <!-- TAB: GESTIÓN DE USUARIOS (solo admin) -->
+        <section id="tab-users" class="tab-content">
+            <div class="section-banner">
+                <div class="banner-text">
+                    <h2>Gestión y control de usuarios</h2>
+                    <p>Administra quién entra al monitor, con qué rol y qué ha hecho dentro.</p>
+                </div>
+                <button class="btn-sena-action" id="btn-nuevo-usuario" type="button">
+                    <span>＋</span> Crear usuario
+                </button>
+            </div>
+
+            <!-- Métricas agregadas de uso -->
+            <div class="kpi-grid kpi-grid-compacto" id="users-resumen">
+                <div class="kpi-card sena-accent">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Usuarios registrados</span>
+                        <span class="kpi-value" id="um-total">—</span>
+                        <span class="kpi-subtext" id="um-desglose">—</span>
+                    </div>
+                </div>
+                <div class="kpi-card sena-green">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Cuentas activas</span>
+                        <span class="kpi-value" id="um-activos">—</span>
+                        <span class="kpi-subtext">Pueden iniciar sesión</span>
+                    </div>
+                </div>
+                <div class="kpi-card sena-blue">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Accesos acumulados</span>
+                        <span class="kpi-value" id="um-accesos">—</span>
+                        <span class="kpi-subtext">Inicios de sesión registrados</span>
+                    </div>
+                </div>
+                <div class="kpi-card sena-purple">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Acciones realizadas</span>
+                        <span class="kpi-value" id="um-acciones">—</span>
+                        <span class="kpi-subtext">Escrituras sobre el sistema</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container-card">
+                <table class="sena-data-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Último acceso</th>
+                            <th>Uso</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- TAB 5: CONFIGURACIÓN DEL CLIENTE -->
         <section id="tab-config" class="tab-content">
             <div class="section-banner">
@@ -585,6 +647,49 @@
             </div>
             <div class="modal-body" id="modal-content">
                 <!-- Modal dynamic contents -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de crear / editar usuario -->
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="user-modal-title">Crear usuario</h3>
+                <button class="close-modal" id="btn-close-user-modal" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="user-form" onsubmit="return false;">
+                    <input type="hidden" id="uf-id">
+                    <div class="form-group">
+                        <label for="uf-nombre">Nombre completo</label>
+                        <input type="text" id="uf-nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="uf-correo">Correo electrónico</label>
+                        <input type="email" id="uf-correo" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="uf-rol">Rol</label>
+                            <select id="uf-rol">
+                                <option value="usuario">Usuario</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="uf-estado">Estado</label>
+                            <select id="uf-estado">
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="form-error" id="uf-error" hidden></p>
+                    <div class="form-actions">
+                        <button class="btn-sena-primary" id="btn-guardar-usuario" type="button">Guardar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

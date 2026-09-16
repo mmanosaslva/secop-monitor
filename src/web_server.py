@@ -201,6 +201,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_get_metrics()
         elif path == "/api/notifications":
             self.handle_get_notifications()
+        elif path == "/api/users":
+            self.handle_list_users()
         else:
             # Fallback to serving static SPA files
             super().do_GET()
@@ -230,8 +232,175 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_manual_sync()
         elif path == "/api/notifications/read":
             self.handle_mark_notification(payload)
+        elif path == "/api/users":
+            self.handle_create_user(payload)
         else:
             self.send_json_response({"error": "Endpoint not found"}, 404)
+
+    def do_PUT(self):
+        path = urllib.parse.urlparse(self.path).path
+        payload = self._leer_payload()
+        if path.startswith("/api/users/"):
+            self.handle_update_user(path.rsplit("/", 1)[-1], payload)
+        else:
+            self.send_json_response({"error": "Endpoint not found"}, 404)
+
+    def do_DELETE(self):
+        path = urllib.parse.urlparse(self.path).path
+        if path.startswith("/api/users/"):
+            self.handle_delete_user(path.rsplit("/", 1)[-1])
+        else:
+            self.send_json_response({"error": "Endpoint not found"}, 404)
+
+    # ----------------------------------------------------------------------
+    # Gestion de usuarios (solo admin)
+    # ----------------------------------------------------------------------
+    def handle_list_users(self):
+        if self.exigir("gestionar_usuarios") is None:
+            return
+        usuarios = leer_usuarios()
+        activos = [u for u in usuarios if u["estado"] == "activo"]
+        self.send_json_response({
+            "usuarios": [usuario_publico(u) for u in usuarios],
+            "resumen": {
+                "total": len(usuarios),
+                "activos": len(activos),
+                "inactivos": len(usuarios) - len(activos),
+                "administradores": sum(1 for u in usuarios if u["rol"] == "admin"),
+                "accesos": sum(u.get("accesos", 0) for u in usuarios),
+                "acciones": sum(u.get("acciones", 0) for u in usuarios),
+            },
+        })
+
+    def _validar_usuario(self, datos: dict, usuarios: list, id_actual=None):
+        """Devuelve un mensaje de error, o None si los datos son validos."""
+        nombre = (datos.get("nombre") or "").strip()
+        correo = (datos.get("correo") or "").strip().lower()
+        rol = datos.get("rol")
+        estado = datos.get("estado", "activo")
+
+        if not nombre:
+            return "El nombre es obligatorio"
+        if not correo or "@" not in correo:
+            return "El correo no es valido"
+        if rol not in PERMISOS:
+            return "El rol debe ser admin o usuario"
+        if estado not in ("activo", "inactivo"):
+            return "El estado debe ser activo o inactivo"
+        if any(u["correo"].lower() == correo and u["id"] != id_actual for u in usuarios):
+            return "Ya existe un usuario con ese correo"
+        return None
+
+    def handle_create_user(self, payload: dict):
+        sesion = self.exigir("gestionar_usuarios")
+        if sesion is None:
+            return
+
+        usuarios = leer_usuarios()
+        error = self._validar_usuario(payload, usuarios)
+        if error:
+            self.send_json_response(
+                {"error": error, "codigo": "datos_invalidos"}, 400)
+            return
+
+        numeros = [int(u["id"].split("-")[1]) for u in usuarios if u["id"].startswith("u-")]
+        nuevo = {
+            "id": f"u-{max(numeros, default=0) + 1:03d}",
+            "nombre": payload["nombre"].strip(),
+            "correo": payload["correo"].strip().lower(),
+            "rol": payload["rol"],
+            "estado": payload.get("estado", "activo"),
+            "ultimo_acceso": None,
+            "accesos": 0,
+            "acciones": 0,
+        }
+        usuarios.append(nuevo)
+        guardar_usuarios(usuarios)
+        registrar_accion(sesion["user_id"])
+        self.send_json_response({"usuario": usuario_publico(nuevo)}, 201)
+
+    def handle_update_user(self, user_id: str, payload: dict):
+        sesion = self.exigir("gestionar_usuarios")
+        if sesion is None:
+            return
+
+        usuarios = leer_usuarios()
+        actual = next((u for u in usuarios if u["id"] == user_id), None)
+        if actual is None:
+            self.send_json_response(
+                {"error": "No existe ese usuario", "codigo": "no_encontrado"}, 404)
+            return
+
+        datos = {
+            "nombre": payload.get("nombre", actual["nombre"]),
+            "correo": payload.get("correo", actual["correo"]),
+            "rol": payload.get("rol", actual["rol"]),
+            "estado": payload.get("estado", actual["estado"]),
+        }
+        error = self._validar_usuario(datos, usuarios, id_actual=user_id)
+        if error:
+            self.send_json_response(
+                {"error": error, "codigo": "datos_invalidos"}, 400)
+            return
+
+        # Salvaguardas: nadie se deja a si mismo fuera, y el sistema nunca se
+        # queda sin un administrador activo que pueda volver a entrar.
+        propio = user_id == sesion["user_id"]
+        if propio and (datos["rol"] != actual["rol"] or datos["estado"] != "activo"):
+            self.send_json_response(
+                {"error": "No puedes cambiar tu propio rol ni desactivar tu cuenta",
+                 "codigo": "autobloqueo"}, 409)
+            return
+
+        pierde_admin = (actual["rol"] == "admin" and actual["estado"] == "activo"
+                        and (datos["rol"] != "admin" or datos["estado"] != "activo"))
+        if pierde_admin and self._admins_activos(usuarios) <= 1:
+            self.send_json_response(
+                {"error": "Debe quedar al menos un administrador activo",
+                 "codigo": "ultimo_admin"}, 409)
+            return
+
+        actual.update({
+            "nombre": datos["nombre"].strip(),
+            "correo": datos["correo"].strip().lower(),
+            "rol": datos["rol"],
+            "estado": datos["estado"],
+        })
+        guardar_usuarios(usuarios)
+        registrar_accion(sesion["user_id"])
+        self.send_json_response({"usuario": usuario_publico(actual)})
+
+    def handle_delete_user(self, user_id: str):
+        sesion = self.exigir("gestionar_usuarios")
+        if sesion is None:
+            return
+
+        usuarios = leer_usuarios()
+        objetivo = next((u for u in usuarios if u["id"] == user_id), None)
+        if objetivo is None:
+            self.send_json_response(
+                {"error": "No existe ese usuario", "codigo": "no_encontrado"}, 404)
+            return
+        if user_id == sesion["user_id"]:
+            self.send_json_response(
+                {"error": "No puedes eliminar tu propia cuenta",
+                 "codigo": "autobloqueo"}, 409)
+            return
+        if (objetivo["rol"] == "admin" and objetivo["estado"] == "activo"
+                and self._admins_activos(usuarios) <= 1):
+            self.send_json_response(
+                {"error": "Debe quedar al menos un administrador activo",
+                 "codigo": "ultimo_admin"}, 409)
+            return
+
+        guardar_usuarios([u for u in usuarios if u["id"] != user_id])
+        registrar_accion(sesion["user_id"])
+        self.send_json_response({"status": "ok", "eliminado": user_id})
+
+    @staticmethod
+    def _admins_activos(usuarios: list) -> int:
+        return sum(1 for u in usuarios
+                   if u["rol"] == "admin" and u["estado"] == "activo")
 
     # ----------------------------------------------------------------------
     # Autenticacion
