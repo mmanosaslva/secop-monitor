@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0B0E14; color: #F4F6F8;
+           font-family: Archivo, 'Helvetica Neue', Helvetica, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: #2F6BFF; } a:hover { color: #5C8CFF; }
+  </style>
+</helmet>
+
+<div style="padding: 72px 80px; display: flex; flex-direction: column; gap: 64px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">estados transversales</span>
+    <h1 style="margin: 0; font-size: 46px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.08;">Lo que ve el usuario<br>cuando no hay nada que ver.</h1>
+    <p style="margin: 4px 0 0; max-width: 640px; font-size: 17px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Vacío, carga, permiso denegado y el cambio de contraseña. Ninguno usa color de alarma salvo el que informa de un error real.</p>
+  </div>
+
+  <!-- NAVEGACION POR ROL -->
+  <div style="display: flex; flex-direction: column; gap: 22px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">navegación según el rol</span>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">USUARIO — DOS MÓDULOS</span>
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 0 26px;">
+        <div style="display: flex; gap: 32px;">
+          <button style="font-family: inherit; font-size: 14px; font-weight: 600; color: #F4F6F8; background: none; border: none; border-bottom: 2px solid #2F6BFF; padding: 18px 0; cursor: pointer;">Panel de Métricas</button>
+          <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">¿Cómo Funciona por Dentro?</button>
+        </div>
+      </div>
+      <span style="font-size: 13px; line-height: 1.5; color: #9AA3B2;">Lo que el rol no autoriza no se pinta: se saca del DOM, no se oculta con CSS.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ADMINISTRADOR — CINCO MÓDULOS</span>
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 0 26px;">
+        <div style="display: flex; gap: 32px;">
+          <button style="font-family: inherit; font-size: 14px; font-weight: 600; color: #F4F6F8; background: none; border: none; border-bottom: 2px solid #2F6BFF; padding: 18px 0; cursor: pointer;">Panel de Métricas</button>
+          <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">¿Cómo Funciona por Dentro?</button>
+          <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Monitoreo en Vivo</button>
+          <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Configuración del Cliente</button>
+          <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Gestión de Usuarios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+
+    <!-- Vacio -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ESTADO VACÍO</span>
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 60px 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; min-height: 250px; justify-content: center;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        <span style="font-size: 20px; font-weight: 600;">Todavía no hay coincidencias</span>
+        <span style="max-width: 380px; font-size: 15px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Cuando el motor encuentre un proceso que cumpla tus criterios, aparecerá aquí. La próxima revisión es a las 13:30 COT.</span>
+      </div>
+    </div>
+
+    <!-- Carga -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ESTADO DE CARGA</span>
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 26px; display: flex; flex-direction: column; gap: 18px; min-height: 250px;">
+        <div style="display: flex; align-items: center; gap: 11px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>
+          <span style="font-size: 14px; color: #9AA3B2;">Consultando procesos en SECOP II…</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: grid; grid-template-columns: 90px minmax(0,1fr) 110px; gap: 16px; align-items: center;">
+            <span style="height: 11px; background: #232833; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #232833; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #232833; border-radius: 3px;"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px minmax(0,1fr) 110px; gap: 16px; align-items: center;">
+            <span style="height: 11px; background: #1C212B; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #1C212B; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #1C212B; border-radius: 3px;"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px minmax(0,1fr) 110px; gap: 16px; align-items: center;">
+            <span style="height: 11px; background: #171C25; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #171C25; border-radius: 3px;"></span>
+            <span style="height: 11px; background: #171C25; border-radius: 3px;"></span>
+          </div>
+        </div>
+        <span style="font-size: 13px; line-height: 1.5; color: #9AA3B2;">El esqueleto conserva la retícula de la tabla para que nada salte al llegar los datos.</span>
+      </div>
+    </div>
+
+    <!-- Acceso denegado -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ACCESO DENEGADO</span>
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 52px 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 13px; min-height: 250px; justify-content: center;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">acceso restringido</span>
+        <span style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2;">Tu rol no alcanza<br>para este módulo</span>
+        <span style="max-width: 400px; font-size: 15px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">«Gestión de Usuarios» solo está disponible para administradores. Tu sesión es de rol usuario.</span>
+        <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 8px; padding: 12px 20px; cursor: pointer; margin-top: 6px;">Volver al inicio</button>
+      </div>
+    </div>
+
+    <!-- Modal contrasena -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">CAMBIO DE CONTRASEÑA</span>
+      <div style="background: #090C11; border: 1px solid #232833; border-radius: 10px; padding: 34px; display: flex; align-items: center; justify-content: center; min-height: 250px;">
+        <div style="width: 100%; max-width: 440px; background: #13171F; border: 1px solid #232833; border-radius: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #232833;">
+            <span style="font-size: 18px; font-weight: 600;">Cambiar mi contraseña</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="1.6" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </div>
+          <div style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+            <div style="display: flex; flex-direction: column; gap: 7px;">
+              <label style="font-size: 14px; font-weight: 500;">Contraseña actual</label>
+              <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 14px; font-size: 15px; letter-spacing: 0.18em; color: #F4F6F8;">••••••••••</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 7px;">
+              <label style="font-size: 14px; font-weight: 500;">Contraseña nueva</label>
+              <div style="background: #0B0E14; border: 1px solid #2F6BFF; border-radius: 8px; padding: 13px 14px; font-size: 15px; letter-spacing: 0.18em; color: #F4F6F8;">••••••••••••</div>
+              <span style="font-size: 12px; color: #9AA3B2;">Mínimo 8 caracteres.</span>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 12px 22px; cursor: pointer;">Guardar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

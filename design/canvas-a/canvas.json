@@ -1,0 +1,42 @@
+{
+  "artboards": [
+    { "file": "Tokens.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1800, "title": "00 · Tokens del sistema" },
+    { "file": "Acceso.dc.html", "x": 0, "y": 1920, "w": 1440, "h": 1360, "title": "01 · Acceso — 1440" },
+    { "file": "AccesoMovil.dc.html", "x": 1520, "y": 1920, "w": 390, "h": 844, "title": "01b · Acceso — 390" },
+    { "file": "Main.dc.html", "x": 0, "y": 3400, "w": 1440, "h": 1120, "title": "02 · Métricas USUARIO — 1440" },
+    { "file": "MetricasUsuarioMovil.dc.html", "x": 1520, "y": 3400, "w": 390, "h": 1340, "title": "02b · Métricas USUARIO — 390" },
+    { "file": "MetricasAdmin.dc.html", "x": 0, "y": 4860, "w": 1440, "h": 1160, "title": "03 · Métricas ADMIN — 1440" },
+    { "file": "Estados.dc.html", "x": 0, "y": 6140, "w": 1440, "h": 1520, "title": "04 · Estados transversales" }
+  ],
+  "annotations": [
+    {
+      "id": "nota-alcance",
+      "x": 1520,
+      "y": 60,
+      "w": 360,
+      "text": "Canvas A — el núcleo.\n\nDe aquí salen los tokens que rigen el Canvas B (módulos: cómo funciona, notificaciones, usuarios, configuración, monitoreo en vivo).\n\nMockups estáticos: sirven de referencia para migrar styles.css, no son un prototipo clicable."
+    },
+    {
+      "id": "nota-marca",
+      "x": 1960,
+      "y": 1920,
+      "w": 340,
+      "text": "El logotipo es un PLACEHOLDER.\n\nNo tengo la marca de Plataforma50. La regla 2 pide encabezado sin wordmark de texto, así que va solo el símbolo: sustitúyelo cuando tengas el real."
+    },
+    {
+      "id": "nota-acento",
+      "x": 1520,
+      "y": 4860,
+      "w": 360,
+      "text": "Un solo acento por pantalla.\n\nEn USUARIO el azul marca únicamente los numerales [01]-[04] y el tab activo.\n\nEn ADMIN pasa al botón Sincronizar: es la acción de la pantalla. Los numerales lo conservan porque son el mismo dato, no una segunda llamada a la acción."
+    },
+    {
+      "id": "nota-color",
+      "x": 1520,
+      "y": 6140,
+      "w": 360,
+      "text": "Rojo y ámbar no están en design.md.\n\nLos añadí solo para error y aviso (#FF8A8A, #E8B871 sobre fondos apagados). Son los únicos colores fuera de la paleta: sin ellos un fallo de credenciales no se distingue de un texto normal."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

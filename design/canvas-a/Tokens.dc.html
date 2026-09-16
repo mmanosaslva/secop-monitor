@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0B0E14; color: #F4F6F8;
+           font-family: Archivo, 'Helvetica Neue', Helvetica, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: #2F6BFF; } a:hover { color: #5C8CFF; }
+  </style>
+</helmet>
+
+<div style="padding: 72px 80px; display: flex; flex-direction: column; gap: 72px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">sistema de diseño</span>
+    <h1 style="margin: 0; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.08;">Los tokens que rigen<br>todo el aplicativo.</h1>
+    <p style="margin: 6px 0 0; max-width: 620px; font-size: 17px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Un solo acento por pantalla, bordes de 1&nbsp;px, cero sombras. Cada valor de abajo aterriza en <code style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #F4F6F8;">:root</code> de <code style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #F4F6F8;">styles.css</code>.</p>
+  </div>
+
+  <!-- PALETA -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">paleta</span>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #0B0E14; border: 1px solid #232833; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-ink</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#0B0E14</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Fondo de la aplicación</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #13171F; border: 1px solid #232833; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-surface</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#13171F</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Tarjetas y tablas</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #232833; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-line</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#232833</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Bordes de 1 px</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #F4F6F8; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-text</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#F4F6F8</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Texto principal</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #9AA3B2; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-text-muted</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#9AA3B2</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Bajadas y metadatos</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #2F6BFF; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-accent</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#2F6BFF</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Único acento: acción y estado deseado</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #1B2A4D; border: 1px solid #232833; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-accent-soft</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#1B2A4D</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Relleno de chip activo</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #FFFFFF; border-radius: 8px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">--p50-paper</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">#FFFFFF</span>
+          <span style="font-size: 12px; color: #9AA3B2;">Secciones claras alternas</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 88px; background: #13171F; border: 1px solid #232833; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 12px; color: #9AA3B2; text-align: center; padding: 0 10px; line-height: 1.4;">sin degradados<br>sin sombras</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #F4F6F8;">regla</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">1px / 0 blur</span>
+          <span style="font-size: 12px; color: #9AA3B2;">La profundidad la da el borde</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPOGRAFIA -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">escala tipográfica</span>
+    <div style="border-top: 1px solid #232833;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Titular · 52/600/-0.02em</span>
+        <span style="font-size: 52px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.08;">Convertimos procesos lentos</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Eyebrow · 13/500/+0.08em</span>
+        <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">panel de métricas</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Cuerpo · 17/400/1.6</span>
+        <span style="font-size: 17px; line-height: 1.6; color: #F4F6F8; max-width: 620px; display: block;">Estado en tiempo real de las oportunidades que el motor encontró para ti en la región Caribe.</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Dato · 44/600 tabular</span>
+        <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em;">1.420</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Numeral · 13 mono</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[01]</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; padding: 22px 0; border-bottom: 1px solid #232833; align-items: baseline;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Meta · 12/500/+0.06em</span>
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ÚLTIMO ACCESO · HOY 20:00 COT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPONENTES -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">componentes</span>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+
+      <!-- Botones -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">BOTONES</span>
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+          <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 13px 22px; cursor: pointer;">Entrar al monitor</button>
+          <span style="font-size: 13px; color: #9AA3B2;">Sin costo y sin compromiso.</span>
+          <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 8px; padding: 12px 20px; cursor: pointer;">Sincronizar ahora</button>
+          <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #FF6B6B; background: transparent; border: 1px solid #40242A; border-radius: 6px; padding: 7px 13px; cursor: pointer;">Eliminar</button>
+        </div>
+      </div>
+
+      <!-- Campo -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">CAMPO DE FORMULARIO</span>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <label style="font-size: 14px; font-weight: 500; color: #F4F6F8;">Correo electrónico</label>
+          <div style="background: #0B0E14; border: 1px solid #2F6BFF; border-radius: 8px; padding: 13px 14px; font-size: 15px; color: #F4F6F8;">admin@secopmonitor.co</div>
+          <span style="font-size: 12px; color: #9AA3B2;">Enfocado — borde en acento.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <label style="font-size: 14px; font-weight: 500; color: #F4F6F8;">Contraseña</label>
+          <div style="background: #0B0E14; border: 1px solid #5C2B33; border-radius: 8px; padding: 13px 14px; font-size: 15px; color: #9AA3B2;">••••••••</div>
+          <span style="font-size: 12px; color: #FF6B6B;">Correo o contraseña incorrectos.</span>
+        </div>
+      </div>
+
+      <!-- Chips -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">CHIPS Y DISTINTIVOS</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 4px 11px;">ADMINISTRADOR</span>
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 11px;">USUARIO</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <span style="font-size: 11px; font-weight: 600; color: #2F6BFF; border: 1px solid #2F6BFF; border-radius: 999px; padding: 4px 11px;">Activo</span>
+          <span style="font-size: 11px; font-weight: 600; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 11px;">Inactivo</span>
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 11px;">SOLO LECTURA</span>
+        </div>
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="position: relative; width: 38px; height: 38px; border: 1px solid #232833; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4F6F8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <span style="position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; color: #FFFFFF; background: #2F6BFF; border-radius: 999px;">2</span>
+          </div>
+          <span style="font-size: 12px; color: #9AA3B2;">Campana con conteo sin leer</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta numerada -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[02]</span>
+        <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">COINCIDENCIAS DEL DÍA</span>
+        <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1;">18</span>
+        <span style="font-size: 14px; line-height: 1.5; color: #9AA3B2;">Cumplen tus criterios de departamento, modalidad y objeto.</span>
+      </div>
+
+      <!-- Fila de comparacion -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">FILA DE COMPARACIÓN</span>
+        <div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid #232833; align-items: center;">
+            <span style="font-size: 14px; color: #F4F6F8;">Revisión diaria</span>
+            <span style="font-size: 14px; color: #9AA3B2;">6 h a mano</span>
+            <span style="font-size: 14px; font-weight: 600; color: #2F6BFF;">25 min</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; padding: 14px 0; align-items: center;">
+            <span style="font-size: 14px; color: #F4F6F8;">Aviso al cliente</span>
+            <span style="font-size: 14px; color: #9AA3B2;">5 días</span>
+            <span style="font-size: 14px; font-weight: 600; color: #2F6BFF;">hoy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila de tabla -->
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">FILA DE TABLA</span>
+        <div>
+          <div style="display: grid; grid-template-columns: 34px minmax(0,1fr) 88px; gap: 12px; padding: 0 0 12px; border-bottom: 1px solid #232833; align-items: center;">
+            <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;"></span>
+            <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">USUARIO</span>
+            <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ROL</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 34px minmax(0,1fr) 88px; gap: 12px; padding: 14px 0; border-bottom: 1px solid #232833; align-items: center;">
+            <span style="width: 32px; height: 32px; border-radius: 999px; background: #1B2A4D; color: #2F6BFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;">AS</span>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <span style="font-size: 14px; font-weight: 500;">Administrador del Sistema</span>
+              <span style="font-size: 12px; color: #9AA3B2;">admin@secopmonitor.co</span>
+            </span>
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 4px 9px; justify-self: start;">ADMIN</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

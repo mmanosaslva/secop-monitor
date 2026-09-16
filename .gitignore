@@ -28,3 +28,7 @@ Thumbs.db
 
 # Estado en ejecucion de la aplicacion web (se siembra desde config/)
 data/
+
+# Lienzo sembrado (2 MB, se regenera desde los .dc.html)
+design/canvas-a/*.html
+!design/canvas-a/*.dc.html

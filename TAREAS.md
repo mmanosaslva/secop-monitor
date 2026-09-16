@@ -148,11 +148,20 @@ trabajo · `simulador` archivo del módulo retirado.
 
 ## Fase 7 — Canvas de diseño (Claude Design)
 
-- [ ] 7.1 Releer `design.md` completo (181 líneas) antes de generar nada.
-- [ ] 7.2 **Canvas A — núcleo:** tira de tokens + Login/selección de rol +
+> **Canvas A entregado y aprobado (2026-09-16).** 7 artboards: tokens, acceso
+> (1440 + 390) con sus tres estados de error, métricas USUARIO (1440 + 390),
+> métricas ADMIN y estados transversales.
+> Fuentes en `design/canvas-a/*.dc.html`; el lienzo sembrado se regenera desde
+> ahí y no se versiona.
+> Decisiones: logotipo provisional (falta la marca real), Archivo + JetBrains
+> Mono como familias, y dos colores fuera de la paleta (rojo y ámbar apagados)
+> reservados a error y aviso.
+
+- [x] 7.1 Releer `design.md` completo (181 líneas) antes de generar nada.
+- [x] 7.2 **Canvas A — núcleo:** tira de tokens + Login/selección de rol +
       Métricas rol USUARIO + Métricas rol ADMIN + estados transversales
       (nav por rol, vacío, carga, acceso denegado).
-- [ ] 7.3 Revisar y aprobar el Canvas A. Los tokens que salgan de aquí son los
+- [x] 7.3 Revisar y aprobar el Canvas A. Los tokens que salgan de aquí son los
       que rigen el Canvas B.
 - [ ] 7.4 **Canvas B — módulos:** ¿Cómo Funciona por Dentro? (motivo "Antes/Ahora")
       + Desplegable de Notificaciones + Gestión de Usuarios + Configuración del

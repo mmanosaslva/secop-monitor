@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0B0E14; color: #F4F6F8;
+           font-family: Archivo, 'Helvetica Neue', Helvetica, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: #2F6BFF; } a:hover { color: #5C8CFF; }
+  </style>
+</helmet>
+
+<div style="min-height: 844px; display: flex; flex-direction: column; justify-content: center; padding: 40px 20px;">
+  <div style="background: #13171F; border: 1px solid #232833; border-radius: 12px; padding: 30px 24px; display: flex; flex-direction: column; gap: 24px;">
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="30" height="30" viewBox="0 0 34 34" fill="none">
+        <rect x="0.5" y="0.5" width="33" height="33" rx="8" stroke="#232833"/>
+        <path d="M10 22L17 10L24 22" stroke="#2F6BFF" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M13.5 18.5H20.5" stroke="#9AA3B2" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">acceso al sistema</span>
+      <h1 style="margin: 0; font-size: 29px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15;">Entra a tu<br>panel de monitoreo</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Usa el correo y la contraseña de tu cuenta.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-size: 14px; font-weight: 500;">Correo electrónico</label>
+        <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 15px 14px; font-size: 15px; color: #9AA3B2;">tu@correo.co</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-size: 14px; font-weight: 500;">Contraseña</label>
+        <div style="display: flex; align-items: center; background: #0B0E14; border: 1px solid #2F6BFF; border-radius: 8px; padding: 15px 14px;">
+          <span style="flex-grow: 1; font-size: 15px; letter-spacing: 0.18em;">••••••••</span>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <button style="font-family: inherit; font-size: 16px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 16px 20px; cursor: pointer; width: 100%;">Entrar al monitor</button>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #9AA3B2; text-align: center; text-wrap: pretty;">Tu sesión queda fijada en este navegador.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
