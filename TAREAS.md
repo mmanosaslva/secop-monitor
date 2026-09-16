@@ -1,0 +1,211 @@
+# Plan de trabajo — roles, permisos y rediseño
+
+Rama base: `frontend`. Rama nueva al final: `monitoreo`.
+
+**Orden: primero la funcionalidad (Fases 0-6), después el diseño (Fases 7-9),
+y por último la derivación de la rama `monitoreo` (Fase 10).**
+
+Los prompts para ejecutar cada bloque están en [`prompts.md`](./prompts.md).
+
+| Bloque | Fases | Prompt |
+|--------|-------|--------|
+| Funcionalidad | 0 → 6 | Prompt 1 |
+| Diseño y cierre | 7 → 9 | Prompt 2 |
+| Rama `monitoreo` | 10 | Prompt 3 |
+
+**Ramas:** `main` intocable (no contiene la interfaz web) · `frontend` rama de
+trabajo · `simulador` ya creada como rescate del módulo · `monitoreo` se deriva
+en la Fase 10.
+
+---
+
+# BLOQUE A — Funcionalidad
+
+## Fase 0 — Preparación
+
+> **Fase 0 cerrada el 2026-09-15** sobre el commit `d343f87`.
+
+- [x] 0.1 `frontend` limpia y sincronizada (`Already up to date`).
+- [x] 0.2 `pytest`: **53 pasan, 0 fallos**. Estado inicial VERDE.
+      Ejecutar con el entorno del proyecto: `./.venv/bin/python -m pytest -q`
+      (el python del sistema no tiene pytest instalado).
+      Ruido conocido: 12 warnings por marcas sin registrar (`acceptance`,
+      `integration`, `slow`); no son fallos.
+- [x] 0.3 Servidor verificado (`PORT=8099 ./.venv/bin/python src/web_server.py`):
+      `/` 27656 B, `/styles.css` 21328 B, `/app.js` 24173 B, todos HTTP 200.
+      `/api/config` y `/api/secop/live` responden 200.
+      **Referencia de la UI inicial — 6 tabs:** `dashboard`, `architecture`,
+      `secop-live`, `simulator`, `config`, `email-preview`.
+      Título actual: `SECOP Monitor - Servicio Nacional de Aprendizaje SENA`.
+      Al terminar el Prompt 1 deben quedar 4 (sin `simulator` ni `email-preview`,
+      que pasa a ser desplegable).
+- [x] 0.4 **Preservar el simulador antes de borrarlo:** rama `simulador` creada
+      desde `frontend` (`git branch simulador frontend`). Verificado que conserva
+      `#tab-simulator`, `initSimulator()` y `runSimulation()`.
+- [x] 0.5 Upstream de `frontend` corregido: apuntaba a `origin/main`, ahora sigue
+      a `origin/frontend`. Protege la regla de no tocar `main`.
+- [x] 0.6 Rama `simulador` publicada en el remoto (`origin/simulador`). Es un
+      archivo, no se fusiona: ignorar la invitación de GitHub a abrir un PR.
+
+## Fase 1 — Base de roles
+
+- [ ] 1.1 Definir el modelo de usuario (id, nombre, correo, rol, estado, último acceso).
+- [ ] 1.2 Pantalla de acceso que fija el rol de la sesión (`admin` / `usuario`).
+- [ ] 1.3 Persistir el rol en la sesión del navegador y exponerlo a `app.js`.
+- [ ] 1.4 Función central `puede(accion)` que resuelva permisos en un solo lugar.
+- [ ] 1.5 Commit: `feat: sistema de roles admin y usuario`.
+
+## Fase 2 — Permisos en la navegación
+
+- [ ] 2.1 Renderizar el nav según el rol, no ocultar con CSS.
+- [ ] 2.2 Rol `usuario`: solo **Panel de Métricas** y **¿Cómo Funciona por Dentro?**.
+- [ ] 2.3 Rol `admin`: lo anterior + **Monitoreo en Vivo** + **Configuración del Cliente**
+      + **Gestión de Usuarios**.
+- [ ] 2.4 Vista de acceso denegado al intentar entrar a un tab no autorizado.
+- [ ] 2.5 Commit: `feat: navegacion condicionada por rol`.
+
+## Fase 3 — Métricas de solo lectura para `usuario`
+
+- [ ] 3.1 Quitar del render de `usuario` todo control de escritura (guardar,
+      editar, sincronización manual — ver `initManualSync()` en `app.js:454`).
+- [ ] 3.2 Dejar los mismos controles activos para `admin`.
+- [ ] 3.3 Bloquear en `src/web_server.py` los `do_POST` (`/api/config`,
+      `/api/filter/test`) cuando el rol no es `admin`.
+- [ ] 3.4 Tests de permisos del backend (rol no autorizado → rechazo).
+- [ ] 3.5 Commit: `feat: metricas de solo lectura para rol usuario`.
+
+## Fase 4 — Notificaciones como desplegable
+
+- [ ] 4.1 Eliminar el tab "Notificación Brevo" (`index.html:69`) y la sección
+      `#tab-email-preview` (`index.html:504-528`).
+- [ ] 4.2 Añadir campana con badge de conteo en el header.
+- [ ] 4.3 Panel flotante: lista de notificaciones, leída/no leída, estado vacío,
+      cierre al hacer clic fuera.
+- [ ] 4.4 Reutilizar la lógica de `initEmailPreview()` (`app.js:353`) que siga siendo útil.
+- [ ] 4.5 Disponible para ambos roles.
+- [ ] 4.6 Commit: `feat: notificaciones como desplegable en el header`.
+
+## Fase 5 — Gestión y control de usuarios (solo `admin`)
+
+- [ ] 5.1 Nuevo módulo "Gestión de Usuarios" visible solo para `admin`.
+- [ ] 5.2 Tabla de usuarios: avatar, nombre, correo, rol, estado, último acceso.
+- [ ] 5.3 Acciones: crear, editar, activar/desactivar, cambiar rol.
+- [ ] 5.4 Métricas agregadas de uso por usuario (accesos, acciones, estado).
+- [ ] 5.5 Endpoints de backend para el CRUD, protegidos por rol.
+- [ ] 5.6 Tests del CRUD y de su protección por rol.
+- [ ] 5.7 Commit: `feat: panel de gestion y metricas de usuarios para admin`.
+
+## Fase 6 — Retirar el simulador y cerrar la funcionalidad
+
+> El módulo está a salvo en la rama `simulador`. Antes de borrar, confirmar:
+> `git grep -c 'tab-simulator' simulador -- src/web/index.html`
+
+- [ ] 6.0 Verificar que la rama `simulador` conserva el módulo.
+- [ ] 6.1 Quitar el tab "Simulador del Motor" (`index.html:63`).
+- [ ] 6.2 Quitar la sección `#tab-simulator` (`index.html:379-449`).
+- [ ] 6.3 Quitar `initSimulator()` (`app.js:277`) y `runSimulation()` (`app.js:284`).
+- [ ] 6.4 Quitar los estilos asociados en `styles.css`.
+- [ ] 6.5 Verificar que no queden referencias muertas (`grep -rn simulator src/web`).
+- [ ] 6.6 Commit: `refactor: eliminar el simulador del motor de la interfaz`.
+- [ ] 6.7 **Puerta de calidad:** `pytest` en verde y prueba manual de los dos roles
+      de punta a punta. No se pasa al bloque de diseño sin esto.
+- [ ] 6.8 **Puerta de estilos:** `grep -nE '#[0-9A-Fa-f]{3,6}' src/web/styles.css`
+      no debe devolver nada fuera del bloque `:root`. Es lo que mantiene barata
+      la Fase 8.
+
+---
+
+# BLOQUE B — Diseño (al final, sobre la estructura ya terminada)
+
+> **Stack:** `design.md` es la fuente de verdad → la skill `design` de Claude Code
+> genera el canvas → el Artifact publicado permite editarlo visualmente → los
+> tokens aterrizan en `:root` de `src/web/styles.css`.
+> No hay MCP de Claude Design; la integración es la skill.
+
+## Fase 7 — Canvas de diseño (Claude Design)
+
+- [ ] 7.1 Releer `design.md` completo (181 líneas) antes de generar nada.
+- [ ] 7.2 **Canvas A — núcleo:** tira de tokens + Login/selección de rol +
+      Métricas rol USUARIO + Métricas rol ADMIN + estados transversales
+      (nav por rol, vacío, carga, acceso denegado).
+- [ ] 7.3 Revisar y aprobar el Canvas A. Los tokens que salgan de aquí son los
+      que rigen el Canvas B.
+- [ ] 7.4 **Canvas B — módulos:** ¿Cómo Funciona por Dentro? (motivo "Antes/Ahora")
+      + Desplegable de Notificaciones + Gestión de Usuarios + Configuración del
+      Cliente + Monitoreo en Vivo.
+- [ ] 7.5 Variantes móviles de 390px para login, métricas de usuario y
+      desplegable de notificaciones. Desktop a 1440px.
+- [ ] 7.6 Verificar que ningún artboard incluye el Simulador del Motor.
+- [ ] 7.7 Revisar y aprobar el Canvas B.
+
+## Fase 8 — Implementación del diseño en código
+
+- [ ] 8.1 Sustituir el bloque `:root` de `src/web/styles.css`: `--sena-green`,
+      `--sena-navy`, `--bg-*`, `--text-*`, `--border-*` pasan a los tokens
+      Plataforma50 (`--p50-ink`, `--p50-surface`, `--p50-line`, `--p50-text`,
+      `--p50-text-muted`, `--p50-accent`, `--p50-accent-soft`, `--p50-paper`).
+- [ ] 8.2 Corregir `--border-focus` (`styles.css:23`), que hoy repite el verde
+      SENA en duro en lugar de referenciar una variable.
+- [ ] 8.3 Ajustar la escala tipográfica (titular 40-56px/600/-0.02em, eyebrow
+      13-14px/+0.08em, cuerpo 16-18px/1.6, dato 32-48px tabular, numeral `[01]` mono).
+- [ ] 8.4 Eliminar sombras (`--shadow-*`) y degradados decorativos; bordes de 1px.
+- [ ] 8.5 Un solo acento por pantalla: revisar que no queden dos colores compitiendo.
+- [ ] 8.6 Eliminar "SECOP II Monitor" del header (`index.html:31`, el
+      `<h1 class="app-title">` con el `<span class="tag-v2">`).
+- [ ] 8.7 Eliminar el bloque "SECOP Monitor v2.0" del footer (`index.html:529-535`),
+      conservando la descripción funcional y la línea institucional.
+- [ ] 8.8 Aplicar la voz y el copy de §2 de `design.md` (segunda persona, eyebrow
+      en minúscula, titulares de 4-8 palabras, cada dato con número explícito).
+- [ ] 8.9 Revisar contraste mínimo 4.5:1 en todo texto.
+- [ ] 8.10 Commit: `estilo: migrar interfaz al sistema de diseño Plataforma50`.
+
+## Fase 9 — Cierre de `frontend`
+
+- [ ] 9.1 `pytest` en verde.
+- [ ] 9.2 Prueba manual de los dos roles de punta a punta, ya con el diseño aplicado.
+- [ ] 9.3 Push de `frontend` y PR hacia `main`.
+
+---
+
+# BLOQUE C — Derivación
+
+## Fase 10 — Rama `monitoreo`
+
+- [ ] 10.1 Crear la rama: `git checkout -b monitoreo` (a partir de `frontend`,
+      ya funcional **y** rediseñada; así hereda el diseño sin reaplicarlo).
+- [ ] 10.2 Dejar solo el módulo de Monitoreo en Vivo: `#tab-secop-live`
+      (`index.html:317-378`), `initLiveSECOP()` (`app.js:120`),
+      `loadLiveSecopData()` (`app.js:134`), `renderTable()`, `updateKpis()`,
+      el modal de detalle y el endpoint `/api/secop/live`.
+- [ ] 10.3 Eliminar de esta rama el resto de módulos, su JS y su CSS.
+- [ ] 10.4 Verificar que no queda CSS huérfano de los módulos eliminados y que la
+      pantalla resultante sigue respetando `design.md`.
+- [ ] 10.5 Verificar que la rama arranca y consulta SECOP II de forma autónoma.
+- [ ] 10.6 Push de `monitoreo`.
+
+---
+
+---
+
+# Fase 11 — Recorte de la rama `simulador` (opcional, sin prisa)
+
+Hoy `simulador` es una copia completa de `frontend` en su estado previo. Cuando
+convenga, se puede depurar. No bloquea nada de lo anterior.
+
+- [ ] 11.1 Dejar en la rama solo el Simulador del Motor: `#tab-simulator`
+      (`index.html:379-449`), `initSimulator()` (`app.js:277`) y
+      `runSimulation()` (`app.js:284`).
+- [ ] 11.2 Eliminar el resto de módulos, su JS y su CSS.
+- [ ] 11.3 Aplicar el diseño copiando el bloque `:root` ya migrado en `frontend`
+      (barato: el CSS está tokenizado, los colores solo viven en `:root`).
+- [ ] 11.4 Verificar que la rama arranca de forma autónoma.
+
+---
+
+## Decisiones tomadas
+
+- **El simulador no se pierde:** rama `simulador` creada antes de empezar.
+- **`monitoreo` queda solo con monitoreo en vivo;** el simulador no se traslada
+  allí, tiene su propia rama.
+- **`main` no se toca en ninguna fase.** Verificado que no contiene `src/web/`,
+  así que tampoco sirve como respaldo de la interfaz.
