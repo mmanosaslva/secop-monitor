@@ -186,6 +186,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_get_config()
         elif path == "/api/secop/live":
             self.handle_live_secop()
+        elif path == "/api/metrics":
+            self.handle_get_metrics()
         else:
             # Fallback to serving static SPA files
             super().do_GET()
@@ -211,6 +213,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_test_filter(payload)
         elif path == "/api/config":
             self.handle_save_config(payload)
+        elif path == "/api/sync":
+            self.handle_manual_sync()
         else:
             self.send_json_response({"error": "Endpoint not found"}, 404)
 
@@ -415,6 +419,55 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self.send_json_response({"error": str(e)}, 500)
+
+    def handle_get_metrics(self):
+        """KPIs agregados del panel.
+
+        El rol usuario necesita los NUMEROS del panel de metricas pero no la
+        lista de procesos: por eso este endpoint devuelve solo conteos y exige
+        ver_metricas, mientras /api/secop/live exige ver_monitoreo.
+        """
+        if self.exigir("ver_metricas") is None:
+            return
+        try:
+            procesos = self._consultar_procesos()
+        except Exception as e:
+            self.send_json_response(
+                {"error": f"No se pudo consultar SECOP II: {e}",
+                 "codigo": "fuente_no_disponible"}, 503)
+            return
+
+        coincidencias = [p for p in procesos if p.get("is_matched")]
+        con_ventaja = [
+            p for p in procesos
+            if any((p.get("certifications") or {}).values())
+        ]
+        self.send_json_response({
+            "analizados": len(procesos),
+            "coincidencias": len(coincidencias),
+            "notificados": len(coincidencias),
+            "con_ventaja": len(con_ventaja),
+            "actualizado": ahora_iso(),
+        })
+
+    def handle_manual_sync(self):
+        """Sincronizacion manual: muta estado, por eso exige editar_metricas."""
+        sesion = self.exigir("editar_metricas")
+        if sesion is None:
+            return
+        try:
+            procesos = self._consultar_procesos()
+        except Exception as e:
+            self.send_json_response(
+                {"error": f"No se pudo consultar SECOP II: {e}",
+                 "codigo": "fuente_no_disponible"}, 503)
+            return
+        registrar_accion(sesion["user_id"])
+        self.send_json_response({
+            "status": "ok",
+            "procesos": len(procesos),
+            "actualizado": ahora_iso(),
+        })
 
     def handle_get_stats(self):
         self.send_json_response({

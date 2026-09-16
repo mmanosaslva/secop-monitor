@@ -106,13 +106,39 @@ function entrarALaApp() {
     document.getElementById('app-shell').hidden = false;
 
     pintarIdentidad();
+    aplicarModoSoloLectura();
     renderizarNavegacion();
 
     initModal();
+    cargarMetricas();
     if (puede('ver_monitoreo')) initLiveSECOP();
     if (puede('editar_configuracion')) initConfigEditor();
     if (puede('ver_notificaciones')) initEmailPreview();
     if (puede('editar_metricas')) initManualSync();
+}
+
+/**
+ * Saca del DOM los controles de escritura cuando el rol no los autoriza.
+ * No basta con ocultarlos: un control oculto sigue siendo pulsable desde el
+ * inspector. Aqui se elimina, y ademas el backend rechaza la peticion.
+ */
+function aplicarModoSoloLectura() {
+    if (puede('editar_metricas')) return;
+
+    const sync = document.getElementById('btn-run-manual-sync');
+    if (sync) sync.remove();
+
+    const panel = document.getElementById('tab-dashboard');
+    if (panel) {
+        panel.classList.add('is-readonly');
+        const banner = panel.querySelector('.section-banner .banner-text');
+        if (banner) {
+            const aviso = document.createElement('span');
+            aviso.className = 'chip-solo-lectura';
+            aviso.textContent = 'Solo lectura';
+            banner.appendChild(aviso);
+        }
+    }
 }
 
 function pintarIdentidad() {
@@ -312,37 +338,26 @@ function initLiveSECOP() {
 
 async function loadLiveSecopData() {
     const tableBody = document.getElementById('secop-table-body');
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#64748B;">⏳ Cargando procesos desde la API de datos.gov.co...</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">⏳ Consultando procesos en SECOP II...</td></tr>`;
 
     try {
-        // Try fetching backend API endpoint or fallback to Socrata directly
-        let data = [];
-        try {
-            const resp = await fetch('/api/secop/live');
-            if (resp.ok) {
-                data = await resp.json();
-            } else {
-                throw new Error('API server fallback');
-            }
-        } catch (e) {
-            // Direct query to Colombian Open Data API
-            const deptList = clientConfig.departments.map(d => `'${d}'`).join(',');
-            const socrataUrl = `https://www.datos.gov.co/resource/p6dx-8zbt.json?$where=departamento_entidad IN (${deptList}) AND estado_del_procedimiento='Publicado' AND id_estado_del_procedimiento=50&$order=fecha_de_publicacion_del DESC&$limit=40`;
-            const socrataResp = await fetch(socrataUrl);
-            const raw = await socrataResp.json();
-            data = raw.map(r => ({
-                id: r.id_del_proceso || 'CO1.REQ.' + Math.floor(Math.random()*90000),
-                entity_name: r.entidad || 'Entidad Pública',
-                department: r.departamento_entidad || 'Atlántico',
-                city: r.ciudad_entidad || 'Barranquilla',
-                name: r.nombre_del_procedimiento || 'Objeto de contratación',
-                description: r.descripci_n_del_procedimiento || '',
-                modality: r.modalidad_de_contratacion || 'Mínima cuantía',
-                base_price: parseFloat(r.precio_base || 0),
-                unspsc_code: r.codigo_principal_de_categoria || 'V1.53102700',
-                url: typeof r.urlproceso === 'object' ? (r.urlproceso.url || '#') : (r.urlproceso || '#')
-            }));
+        // Solo a traves del backend. Antes habia un fallback que consultaba
+        // datos.gov.co directamente desde el navegador cuando la API fallaba:
+        // eso convertia un 403 del servidor en datos igualmente servidos, es
+        // decir, saltaba el control de permisos. El 403 ahora se respeta.
+        const resp = await fetch('/api/secop/live');
+
+        if (resp.status === 403 || resp.status === 401) {
+            mostrarAccesoDenegado('Monitoreo en Vivo (SECOP II)');
+            return;
         }
+        if (!resp.ok) {
+            tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">
+                No se pudo consultar SECOP II. Reintenta con "Consultar API SECOP II".</td></tr>`;
+            return;
+        }
+
+        const data = await resp.json();
 
         // Process data through filter engine logic
         fetchedProcesses = data.map(p => {
@@ -372,10 +387,51 @@ function updateKpis() {
     const matched = fetchedProcesses.filter(p => p.is_matched).length;
     const advantages = fetchedProcesses.filter(p => Object.values(p.certifications).some(v => v)).length;
 
-    document.getElementById('kpi-analyzed').textContent = total > 0 ? total : 1420;
-    document.getElementById('kpi-matched').textContent = matched;
-    document.getElementById('kpi-notified').textContent = matched;
-    document.getElementById('kpi-advantages').textContent = advantages;
+    pintarKpis({
+        analizados: total,
+        coincidencias: matched,
+        notificados: matched,
+        con_ventaja: advantages
+    });
+}
+
+function pintarKpis(m) {
+    const asignar = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = Number(valor).toLocaleString('es-CO');
+    };
+    asignar('kpi-analyzed', m.analizados);
+    asignar('kpi-matched', m.coincidencias);
+    asignar('kpi-notified', m.notificados);
+    asignar('kpi-advantages', m.con_ventaja);
+}
+
+/**
+ * Carga los KPIs agregados del panel.
+ * El rol usuario no puede pedir la lista de procesos (/api/secop/live exige
+ * ver_monitoreo), pero si los conteos: para eso existe /api/metrics.
+ */
+async function cargarMetricas() {
+    const panel = document.getElementById('tab-dashboard');
+    if (!panel) return;
+
+    try {
+        const resp = await fetch('/api/metrics');
+        if (!resp.ok) {
+            marcarMetricasNoDisponibles();
+            return;
+        }
+        pintarKpis(await resp.json());
+    } catch (err) {
+        marcarMetricasNoDisponibles();
+    }
+}
+
+function marcarMetricasNoDisponibles() {
+    ['kpi-analyzed', 'kpi-matched', 'kpi-notified', 'kpi-advantages'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+    });
 }
 
 function renderTable() {
@@ -397,7 +453,7 @@ function renderTable() {
     });
 
     if (filtered.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#94A3B8;">No se encontraron procesos con los filtros aplicados.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">No se encontraron procesos con los filtros aplicados.</td></tr>`;
         return;
     }
 
@@ -632,18 +688,37 @@ function openModal(process) {
 
 function initManualSync() {
     const btnSync = document.getElementById('btn-run-manual-sync');
-    if (btnSync) {
-        btnSync.addEventListener('click', () => {
-            btnSync.innerHTML = '⏳ Sincronizando SECOP...';
+    if (!btnSync) return;
+
+    btnSync.addEventListener('click', async () => {
+        const original = '<span>🔄</span> Ejecutar Sincronización Manual';
+        btnSync.disabled = true;
+        btnSync.innerHTML = '⏳ Sincronizando SECOP...';
+
+        try {
+            const resp = await fetch('/api/sync', { method: 'POST' });
+
+            if (resp.status === 403 || resp.status === 401) {
+                mostrarAccesoDenegado('Sincronización manual');
+                return;
+            }
+            if (!resp.ok) {
+                btnSync.innerHTML = '⚠️ No se pudo sincronizar';
+            } else {
+                const data = await resp.json();
+                btnSync.innerHTML = `<span>✅</span> ${data.procesos} procesos sincronizados`;
+                cargarMetricas();
+                if (puede('ver_monitoreo')) loadLiveSecopData();
+            }
+        } catch (err) {
+            btnSync.innerHTML = '⚠️ Sin conexión con el servidor';
+        } finally {
             setTimeout(() => {
-                btnSync.innerHTML = '<span>🔄</span> Sincronización Completada';
-                loadLiveSecopData();
-                setTimeout(() => {
-                    btnSync.innerHTML = '<span>🔄</span> Ejecutar Sincronización Manual';
-                }, 2000);
-            }, 1200);
-        });
-    }
+                btnSync.disabled = false;
+                btnSync.innerHTML = original;
+            }, 2500);
+        }
+    });
 }
 
 // Helpers

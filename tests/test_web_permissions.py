@@ -243,3 +243,67 @@ def test_usuario_si_puede_leer_el_perfil_del_cliente(cliente_usuario):
 def test_leer_el_perfil_exige_sesion(anonimo):
     estado, _ = anonimo.peticion("GET", "/api/config")
     assert estado == 401
+
+
+# ==========================================================================
+# Metricas y sincronizacion manual (Fase 3)
+# ==========================================================================
+@pytest.fixture()
+def sin_red(monkeypatch):
+    """Evita salir a internet: sustituye la consulta real por datos fijos."""
+    procesos = [
+        {"is_matched": True, "certifications": {"favorece_pyme": True}},
+        {"is_matched": True, "certifications": {"favorece_pyme": False}},
+        {"is_matched": False, "certifications": {"favorece_pyme": False}},
+    ]
+    monkeypatch.setattr(
+        web_server.SecopMonitorHandler, "_consultar_procesos",
+        lambda self: procesos)
+    return procesos
+
+
+def test_las_metricas_exigen_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("GET", "/api/metrics")
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"
+
+
+def test_el_usuario_si_puede_leer_las_metricas(cliente_usuario, sin_red):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/metrics")
+    assert estado == 200
+    assert cuerpo["analizados"] == 3
+    assert cuerpo["coincidencias"] == 2
+    assert cuerpo["con_ventaja"] == 1
+
+
+def test_las_metricas_no_exponen_la_lista_de_procesos(cliente_usuario, sin_red):
+    """El usuario ve los numeros, no los procesos: esa es la diferencia
+    entre ver_metricas y ver_monitoreo."""
+    _, cuerpo = cliente_usuario.peticion("GET", "/api/metrics")
+    assert set(cuerpo) == {
+        "analizados", "coincidencias", "notificados", "con_ventaja", "actualizado"}
+
+
+def test_el_usuario_no_puede_lanzar_la_sincronizacion(cliente_usuario, sin_red):
+    estado, cuerpo = cliente_usuario.peticion("POST", "/api/sync")
+    assert estado == 403
+    assert cuerpo["permiso"] == "editar_metricas"
+
+
+def test_el_admin_si_puede_lanzar_la_sincronizacion(cliente_admin, sin_red):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/sync")
+    assert estado == 200
+    assert cuerpo["procesos"] == 3
+
+
+def test_la_sincronizacion_cuenta_como_accion_del_usuario(
+        cliente_admin, sin_red, usuarios_temporales):
+    cliente_admin.peticion("POST", "/api/sync")
+    usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
+    admin = next(u for u in usuarios if u["id"] == "u-001")
+    assert admin["acciones"] == 1
+
+
+def test_la_sincronizacion_sin_sesion_es_rechazada(anonimo):
+    estado, _ = anonimo.peticion("POST", "/api/sync")
+    assert estado == 401

@@ -1300,3 +1300,23 @@ body {
 .estado-denegado .estado-icono {
     color: var(--warning);
 }
+
+/* Modo solo lectura (rol usuario) */
+.chip-solo-lectura {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--warning);
+    background: var(--warning-bg);
+    border-radius: 999px;
+}
+
+.tabla-aviso {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+}
