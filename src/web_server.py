@@ -706,9 +706,18 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
         })
 
 
+class ServidorReutilizable(socketserver.TCPServer):
+    """TCPServer que reutiliza la direccion al reiniciar.
+
+    Sin esto, tras apagar el servidor el puerto queda en TIME_WAIT y el
+    siguiente arranque falla con "Address already in use" durante ~60s.
+    """
+    allow_reuse_address = True
+
+
 def run_server(port=PORT):
     server_address = ('', port)
-    httpd = socketserver.TCPServer(server_address, SecopMonitorHandler)
+    httpd = ServidorReutilizable(server_address, SecopMonitorHandler)
     print("===========================================================")
     print(f"[OK] SECOP Monitor activo en http://localhost:{port}")
     print("===========================================================")

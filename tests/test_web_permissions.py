@@ -501,3 +501,12 @@ def test_un_usuario_creado_inactivo_no_puede_entrar(cliente_admin, servidor):
     estado, cuerpo = otro.entrar("usuario", correo="pendiente@secopmonitor.co")
     assert estado == 403
     assert cuerpo["codigo"] == "cuenta_inactiva"
+
+
+# ==========================================================================
+# Arranque del servidor
+# ==========================================================================
+def test_el_servidor_reutiliza_la_direccion():
+    """Sin SO_REUSEADDR, apagar y volver a levantar falla con
+    'Address already in use' durante el TIME_WAIT del socket (~60s)."""
+    assert web_server.ServidorReutilizable.allow_reuse_address is True
