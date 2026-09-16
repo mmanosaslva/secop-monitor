@@ -57,9 +57,14 @@ PORT=8099 python src/web_server.py
 
 ### Entrar a la aplicación
 
-La primera pantalla pide elegir un rol. No hay contraseñas: es un MVP donde el
-rol seleccionado queda fijado en la sesión del navegador mediante una cookie
-`HttpOnly`.
+**No hay usuario ni contraseña.** La primera pantalla es una selección de rol:
+eliges Usuario o Administrador y pulsas *Entrar al monitor*. El rol queda fijado
+en la sesión del navegador mediante una cookie `HttpOnly`, y el backend
+comprueba esa sesión en cada petición.
+
+Es una decisión consciente de MVP: el objetivo era demostrar el **control de
+permisos**, no la autenticación. Cualquiera que abra la aplicación puede elegir
+ser administrador, así que **no la expongas a internet tal cual**.
 
 | Rol | Entra como | Ve |
 |-----|-----------|-----|
@@ -165,12 +170,21 @@ los procesos uno a uno.
 }
 ```
 
-### `config/users.json` y `config/notifications.json`
+### Semilla y estado: `config/` frente a `data/`
 
-Son **semilla y estado a la vez**: se versionan con datos iniciales, pero la
-aplicación los reescribe al iniciar sesión, marcar una notificación como leída o
-gestionar usuarios. Verás cambios sin commitear tras usar la aplicación; es
-esperado en este MVP.
+- **`config/users.json` y `config/notifications.json`** son la **semilla**
+  versionada. La aplicación no los modifica nunca.
+- **`data/`** guarda el **estado en ejecución** (accesos, acciones,
+  notificaciones leídas, usuarios creados). Está en `.gitignore`, así que usar
+  la aplicación no ensucia el repositorio.
+
+En el primer arranque, `data/` se crea copiando la semilla. Para volver al
+estado inicial basta con borrar la carpeta:
+
+```bash
+rm -rf data/
+python src/web_server.py
+```
 
 ### Lógica de filtrado
 
