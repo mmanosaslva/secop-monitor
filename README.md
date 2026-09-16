@@ -11,8 +11,34 @@ El proyecto son **dos piezas que se levantan por separado**:
 | **Motor** (`src/main.py`) | Consulta SECOP II, filtra, deduplica y envía correos. Lo dispara el cron. | Sí (Neon PostgreSQL) |
 | **Interfaz web** (`src/web_server.py`) | Panel de métricas, monitoreo en vivo, notificaciones y gestión de usuarios. | **No** |
 
-Si solo quieres ver la aplicación funcionando, levanta la interfaz web: no
-requiere base de datos ni credenciales.
+---
+
+## Inicio rápido
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python src/web_server.py          # → http://localhost:8080
+```
+
+Y entra con estas credenciales:
+
+| Correo | Contraseña | Rol | Estado |
+|--------|-----------|-----|--------|
+| `admin@secopmonitor.co` | `Admin2026*` | **Administrador** | Activo |
+| `cliente@secopmonitor.co` | `Cliente2026*` | Usuario | Activo |
+| `analista@secopmonitor.co` | `Analista2026*` | Usuario | Activo |
+| `supervisora@secopmonitor.co` | `Supervisora2026*` | Administrador | **Inactivo** |
+
+La cuenta de la supervisora está desactivada a propósito: sirve para comprobar
+que una cuenta inactiva no entra aunque la contraseña sea correcta.
+
+**Estas credenciales son públicas** — están en este archivo y en el repositorio.
+Cámbialas desde *Contraseña*, en el encabezado, antes de usar la aplicación con
+datos reales. Para volver a ellas en cualquier momento: `rm -rf data/`.
+
+La interfaz web no necesita base de datos ni `.env`. El motor sí; eso se
+explica [más abajo](#levantar-el-motor).
 
 ---
 
@@ -60,21 +86,7 @@ PORT=8099 python src/web_server.py
 La aplicación pide **correo y contraseña**. El rol y los permisos los determina
 la cuenta con la que entras, no una elección en la pantalla de acceso.
 
-#### Credenciales iniciales
-
-| Correo | Contraseña | Rol | Estado |
-|--------|-----------|-----|--------|
-| `admin@secopmonitor.co` | `Admin2026*` | Administrador | Activo |
-| `cliente@secopmonitor.co` | `Cliente2026*` | Usuario | Activo |
-| `analista@secopmonitor.co` | `Analista2026*` | Usuario | Activo |
-| `supervisora@secopmonitor.co` | `Supervisora2026*` | Administrador | **Inactivo** |
-
-> La última cuenta está desactivada a propósito, para poder comprobar que una
-> cuenta inactiva no entra aunque la contraseña sea correcta.
-
-**Estas credenciales son públicas: están en este README y en el repositorio.**
-Cámbialas antes de usar la aplicación con datos reales, desde *Contraseña* en
-el encabezado.
+Las credenciales iniciales están en [Inicio rápido](#inicio-rápido).
 
 #### Qué ve cada rol
 
