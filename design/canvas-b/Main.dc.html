@@ -1,0 +1,256 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0B0E14; color: #F4F6F8;
+           font-family: Archivo, 'Helvetica Neue', Helvetica, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: #2F6BFF; } a:hover { color: #5C8CFF; }
+  </style>
+</helmet>
+
+<div style="display: flex; flex-direction: column; min-height: 1900px;">
+
+  <header style="border-bottom: 1px solid #232833; padding: 0 80px;">
+    <div style="max-width: 1280px; margin: 0 auto; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 32px;">
+      <svg width="32" height="32" viewBox="0 0 34 34" fill="none">
+        <rect x="0.5" y="0.5" width="33" height="33" rx="8" stroke="#232833"/>
+        <path d="M10 22L17 10L24 22" stroke="#2F6BFF" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M13.5 18.5H20.5" stroke="#9AA3B2" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div style="display: flex; align-items: center; gap: 20px; flex-grow: 1;">
+        <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #9AA3B2;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: #2F6BFF;"></span>SECOP II · conectado</span>
+        <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #9AA3B2;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: #2F6BFF;"></span>Base de datos · operativa</span>
+        <span style="font-size: 12px; color: #9AA3B2;">Sincroniza 4 veces al día</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="position: relative; width: 38px; height: 38px; border: 1px solid #232833; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4F6F8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span style="position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; color: #FFFFFF; background: #2F6BFF; border-radius: 999px;">2</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+          <span style="font-size: 13px; font-weight: 600;">Administrador del Sistema</span>
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 2px 9px;">ADMINISTRADOR</span>
+        </div>
+        <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 8px 14px; cursor: pointer;">Contraseña</button>
+        <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 8px 14px; cursor: pointer;">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+  <nav style="border-bottom: 1px solid #232833; padding: 0 80px;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; gap: 32px;">
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Panel de Métricas</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">¿Cómo Funciona por Dentro?</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Monitoreo en Vivo</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Configuración del Cliente</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 600; color: #F4F6F8; background: none; border: none; border-bottom: 2px solid #2F6BFF; padding: 18px 0; cursor: pointer;">Gestión de Usuarios</button>
+    </div>
+  </nav>
+
+  <main style="flex-grow: 1; padding: 56px 80px 64px;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px;">
+
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 40px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">gestión de usuarios</span>
+          <h1 style="margin: 0; font-size: 46px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.08;">Quién entra, con qué rol<br>y qué ha hecho dentro.</h1>
+          <p style="margin: 4px 0 0; max-width: 620px; font-size: 17px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Solo tú puedes crear, editar, activar o eliminar cuentas. Cada acción de escritura queda contabilizada.</p>
+        </div>
+        <div style="flex-shrink: 0; margin-top: 6px;"><button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 13px 22px; cursor: pointer;">Crear usuario</button></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+        <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 26px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[01]</span>
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">USUARIOS REGISTRADOS</span>
+          <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1;">4</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #9AA3B2;">2 administradores · 1 inactivo</span>
+        </div>
+        <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 26px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[02]</span>
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">CUENTAS ACTIVAS</span>
+          <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1;">3</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #9AA3B2;">Pueden iniciar sesión</span>
+        </div>
+        <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 26px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[03]</span>
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ACCESOS ACUMULADOS</span>
+          <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1;">27</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #9AA3B2;">Inicios de sesión registrados</span>
+        </div>
+        <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 26px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2F6BFF;">[04]</span>
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ACCIONES REALIZADAS</span>
+          <span style="font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1;">12</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #9AA3B2;">Escrituras sobre el sistema</span>
+        </div>
+      </div>
+
+      <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 8px 28px 12px;">
+        <div style="display: flex; flex-direction: column;">
+          <div style="display: grid; grid-template-columns: 250px 230px 110px 100px 120px 170px minmax(0, 1fr); gap: 16px; padding: 18px 0 12px; border-bottom: 1px solid #232833;">
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">USUARIO</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">CORREO</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ROL</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ESTADO</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">ÚLTIMO ACCESO</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">USO</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;"></span>
+          </div>
+            <div style="display: grid; grid-template-columns: 250px 230px 110px 100px 120px 170px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid #232833; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 11px; min-width: 0;">
+                <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; background: #1B2A4D; color: #2F6BFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;">AS</span>
+                <span style="font-size: 14px; font-weight: 500;">Administrador del Sistema</span>
+              </span>
+              <span style="font-size: 13px; color: #9AA3B2;">admin@secopmonitor.co</span>
+              <span><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 4px 10px;">ADMIN</span></span>
+              <span><span style="font-size: 11px; font-weight: 600; color: #2F6BFF; border: 1px solid #2F6BFF; border-radius: 999px; padding: 4px 10px;">Activo</span></span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">hoy 21:04</span>
+              <span style="font-size: 12px; color: #9AA3B2;">14 accesos · 12 acciones</span>
+              <span style="display: flex; gap: 7px; justify-self: end;">
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Editar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Desactivar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #FF6B6B; background: transparent; border: 1px solid #40242A; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Eliminar</button>
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: 250px 230px 110px 100px 120px 170px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid #232833; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 11px; min-width: 0;">
+                <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; background: #1B2A4D; color: #2F6BFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;">CT</span>
+                <span style="font-size: 14px; font-weight: 500;">Cliente Textil Caribe</span>
+              </span>
+              <span style="font-size: 13px; color: #9AA3B2;">cliente@secopmonitor.co</span>
+              <span><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 10px;">USUARIO</span></span>
+              <span><span style="font-size: 11px; font-weight: 600; color: #2F6BFF; border: 1px solid #2F6BFF; border-radius: 999px; padding: 4px 10px;">Activo</span></span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">hoy 18:32</span>
+              <span style="font-size: 12px; color: #9AA3B2;">9 accesos · 0 acciones</span>
+              <span style="display: flex; gap: 7px; justify-self: end;">
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Editar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Desactivar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #FF6B6B; background: transparent; border: 1px solid #40242A; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Eliminar</button>
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: 250px 230px 110px 100px 120px 170px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid #232833; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 11px; min-width: 0;">
+                <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; background: #1B2A4D; color: #2F6BFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;">AC</span>
+                <span style="font-size: 14px; font-weight: 500;">Analista de Contratación</span>
+              </span>
+              <span style="font-size: 13px; color: #9AA3B2;">analista@secopmonitor.co</span>
+              <span><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 10px;">USUARIO</span></span>
+              <span><span style="font-size: 11px; font-weight: 600; color: #2F6BFF; border: 1px solid #2F6BFF; border-radius: 999px; padding: 4px 10px;">Activo</span></span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">ayer 09:15</span>
+              <span style="font-size: 12px; color: #9AA3B2;">4 accesos · 0 acciones</span>
+              <span style="display: flex; gap: 7px; justify-self: end;">
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Editar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Desactivar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #FF6B6B; background: transparent; border: 1px solid #40242A; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Eliminar</button>
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: 250px 230px 110px 100px 120px 170px minmax(0, 1fr); gap: 16px; padding: 16px 0; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 11px; min-width: 0;">
+                <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; background: #1B2A4D; color: #2F6BFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;">SR</span>
+                <span style="font-size: 14px; font-weight: 500;">Supervisora Regional</span>
+              </span>
+              <span style="font-size: 13px; color: #9AA3B2;">supervisora@secopmonitor.co</span>
+              <span><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 4px 10px;">ADMIN</span></span>
+              <span><span style="font-size: 11px; font-weight: 600; color: #9AA3B2; border: 1px solid #232833; border-radius: 999px; padding: 4px 10px;">Inactivo</span></span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">Nunca</span>
+              <span style="font-size: 12px; color: #9AA3B2;">0 accesos · 0 acciones</span>
+              <span style="display: flex; gap: 7px; justify-self: end;">
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Editar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Activar</button>
+                <button style="font-family: inherit; font-size: 12px; font-weight: 600; color: #FF6B6B; background: transparent; border: 1px solid #40242A; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Eliminar</button>
+              </span>
+            </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 20px; border-top: 1px solid #232833; padding-top: 34px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">variante — modal de crear y editar</span>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #9AA3B2; max-width: 700px; text-wrap: pretty;">Al crear, la contraseña es obligatoria. Al editar, dejarla vacía conserva la que el usuario ya tenía.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+
+          <div style="background: #090C11; border: 1px solid #232833; border-radius: 10px; padding: 30px; display: flex; justify-content: center;">
+            <div style="width: 100%; max-width: 440px; background: #13171F; border: 1px solid #232833; border-radius: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #232833;">
+                <span style="font-size: 18px; font-weight: 600;">Crear usuario</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="1.6" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </div>
+              <div style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 14px; font-weight: 500;">Nombre completo</label>
+                  <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 12px 14px; font-size: 15px; color: #9AA3B2;">Nombre y apellido</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 14px; font-weight: 500;">Correo electrónico</label>
+                  <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 12px 14px; font-size: 15px; color: #9AA3B2;">nombre@secopmonitor.co</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 14px; font-weight: 500;">Rol</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 12px 14px; font-size: 15px;">Usuario
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 14px; font-weight: 500;">Estado</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 12px 14px; font-size: 15px;">Activo
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA3B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 14px; font-weight: 500;">Contraseña</label>
+                  <div style="background: #0B0E14; border: 1px solid #2F6BFF; border-radius: 8px; padding: 12px 14px; font-size: 15px; letter-spacing: 0.18em;">••••••••••</div>
+                  <span style="font-size: 12px; color: #9AA3B2;">Mínimo 8 caracteres. El usuario la necesitará para entrar.</span>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                  <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 12px 22px; cursor: pointer;">Guardar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">409 · autobloqueo</span>
+              <div style="background: #2A1518; border: 1px solid #5C2B33; border-radius: 8px; padding: 13px 15px; font-size: 14px; line-height: 1.5; color: #FF8A8A;">No puedes cambiar tu propio rol ni desactivar tu cuenta</div>
+              <span style="font-size: 13px; line-height: 1.55; color: #9AA3B2;">Salvaguarda: quien administra no puede dejarse fuera del sistema por error.</span>
+            </div>
+            <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">409 · ultimo_admin</span>
+              <div style="background: #2A1518; border: 1px solid #5C2B33; border-radius: 8px; padding: 13px 15px; font-size: 14px; line-height: 1.5; color: #FF8A8A;">Debe quedar al menos un administrador activo</div>
+              <span style="font-size: 13px; line-height: 1.55; color: #9AA3B2;">El sistema nunca se queda sin nadie que pueda volver a entrar.</span>
+            </div>
+            <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2;">400 · datos_invalidos</span>
+              <div style="background: #2A1518; border: 1px solid #5C2B33; border-radius: 8px; padding: 13px 15px; font-size: 14px; line-height: 1.5; color: #FF8A8A;">Ya existe un usuario con ese correo</div>
+              <span style="font-size: 13px; line-height: 1.55; color: #9AA3B2;">El error se muestra dentro del formulario, no como aviso flotante.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer style="border-top: 1px solid #232833; padding: 30px 80px;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #9AA3B2;">Seguimiento automatizado de la contratación pública en Colombia.</p>
+    </div>
+  </footer>
+</div>
+</x-dc>
+</body>
+</html>

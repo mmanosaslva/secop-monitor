@@ -1,47 +1,44 @@
 /* ==========================================================================
-   SECOP Monitor - SENA Institutional Styling & Design System
+   SECOP Monitor — Sistema de diseño Plataforma50
+   Ver design.md. Los colores viven SOLO en este bloque.
    ========================================================================== */
 
 :root {
-    --sena-green: #39A900;
-    --sena-green-hover: #2E8B00;
-    --sena-green-light: #EBF8E1;
-    --sena-navy: #00324D;
-    --sena-navy-hover: #002235;
-    --sena-navy-light: #004D77;
-    --sena-accent-yellow: #FFC600;
+    /* Superficies */
+    --p50-ink: #0B0E14;
+    --p50-surface: #13171F;
+    --p50-surface-alt: #171C25;
+    --p50-line: #232833;
 
-    --bg-main: #F4F7F6;
-    --bg-card: #FFFFFF;
-    --bg-dark-card: #0F172A;
+    /* Texto */
+    --p50-text: #F4F6F8;
+    --p50-text-muted: #9AA3B2;
 
-    --text-primary: #1E293B;
-    --text-muted: #64748B;
-    --text-light: #94A3B8;
+    /* Acento único: el azul de la marca, tomado del logotipo.
+       Marca la acción (CTA) y el estado deseado. Nada más. */
+    --p50-accent: #4A88C3;
+    --p50-accent-hover: #5F9AD2;
+    --p50-accent-soft: #1B2A4D;
 
-    --border-color: #E2E8F0;
-    --border-focus: #39A900;
+    --p50-paper: #FFFFFF;
 
-    --badge-pyme-bg: #D1FAE5;
-    --badge-pyme-text: #065F46;
-    --badge-female-bg: #FCE7F3;
-    --badge-female-text: #BE185D;
-    --badge-gender-bg: #EDE9FE;
-    --badge-gender-text: #6B21A8;
+    /* Estados. Únicos colores fuera de la paleta: sin ellos un error
+       no se distingue de un texto normal. */
+    --danger: #FF8A8A;
+    --danger-bg: #2A1518;
+    --danger-line: #5C2B33;
+    --warning: #E8B871;
+    --warning-bg: #2A2115;
+    --warning-line: #5C4A2B;
 
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    /* Sin sombras: la profundidad la da el borde de 1px. */
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
 
     --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-
-    /* Estados de error y avisos de permisos */
-    --danger: #DC2626;
-    --danger-bg: #FEE2E2;
-    --warning: #B45309;
-    --warning-bg: #FEF3C7;
+    --radius-md: 8px;
+    --radius-lg: 12px;
 }
 
 * {
@@ -51,9 +48,9 @@
 }
 
 body {
-    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
+    font-family: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--p50-ink);
+    color: var(--p50-text);
     line-height: 1.5;
     min-height: 100vh;
     display: flex;
@@ -64,16 +61,15 @@ body {
    Header Institucional SENA
    ========================================================================== */
 
-.sena-header {
-    background: linear-gradient(135deg, var(--sena-navy) 0%, #002338 100%);
-    color: white;
+.app-header {
+    background: var(--p50-ink);
+    color: var(--p50-text);
     padding: 18px 28px;
-    border-bottom: 4px solid var(--sena-green);
-    box-shadow: var(--shadow-md);
+    border-bottom: 1px solid var(--p50-line);
 }
 
 .header-container {
-    max-width: 1350px;
+    max-width: 1280px;
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -88,14 +84,13 @@ body {
     gap: 16px;
 }
 
-.sena-logo-badge {
-    background: white;
+.marca {
+    background: var(--p50-surface);
     padding: 6px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 12px rgba(57, 169, 0, 0.4);
 }
 
 .institution-name {
@@ -103,15 +98,15 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--sena-accent-yellow);
+    color: var(--p50-accent);
     display: block;
 }
 
 .app-title {
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 600;
     margin: 0;
-    color: white;
+    color: var(--p50-text);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -128,26 +123,25 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--p50-line);
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--p50-line);
 }
 
 .status-dot {
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: #10B981;
-    box-shadow: 0 0 8px #10B981;
+    background: var(--p50-accent);
 }
 
 .status-pill.cron {
-    background: rgba(255, 198, 0, 0.15);
-    border-color: rgba(255, 198, 0, 0.4);
-    color: var(--sena-accent-yellow);
+    background: var(--p50-surface);
+    border-color: var(--p50-line);
+    color: var(--p50-accent);
 }
 
 /* ==========================================================================
@@ -155,13 +149,13 @@ body {
    ========================================================================== */
 
 .nav-tabs-bar {
-    background: var(--sena-navy-hover);
+    background: var(--p50-ink);
     padding: 0 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--p50-line);
 }
 
 .tabs-container {
-    max-width: 1350px;
+    max-width: 1280px;
     margin: 0 auto;
     display: flex;
     gap: 4px;
@@ -176,7 +170,7 @@ body {
 .nav-tab {
     background: transparent;
     border: none;
-    color: #94A3B8;
+    color: var(--p50-text-muted);
     padding: 14px 20px;
     font-family: inherit;
     font-size: 13px;
@@ -185,24 +179,20 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    border-bottom: 3px solid transparent;
+    border-bottom: 1px solid transparent;
     transition: all 0.2s ease;
     white-space: nowrap;
 }
 
 .nav-tab:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--p50-text);
+    background: var(--p50-line);
 }
 
 .nav-tab.active {
-    color: white;
-    background: rgba(57, 169, 0, 0.15);
-    border-bottom-color: var(--sena-green);
-}
-
-.tab-icon {
-    font-size: 15px;
+    color: var(--p50-text);
+    background: var(--p50-accent-soft);
+    border-bottom-color: var(--p50-accent);
 }
 
 /* ==========================================================================
@@ -210,7 +200,7 @@ body {
    ========================================================================== */
 
 .app-main {
-    max-width: 1350px;
+    max-width: 1280px;
     margin: 28px auto;
     padding: 0 20px;
     flex: 1;
@@ -232,11 +222,10 @@ body {
 }
 
 .section-banner {
-    background: white;
+    background: var(--p50-surface);
     padding: 24px 30px;
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    border-left: 5px solid var(--sena-green);
+    border-left: 1px solid var(--p50-accent);
     margin-bottom: 24px;
     display: flex;
     justify-content: space-between;
@@ -247,57 +236,52 @@ body {
 
 .banner-text h2 {
     font-size: 20px;
-    font-weight: 800;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
 }
 
 .banner-text p {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin-top: 4px;
 }
 
 /* Buttons */
-.btn-sena-action {
-    background: var(--sena-green);
-    color: white;
-    border: none;
-    padding: 10px 18px;
+.btn-secundario {
+    background: transparent;
+    color: var(--p50-text);
+    border: 1px solid var(--p50-line);
+    padding: 12px 20px;
     border-radius: var(--radius-sm);
     font-family: inherit;
-    font-weight: 700;
-    font-size: 13px;
+    font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
+    transition: background 0.15s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: background 0.2s ease;
-    box-shadow: 0 3px 10px rgba(57, 169, 0, 0.3);
 }
 
-.btn-sena-action:hover {
-    background: var(--sena-green-hover);
+.btn-secundario:hover {
+    background: var(--p50-surface);
 }
 
-.btn-sena-primary {
-    background: var(--sena-navy);
-    color: white;
+.btn-primario {
+    background: var(--p50-accent);
+    color: var(--p50-ink);
     border: none;
-    padding: 12px 24px;
+    padding: 13px 22px;
     border-radius: var(--radius-sm);
     font-family: inherit;
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: background 0.2s ease;
+    transition: background 0.15s ease;
 }
 
-.btn-sena-primary:hover {
-    background: var(--sena-navy-hover);
+.btn-primario:hover {
+    background: var(--p50-accent-hover);
 }
 
 .block-btn {
@@ -317,47 +301,29 @@ body {
 }
 
 .kpi-card {
-    background: white;
+    background: var(--p50-surface);
     border-radius: var(--radius-md);
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     position: relative;
     overflow: hidden;
 }
 
-.kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-}
 
-.kpi-card.sena-accent::before { background: var(--sena-accent-yellow); }
-.kpi-card.sena-green::before { background: var(--sena-green); }
-.kpi-card.sena-blue::before { background: #3B82F6; }
-.kpi-card.sena-purple::before { background: #8B5CF6; }
-
-.kpi-icon {
-    font-size: 28px;
-    background: var(--bg-main);
-    width: 54px;
-    height: 54px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.kpi-numeral {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--p50-accent);
 }
 
 .kpi-title {
     font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--p50-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: block;
@@ -365,15 +331,15 @@ body {
 
 .kpi-value {
     font-size: 26px;
-    font-weight: 800;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
     line-height: 1.2;
     display: block;
 }
 
 .kpi-subtext {
     font-size: 11px;
-    color: var(--text-light);
+    color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -392,33 +358,32 @@ body {
 }
 
 .glass-card {
-    background: white;
+    background: var(--p50-surface);
     border-radius: var(--radius-md);
     padding: 24px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
 }
 
-.card-header-sena {
+.card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--p50-line);
 }
 
-.card-header-sena h3 {
+.card-header h3 {
     font-size: 16px;
-    font-weight: 800;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
 }
 
-.badge-sena-outline {
+.chip-contorno {
     font-size: 11px;
     font-family: 'JetBrains Mono', monospace;
-    background: var(--sena-green-light);
-    color: var(--sena-green-hover);
+    background: var(--p50-accent-soft);
+    color: var(--p50-accent-hover);
     padding: 4px 10px;
     border-radius: 6px;
     font-weight: 600;
@@ -426,11 +391,11 @@ body {
 
 .badge-live {
     font-size: 11px;
-    background: #DEF7EC;
-    color: #03543F;
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
     padding: 4px 10px;
     border-radius: 12px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* Client details */
@@ -440,21 +405,21 @@ body {
 
 .detail-label {
     font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--p50-text-muted);
     display: block;
     margin-bottom: 4px;
 }
 
 .detail-val {
     font-size: 14px;
-    color: var(--text-primary);
+    color: var(--p50-text);
     font-weight: 500;
 }
 
 .detail-val.highlight {
-    font-weight: 700;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
     font-size: 16px;
 }
 
@@ -466,8 +431,8 @@ body {
 }
 
 .tag-dept {
-    background: #E0F2FE;
-    color: #0369A1;
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
     font-size: 11px;
     font-weight: 600;
     padding: 3px 8px;
@@ -475,8 +440,8 @@ body {
 }
 
 .tag-kw {
-    background: #FEF3C7;
-    color: #92400E;
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
     font-size: 11px;
     font-weight: 600;
     padding: 3px 8px;
@@ -491,24 +456,24 @@ body {
 }
 
 .timeline-item {
-    border-left: 3px solid var(--sena-green);
+    border-left: 1px solid var(--p50-accent);
     padding-left: 14px;
 }
 
 .time-mark {
     font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--p50-text-muted);
 }
 
 .timeline-content strong {
     font-size: 13px;
-    color: var(--sena-navy);
+    color: var(--p50-surface);
 }
 
 .timeline-content p {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -516,18 +481,17 @@ body {
    ========================================================================== */
 
 .pipeline-wrapper {
-    background: white;
+    background: var(--p50-surface);
     padding: 28px;
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     margin-bottom: 24px;
 }
 
 .pipeline-title {
     font-size: 18px;
-    font-weight: 800;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
     margin-bottom: 24px;
 }
 
@@ -541,27 +505,27 @@ body {
 }
 
 .pipeline-step-card {
-    background: var(--bg-main);
+    background: var(--p50-ink);
     border-radius: var(--radius-md);
     padding: 20px;
     flex: 1;
     min-width: 180px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     position: relative;
 }
 
 .step-num {
     font-size: 11px;
-    font-weight: 800;
-    color: var(--sena-green);
-    background: white;
+    font-weight: 600;
+    color: var(--p50-accent);
+    background: var(--p50-surface);
     width: 26px;
     height: 26px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--sena-green);
+    border: 1px solid var(--p50-accent);
     margin-bottom: 10px;
 }
 
@@ -572,14 +536,14 @@ body {
 
 .pipeline-step-card h4 {
     font-size: 14px;
-    font-weight: 700;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
     margin-bottom: 6px;
 }
 
 .pipeline-step-card p {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     line-height: 1.4;
     margin-bottom: 10px;
 }
@@ -587,8 +551,8 @@ body {
 .step-code {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    background: var(--sena-navy);
-    color: var(--sena-accent-yellow);
+    background: var(--p50-surface);
+    color: var(--p50-accent);
     padding: 3px 8px;
     border-radius: 4px;
     display: inline-block;
@@ -596,7 +560,7 @@ body {
 
 .pipeline-connector {
     font-size: 18px;
-    color: var(--sena-green);
+    color: var(--p50-accent);
     font-weight: bold;
 }
 
@@ -609,7 +573,7 @@ body {
 
 .specs-desc {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin-bottom: 14px;
 }
 
@@ -620,8 +584,8 @@ body {
 .specs-list li {
     font-size: 13px;
     padding: 8px 0;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
+    border-bottom: 1px solid var(--p50-line);
+    color: var(--p50-text);
 }
 
 .specs-list li:last-child {
@@ -629,8 +593,8 @@ body {
 }
 
 .specs-list code {
-    background: var(--sena-green-light);
-    color: var(--sena-green-hover);
+    background: var(--p50-accent-soft);
+    color: var(--p50-accent-hover);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
@@ -659,18 +623,18 @@ body {
 }
 
 .badge-female {
-    background: var(--badge-female-bg);
-    color: var(--badge-female-text);
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
 }
 
 .badge-pyme {
-    background: var(--badge-pyme-bg);
-    color: var(--badge-pyme-text);
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
 }
 
 .badge-gender {
-    background: var(--badge-gender-bg);
-    color: var(--badge-gender-text);
+    background: var(--p50-surface-alt);
+    color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -678,11 +642,10 @@ body {
    ========================================================================== */
 
 .toolbar-card {
-    background: white;
+    background: var(--p50-surface);
     padding: 18px 24px;
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     margin-bottom: 20px;
     display: flex;
     gap: 16px;
@@ -701,14 +664,14 @@ body {
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-light);
+    color: var(--p50-text-muted);
 }
 
 .search-box input {
     width: 100%;
     padding: 10px 14px 10px 40px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     font-family: inherit;
     font-size: 13px;
     outline: none;
@@ -716,7 +679,7 @@ body {
 }
 
 .search-box input:focus {
-    border-color: var(--sena-green);
+    border-color: var(--p50-accent);
 }
 
 .filter-selectors {
@@ -728,73 +691,72 @@ body {
 .filter-selectors select {
     padding: 10px 14px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     font-family: inherit;
     font-size: 13px;
     outline: none;
-    background: white;
+    background: var(--p50-surface);
     cursor: pointer;
 }
 
 .table-container-card {
-    background: white;
+    background: var(--p50-surface);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--p50-line);
     overflow-x: auto;
 }
 
-.sena-data-table {
+.tabla-datos {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
     text-align: left;
 }
 
-.sena-data-table th {
-    background: var(--sena-navy);
-    color: white;
+.tabla-datos th {
+    background: var(--p50-surface);
+    color: var(--p50-text);
     padding: 14px 18px;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
 }
 
-.sena-data-table td {
+.tabla-datos td {
     padding: 14px 18px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
+    border-bottom: 1px solid var(--p50-line);
+    color: var(--p50-text);
     vertical-align: middle;
 }
 
-.sena-data-table tbody tr:hover {
-    background: #F8FAFC;
+.tabla-datos tbody tr:hover {
+    background: var(--p50-surface-alt);
 }
 
 .proc-id {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 600;
-    color: var(--sena-navy);
+    color: var(--p50-surface);
 }
 
 .entity-name {
-    font-weight: 700;
-    color: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
 
 }
 
 .location-tag {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .price-text {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-    color: #059669;
+    font-weight: 600;
+    color: var(--p50-accent);
 }
 
 /* Badges */
@@ -803,31 +765,31 @@ body {
     padding: 3px 8px;
     border-radius: 12px;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     margin-right: 4px;
     margin-bottom: 4px;
 }
 
 .badge-minima {
-    background: #DBEAFE;
-    color: #1E40AF;
+    background: var(--p50-accent-soft);
+    color: var(--p50-accent);
 }
 
 .btn-view-detail {
-    background: var(--sena-navy);
-    color: white;
+    background: var(--p50-surface);
+    color: var(--p50-text);
     border: none;
     padding: 6px 12px;
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .btn-view-detail:hover {
-    background: var(--sena-navy-hover);
+    background: var(--p50-ink);
 }
 
 /* ==========================================================================
@@ -840,7 +802,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 50, 77, 0.6);
+    background: var(--p50-ink);
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
@@ -853,18 +815,17 @@ body {
 }
 
 .modal-card {
-    background: white;
+    background: var(--p50-surface);
     border-radius: var(--radius-md);
     width: 90%;
     max-width: 650px;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
-    background: var(--sena-navy);
-    color: white;
+    background: var(--p50-surface);
+    color: var(--p50-text);
     padding: 16px 24px;
     display: flex;
     justify-content: space-between;
@@ -873,13 +834,13 @@ body {
 
 .modal-header h3 {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .close-modal {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--p50-text);
     font-size: 24px;
     cursor: pointer;
 }
@@ -892,12 +853,12 @@ body {
    Footer Institucional SENA
    ========================================================================== */
 
-.sena-footer {
-    background: var(--sena-navy);
-    color: white;
+.app-footer {
+    background: var(--p50-ink);
+    color: var(--p50-text);
     padding: 24px;
     text-align: center;
-    border-top: 4px solid var(--sena-green);
+    border-top: 1px solid var(--p50-line);
     margin-top: 40px;
 }
 
@@ -924,7 +885,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: var(--bg-main);
+    background: var(--p50-ink);
 }
 
 .login-screen[hidden],
@@ -935,11 +896,10 @@ body {
 .login-card {
     width: 100%;
     max-width: 460px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--p50-surface);
+    border: 1px solid var(--p50-line);
     border-radius: var(--radius-lg);
     padding: 40px 36px;
-    box-shadow: var(--shadow-md);
 }
 
 .login-brand {
@@ -951,23 +911,23 @@ body {
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.08em;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin-bottom: 8px;
 }
 
 .login-title {
     font-size: 30px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     letter-spacing: -0.02em;
-    color: var(--sena-navy);
+    color: var(--p50-surface);
     margin: 0 0 10px 0;
 }
 
 .login-sub {
     font-size: 15px;
     line-height: 1.6;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin: 0 0 24px 0;
 }
 
@@ -988,7 +948,7 @@ body {
     margin: 16px 0 0 0;
     font-size: 12px;
     line-height: 1.5;
-    color: var(--text-light);
+    color: var(--p50-text-muted);
     text-align: center;
 }
 
@@ -1009,7 +969,7 @@ body {
 .user-name {
     font-size: 13px;
     font-weight: 600;
-    color: var(--bg-card);
+    color: var(--p50-surface);
 }
 
 .user-role-chip {
@@ -1019,12 +979,15 @@ body {
     text-transform: uppercase;
     padding: 2px 8px;
     border-radius: 999px;
-    background: var(--sena-navy-light);
-    color: var(--bg-card);
+    background: transparent;
+    border: 1px solid var(--p50-line);
+    color: var(--p50-text-muted);
 }
 
 .user-role-chip.is-admin {
-    background: var(--sena-green);
+    background: var(--p50-accent-soft);
+    border-color: var(--p50-accent);
+    color: var(--p50-text);
 }
 
 .btn-logout {
@@ -1032,16 +995,16 @@ body {
     font-size: 13px;
     font-weight: 600;
     font-family: inherit;
-    color: var(--bg-card);
+    color: var(--p50-surface);
     background: transparent;
-    border: 1px solid var(--sena-navy-light);
+    border: 1px solid var(--p50-line);
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.15s ease;
 }
 
 .btn-logout:hover {
-    background: var(--sena-navy-light);
+    background: var(--p50-line);
 }
 
 /* ==========================================================================
@@ -1054,8 +1017,8 @@ body {
     align-items: center;
     text-align: center;
     padding: 72px 24px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--p50-surface);
+    border: 1px solid var(--p50-line);
     border-radius: var(--radius-lg);
 }
 
@@ -1069,16 +1032,16 @@ body {
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.08em;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin-bottom: 8px;
 }
 
 .estado-titulo {
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.25;
     letter-spacing: -0.02em;
-    color: var(--sena-navy);
+    color: var(--p50-surface);
     margin: 0 0 12px 0;
 }
 
@@ -1086,7 +1049,7 @@ body {
     max-width: 480px;
     font-size: 15px;
     line-height: 1.6;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
     margin: 0 0 24px 0;
 }
 
@@ -1111,7 +1074,7 @@ body {
 .tabla-aviso {
     text-align: center;
     padding: 30px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 /* ==========================================================================
@@ -1131,14 +1094,14 @@ body {
     height: 38px;
     font-size: 17px;
     background: transparent;
-    border: 1px solid var(--sena-navy-light);
+    border: 1px solid var(--p50-line);
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.15s ease;
 }
 
 .btn-campana:hover {
-    background: var(--sena-navy-light);
+    background: var(--p50-line);
 }
 
 .campana-badge {
@@ -1149,11 +1112,11 @@ body {
     height: 18px;
     padding: 0 5px;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 18px;
     text-align: center;
-    color: var(--bg-card);
-    background: var(--danger);
+    color: var(--p50-ink);
+    background: var(--p50-accent);
     border-radius: 999px;
 }
 
@@ -1167,10 +1130,9 @@ body {
     right: 0;
     width: 380px;
     max-width: calc(100vw - 32px);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--p50-surface);
+    border: 1px solid var(--p50-line);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
     z-index: 200;
     overflow: hidden;
 }
@@ -1184,20 +1146,20 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--p50-line);
 }
 
 .panel-titulo {
     font-size: 14px;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: var(--p50-text);
 }
 
 .panel-accion {
     font-family: inherit;
     font-size: 12px;
     font-weight: 600;
-    color: var(--sena-green);
+    color: var(--p50-accent);
     background: none;
     border: none;
     cursor: pointer;
@@ -1222,13 +1184,13 @@ body {
     font-family: inherit;
     background: none;
     border: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--p50-line);
     cursor: pointer;
     transition: background 0.12s ease;
 }
 
 .notif-item:hover {
-    background: var(--bg-main);
+    background: var(--p50-ink);
 }
 
 .notif-punto {
@@ -1237,11 +1199,11 @@ body {
     height: 7px;
     margin-top: 6px;
     border-radius: 50%;
-    background: var(--sena-green);
+    background: var(--p50-accent);
 }
 
 .notif-item.leida .notif-punto {
-    background: var(--border-color);
+    background: var(--p50-line);
 }
 
 .notif-cuerpo {
@@ -1255,22 +1217,22 @@ body {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
-    color: var(--text-primary);
+    color: var(--p50-text);
 }
 
 .notif-item.leida .notif-titulo {
     font-weight: 400;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .notif-meta {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .notif-fecha {
     font-size: 11px;
-    color: var(--text-light);
+    color: var(--p50-text-muted);
 }
 
 .panel-vacio {
@@ -1281,7 +1243,7 @@ body {
     padding: 40px 24px;
     text-align: center;
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .panel-vacio-icono {
@@ -1290,33 +1252,33 @@ body {
 
 .panel-pie {
     padding: 10px 16px;
-    border-top: 1px solid var(--border-color);
-    background: var(--bg-main);
+    border-top: 1px solid var(--p50-line);
+    background: var(--p50-ink);
 }
 
 .panel-nota {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 /* Correo transaccional mostrado al abrir una notificacion */
 .correo-cabecera {
     padding: 14px 16px;
     margin-bottom: 16px;
-    background: var(--sena-navy);
+    background: var(--p50-surface);
     border-radius: var(--radius-sm);
 }
 
 .correo-marca {
     font-size: 13px;
-    color: var(--sena-green);
+    color: var(--p50-accent);
     letter-spacing: 0.04em;
 }
 
 .correo-asunto {
     margin: 6px 0 0 0;
     font-size: 15px;
-    color: var(--bg-card);
+    color: var(--p50-surface);
 }
 
 .correo-badges {
@@ -1330,8 +1292,8 @@ body {
 .correo-ventaja {
     padding: 14px;
     margin-bottom: 18px;
-    background: var(--sena-green-light);
-    border-left: 3px solid var(--sena-green);
+    background: var(--p50-accent-soft);
+    border-left: 1px solid var(--p50-accent);
     border-radius: var(--radius-sm);
 }
 
@@ -1339,7 +1301,7 @@ body {
     margin: 6px 0 0 0;
     font-size: 13px;
     line-height: 1.6;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .correo-cta {
@@ -1368,9 +1330,9 @@ body {
     width: 32px;
     height: 32px;
     font-size: 12px;
-    font-weight: 700;
-    color: var(--bg-card);
-    background: var(--sena-navy);
+    font-weight: 600;
+    color: var(--p50-surface);
+    background: var(--p50-surface);
     border-radius: 50%;
 }
 
@@ -1385,30 +1347,30 @@ body {
 }
 
 .chip-rol {
-    color: var(--text-muted);
-    background: var(--bg-main);
-    border: 1px solid var(--border-color);
+    color: var(--p50-text-muted);
+    background: var(--p50-ink);
+    border: 1px solid var(--p50-line);
 }
 
 .chip-rol.es-admin {
-    color: var(--sena-navy);
-    background: var(--sena-green-light);
-    border-color: var(--sena-green);
+    color: var(--p50-surface);
+    background: var(--p50-accent-soft);
+    border-color: var(--p50-accent);
 }
 
 .chip-estado.es-activo {
-    color: var(--badge-pyme-text);
-    background: var(--badge-pyme-bg);
+    color: var(--p50-text-muted);
+    background: var(--p50-surface-alt);
 }
 
 .chip-estado.es-inactivo {
-    color: var(--text-muted);
-    background: var(--bg-main);
+    color: var(--p50-text-muted);
+    background: var(--p50-ink);
 }
 
 .celda-tenue {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .acciones-fila {
@@ -1430,12 +1392,12 @@ body {
 }
 
 .btn-fila-secundario {
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
+    color: var(--p50-text-muted);
+    border: 1px solid var(--p50-line);
 }
 
 .btn-fila-secundario:hover {
-    background: var(--bg-main);
+    background: var(--p50-ink);
 }
 
 .btn-fila-peligro {
@@ -1492,15 +1454,15 @@ body {
     display: block;
     margin-top: 5px;
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--p50-text-muted);
 }
 
 .form-exito {
     margin: 12px 0 0 0;
     padding: 10px 14px;
     font-size: 13px;
-    color: var(--badge-pyme-text);
-    background: var(--badge-pyme-bg);
+    color: var(--p50-text-muted);
+    background: var(--p50-surface-alt);
     border-radius: var(--radius-sm);
 }
 
@@ -1511,3 +1473,154 @@ body {
 #login-form .form-group {
     text-align: left;
 }
+
+/* ==========================================================================
+   Escala tipográfica (design.md §4)
+   Dos pesos sobre una sola familia. El contraste lo da el tamaño.
+   ========================================================================== */
+
+body {
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Titular de sección: 40-56px / 600 / -0.02em */
+.section-banner h2,
+.login-title,
+.estado-titulo {
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--p50-text);
+}
+
+/* Eyebrow: 13-14px / 500 / +0.08em, sobre el titular */
+.login-eyebrow,
+.estado-eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--p50-text-muted);
+}
+
+/* Cuerpo: 16-18px / 1.6, máximo 65 caracteres por línea */
+.section-banner p,
+.login-sub,
+.estado-texto {
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 65ch;
+    color: var(--p50-text-muted);
+    text-wrap: pretty;
+}
+
+/* Dato: 32-48px / 600 / tabular */
+.kpi-value {
+    font-size: 44px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: var(--p50-text);
+}
+
+/* Meta y label: 12-13px / 500 / +0.06em */
+.kpi-title,
+.detail-label {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--p50-text-muted);
+}
+
+/* Numeral [01]: 13px mono */
+.step-num,
+.kpi-numeral {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--p50-accent);
+}
+
+/* Rejilla de 12 columnas, ancho máximo 1280px (design.md §5) */
+.header-container,
+.tabs-container,
+.app-main,
+.footer-container {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ==========================================================================
+   Marca
+   ========================================================================== */
+
+.marca-logo {
+    display: block;
+    height: 26px;
+    width: auto;
+}
+
+.login-brand .marca-logo {
+    height: 30px;
+    margin-bottom: 4px;
+}
+
+/* Distintivos y marca de coincidencia de la tabla de procesos */
+.badge-status {
+    display: inline-block;
+    padding: 3px 9px;
+    margin-right: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--p50-text-muted);
+    background: transparent;
+    border: 1px solid var(--p50-line);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.marca-coincide,
+.marca-no-coincide {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.marca-coincide {
+    font-weight: 600;
+    color: var(--p50-accent);
+}
+
+.marca-no-coincide {
+    color: var(--p50-text-muted);
+}
+
+.marca-coincide::before,
+.marca-no-coincide::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+/* Iconos: todos SVG, heredan el color del contenedor */
+.campana-icono svg,
+.search-icon svg,
+.estado-icono svg,
+.panel-vacio-icono svg,
+.pipeline-connector svg,
+.btn-ver-contrasena svg {
+    display: block;
+    color: currentColor;
+}
+
+.estado-icono { color: var(--p50-text-muted); }
+.pipeline-connector { color: var(--p50-line); }

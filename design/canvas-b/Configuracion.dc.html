@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0B0E14; color: #F4F6F8;
+           font-family: Archivo, 'Helvetica Neue', Helvetica, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: #2F6BFF; } a:hover { color: #5C8CFF; }
+  </style>
+</helmet>
+
+<div style="display: flex; flex-direction: column; min-height: 1180px;">
+
+  <header style="border-bottom: 1px solid #232833; padding: 0 80px;">
+    <div style="max-width: 1280px; margin: 0 auto; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 32px;">
+      <svg width="32" height="32" viewBox="0 0 34 34" fill="none">
+        <rect x="0.5" y="0.5" width="33" height="33" rx="8" stroke="#232833"/>
+        <path d="M10 22L17 10L24 22" stroke="#2F6BFF" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M13.5 18.5H20.5" stroke="#9AA3B2" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div style="display: flex; align-items: center; gap: 20px; flex-grow: 1;">
+        <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #9AA3B2;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: #2F6BFF;"></span>SECOP II · conectado</span>
+        <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #9AA3B2;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: #2F6BFF;"></span>Base de datos · operativa</span>
+        <span style="font-size: 12px; color: #9AA3B2;">Sincroniza 4 veces al día</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="position: relative; width: 38px; height: 38px; border: 1px solid #232833; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4F6F8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span style="position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; color: #FFFFFF; background: #2F6BFF; border-radius: 999px;">2</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+          <span style="font-size: 13px; font-weight: 600;">Administrador del Sistema</span>
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #2F6BFF; background: #1B2A4D; border-radius: 999px; padding: 2px 9px;">ADMINISTRADOR</span>
+        </div>
+        <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #F4F6F8; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 8px 14px; cursor: pointer;">Contraseña</button>
+        <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #9AA3B2; background: transparent; border: 1px solid #232833; border-radius: 6px; padding: 8px 14px; cursor: pointer;">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+  <nav style="border-bottom: 1px solid #232833; padding: 0 80px;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; gap: 32px;">
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Panel de Métricas</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">¿Cómo Funciona por Dentro?</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Monitoreo en Vivo</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 600; color: #F4F6F8; background: none; border: none; border-bottom: 2px solid #2F6BFF; padding: 18px 0; cursor: pointer;">Configuración del Cliente</button>
+      <button style="font-family: inherit; font-size: 14px; font-weight: 400; color: #9AA3B2; background: none; border: none; border-bottom: 2px solid transparent; padding: 18px 0; cursor: pointer;">Gestión de Usuarios</button>
+    </div>
+  </nav>
+
+  <main style="flex-grow: 1; padding: 56px 80px 64px;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px;">
+
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 40px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #9AA3B2;">configuración del cliente</span>
+          <h1 style="margin: 0; font-size: 46px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.08;">Las reglas que deciden<br>qué llega y qué no.</h1>
+          <p style="margin: 4px 0 0; max-width: 620px; font-size: 17px; line-height: 1.6; color: #9AA3B2; text-wrap: pretty;">Cambiarlas altera lo que el motor considera una coincidencia. Se guardan en client_config.json y afectan a la siguiente pasada.</p>
+        </div>
+        
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start;">
+
+        <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 30px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Nombre del cliente</label>
+          <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">Cliente Textil Caribe</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Correo de destino</label>
+          <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">cliente@secopmonitor.co</div>
+        </div>
+          </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Departamentos monitoreados</label>
+          <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">Atlántico, Bolívar, Magdalena, Córdoba, Sucre, La Guajira, Cesar</div>
+          <span style="font-size: 12px; color: #9AA3B2;">7 departamentos. Separados por coma.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Palabras clave de producto o servicio</label>
+          <div style="background: #0B0E14; border: 1px solid #2F6BFF; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">uniforme, vestuario, calzado, dotación, textil, confección, prendas, epp…</div>
+          <span style="font-size: 12px; color: #9AA3B2;">18 palabras. Basta con que coincida una.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Códigos UNSPSC de interés</label>
+          <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">V1.53102700, V1.53102710, V1.53102715, V1.53102900, V1.53110000…</div>
+          <span style="font-size: 12px; color: #9AA3B2;">14 códigos. Sustituyen a la coincidencia por palabra.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 14px; font-weight: 500;">Palabras de atributos especiales</label>
+          <div style="background: #0B0E14; border: 1px solid #232833; border-radius: 8px; padding: 13px 15px; font-size: 15px; line-height: 1.5; color: #F4F6F8;">mujer líder, equidad de género, empresa de mujeres, emprendimiento femenino</div>
+          <span style="font-size: 12px; color: #9AA3B2;">No deciden si te avisamos: solo marcan el proceso.</span>
+        </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid #232833; padding-top: 22px;">
+            <span style="font-size: 13px; color: #9AA3B2;">Último guardado: hoy 18:40 COT</span>
+            <button style="font-family: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #2F6BFF; border: none; border-radius: 8px; padding: 13px 22px; cursor: pointer;">Guardar cambios</button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">EFECTO DEL CAMBIO</span>
+            <div style="display: flex; flex-direction: column;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #232833;">
+                <span style="font-size: 14px; color: #9AA3B2;">Coincidencias hoy</span>
+                <span style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums;">18</span>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #232833;">
+                <span style="font-size: 14px; color: #9AA3B2;">Con las reglas nuevas</span>
+                <span style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: #2F6BFF;">23</span>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0;">
+                <span style="font-size: 14px; color: #9AA3B2;">Diferencia</span>
+                <span style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: #2F6BFF;">+5</span>
+              </div>
+            </div>
+            <span style="font-size: 13px; line-height: 1.55; color: #9AA3B2;">Recalculado sobre los 1.420 procesos de hoy, antes de guardar.</span>
+          </div>
+
+          <div style="background: #13171F; border: 1px solid #232833; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9AA3B2;">SOLO ADMINISTRADORES</span>
+            <span style="font-size: 14px; line-height: 1.6; color: #9AA3B2;">El rol usuario ve este perfil en su panel, pero en lectura. El servidor rechaza su petición de guardado aunque llegue a enviarla.</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA3B2; border-top: 1px solid #232833; padding-top: 12px;">POST /api/config · 403</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer style="border-top: 1px solid #232833; padding: 30px 80px;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #9AA3B2;">Seguimiento automatizado de la contratación pública en Colombia.</p>
+    </div>
+  </footer>
+</div>
+</x-dc>
+</body>
+</html>

@@ -244,11 +244,11 @@ function pintarIdentidad() {
 // lo que el rol no autoriza no se pinta y su seccion se saca del DOM, para que
 // no quede accesible desempolvando una clase CSS desde el inspector.
 const MODULOS = [
-    { id: 'dashboard', etiqueta: 'Panel de Métricas', icono: '📊', permiso: 'ver_metricas' },
-    { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', icono: '🧠', permiso: 'ver_arquitectura' },
-    { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', icono: '🌐', permiso: 'ver_monitoreo' },
-    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' },
-    { id: 'users', etiqueta: 'Gestión de Usuarios', icono: '👥', permiso: 'gestionar_usuarios' }
+    { id: 'dashboard', etiqueta: 'Panel de Métricas', permiso: 'ver_metricas' },
+    { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', permiso: 'ver_arquitectura' },
+    { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', permiso: 'ver_monitoreo' },
+    { id: 'config', etiqueta: 'Configuración del Cliente', permiso: 'editar_configuracion' },
+    { id: 'users', etiqueta: 'Gestión de Usuarios', permiso: 'gestionar_usuarios' }
 ];
 
 function modulosAutorizados() {
@@ -268,9 +268,7 @@ function renderizarNavegacion() {
     });
 
     contenedor.innerHTML = autorizados.map(m => `
-        <button class="nav-tab" data-tab="${m.id}">
-            <span class="tab-icon">${m.icono}</span> ${escapeHtml(m.etiqueta)}
-        </button>
+        <button class="nav-tab" data-tab="${m.id}">${escapeHtml(m.etiqueta)}</button>
     `).join('');
 
     contenedor.querySelectorAll('.nav-tab').forEach(tab => {
@@ -422,7 +420,7 @@ function initLiveSECOP() {
 
 async function loadLiveSecopData() {
     const tableBody = document.getElementById('secop-table-body');
-    tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">⏳ Consultando procesos en SECOP II...</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">Consultando procesos en SECOP II…</td></tr>`;
 
     try {
         // Solo a traves del backend. Antes habia un fallback que consultaba
@@ -546,29 +544,29 @@ function renderTable() {
         
         let badgesHtml = `<span class="badge-status badge-minima">${p.modality}</span>`;
         if (p.certifications.favorece_mujer_lider) {
-            badgesHtml += `<span class="badge-status" style="background:#FCE7F3;color:#BE185D;">👩‍💼 Mujer Líder</span>`;
+            badgesHtml += `<span class="badge-status">Mujer líder</span>`;
         }
         if (p.certifications.favorece_pyme) {
-            badgesHtml += `<span class="badge-status" style="background:#D1FAE5;color:#065F46;">🌿 PYME</span>`;
+            badgesHtml += `<span class="badge-status">PYME</span>`;
         }
         if (p.certifications.requiere_equidad_genero) {
-            badgesHtml += `<span class="badge-status" style="background:#EDE9FE;color:#6B21A8;">⚖️ Equidad</span>`;
+            badgesHtml += `<span class="badge-status">Equidad de género</span>`;
         }
 
         const matchTag = p.is_matched 
-            ? `<span style="color:#059669;font-weight:700;">🟢 Coincide</span>` 
-            : `<span style="color:#94A3B8;">⚪ No Coincide</span>`;
+            ? `<span class="marca-coincide">Coincide</span>` 
+            : `<span class="marca-no-coincide">No coincide</span>`;
 
         return `
             <tr>
                 <td class="proc-id">${p.id}</td>
                 <td>
                     <div class="entity-name">${escapeHtml(p.entity_name)}</div>
-                    <div class="location-tag">📍 ${escapeHtml(p.city)}, ${escapeHtml(p.department)}</div>
+                    <div class="location-tag">${escapeHtml(p.city)}, ${escapeHtml(p.department)}</div>
                 </td>
                 <td style="max-width:320px;">
-                    <div style="font-weight:600;color:#00324D;">${escapeHtml(p.name)}</div>
-                    <div style="font-size:11px;color:#64748B;margin-top:2px;">${matchTag}</div>
+                    <div style="font-weight:600;color:var(--p50-text);">${escapeHtml(p.name)}</div>
+                    <div style="font-size:11px;color:var(--p50-text-muted);margin-top:2px;">${matchTag}</div>
                 </td>
                 <td class="price-text">${priceFormatted}</td>
                 <td>${escapeHtml(p.modality)}</td>
@@ -611,7 +609,7 @@ function initConfigEditor() {
             document.getElementById('dash-client-depts').innerHTML = clientConfig.departments.map(d => `<span class="tag-dept">${d}</span>`).join('');
             document.getElementById('dash-client-keywords').innerHTML = clientConfig.keywords.map(k => `<span class="tag-kw">${k}</span>`).join('');
 
-            alert('✅ Configuración del cliente actualizada correctamente.');
+            alert('Configuración del cliente actualizada.');
             loadLiveSecopData();
         });
     }
@@ -696,7 +694,7 @@ function pintarNotificaciones(lista, mensajeError) {
 
     if (lista.length === 0) {
         contenedor.innerHTML = `<div class="panel-vacio">
-            <span class="panel-vacio-icono">📭</span>
+            <span class="panel-vacio-icono"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
             <strong>Sin notificaciones</strong>
             <span>Cuando el motor encuentre una oportunidad que coincida, aparecerá aquí.</span>
         </div>`;
@@ -776,7 +774,7 @@ function construirCorreoHtml(notif) {
                 <span class="badge-status badge-minima">${escapeHtml(notif.modalidad || 'Mínima cuantía')}</span>
             </div>
 
-            <table class="sena-data-table correo-tabla">
+            <table class="tabla-datos correo-tabla">
                 <tr><td><strong>Entidad</strong></td><td>${escapeHtml(notif.entidad)}</td></tr>
                 <tr><td><strong>Objeto</strong></td><td>${escapeHtml(notif.titulo)}</td></tr>
                 <tr><td><strong>Ubicación</strong></td><td>${escapeHtml(notif.ubicacion)}</td></tr>
@@ -791,7 +789,7 @@ function construirCorreoHtml(notif) {
             </div>
 
             <div class="correo-cta">
-                <a href="https://www.datos.gov.co" target="_blank" rel="noopener" class="btn-sena-action">
+                <a href="https://www.datos.gov.co" target="_blank" rel="noopener" class="btn-secundario">
                     Ver proceso en SECOP II
                 </a>
             </div>
@@ -1059,10 +1057,10 @@ function openModal(process) {
     const content = document.getElementById('modal-content');
 
     content.innerHTML = `
-        <h4 style="color:#00324D;font-size:16px;margin-bottom:10px;">${escapeHtml(process.name)}</h4>
-        <div style="font-size:12px;color:#64748B;margin-bottom:16px;">ID: ${escapeHtml(process.id)} | Entidad: ${escapeHtml(process.entity_name)}</div>
+        <h4 style="color:var(--p50-text);font-size:16px;margin-bottom:10px;">${escapeHtml(process.name)}</h4>
+        <div style="font-size:12px;color:var(--p50-text-muted);margin-bottom:16px;">ID: ${escapeHtml(process.id)} | Entidad: ${escapeHtml(process.entity_name)}</div>
         
-        <table class="sena-data-table" style="margin-bottom:16px;">
+        <table class="tabla-datos" style="margin-bottom:16px;">
             <tr><td><strong>Departamento:</strong></td><td>${escapeHtml(process.department)}</td></tr>
             <tr><td><strong>Ciudad:</strong></td><td>${escapeHtml(process.city)}</td></tr>
             <tr><td><strong>Valor Estimado:</strong></td><td class="price-text">$${Number(process.base_price).toLocaleString('es-CO')} COP</td></tr>
@@ -1071,8 +1069,8 @@ function openModal(process) {
         </table>
 
         <div style="margin-top:16px;text-align:right;">
-            <a href="${process.url || 'https://www.datos.gov.co'}" target="_blank" class="btn-sena-action">
-                🌐 Abrir en SECOP II
+            <a href="${process.url || 'https://www.datos.gov.co'}" target="_blank" class="btn-secundario">
+                Abrir en SECOP II
             </a>
         </div>
     `;
@@ -1085,9 +1083,9 @@ function initManualSync() {
     if (!btnSync) return;
 
     btnSync.addEventListener('click', async () => {
-        const original = '<span>🔄</span> Ejecutar Sincronización Manual';
+        const original = 'Ejecutar sincronización manual';
         btnSync.disabled = true;
-        btnSync.innerHTML = '⏳ Sincronizando SECOP...';
+        btnSync.innerHTML = 'Sincronizando…';
 
         try {
             const resp = await fetch('/api/sync', { method: 'POST' });
@@ -1097,15 +1095,15 @@ function initManualSync() {
                 return;
             }
             if (!resp.ok) {
-                btnSync.innerHTML = '⚠️ No se pudo sincronizar';
+                btnSync.innerHTML = 'No se pudo sincronizar';
             } else {
                 const data = await resp.json();
-                btnSync.innerHTML = `<span>✅</span> ${data.procesos} procesos sincronizados`;
+                btnSync.innerHTML = `${data.procesos} procesos sincronizados`;
                 cargarMetricas();
                 if (puede('ver_monitoreo')) loadLiveSecopData();
             }
         } catch (err) {
-            btnSync.innerHTML = '⚠️ Sin conexión con el servidor';
+            btnSync.innerHTML = 'Sin conexión con el servidor';
         } finally {
             setTimeout(() => {
                 btnSync.disabled = false;

@@ -173,24 +173,31 @@ trabajo · `simulador` archivo del módulo retirado.
 
 ## Fase 8 — Implementación del diseño en código
 
-- [ ] 8.1 Sustituir el bloque `:root` de `src/web/styles.css`: `--sena-green`,
+> **Cerrada el 2026-09-16.** La interfaz migró al sistema Plataforma50.
+> El acento NO es el `#2F6BFF` propuesto sino `#4A88C3`, el azul real de la
+> marca extraído de `plataforma50_logo.png`: el inventado daba 4,29:1 sobre el
+> fondo e incumplía el mínimo de 4,5:1 que exige `design.md`.
+> Cero colores fuera de `:root`, cero sombras, cero degradados, cero emoji,
+> dos pesos tipográficos y todos los pares de contraste por encima de 4,5:1.
+
+- [x] 8.1 Sustituir el bloque `:root` de `src/web/styles.css`: `--sena-green`,
       `--sena-navy`, `--bg-*`, `--text-*`, `--border-*` pasan a los tokens
       Plataforma50 (`--p50-ink`, `--p50-surface`, `--p50-line`, `--p50-text`,
       `--p50-text-muted`, `--p50-accent`, `--p50-accent-soft`, `--p50-paper`).
-- [ ] 8.2 Corregir `--border-focus` (`styles.css:23`), que hoy repite el verde
+- [x] 8.2 Corregir `--border-focus` (`styles.css:23`), que hoy repite el verde
       SENA en duro en lugar de referenciar una variable.
-- [ ] 8.3 Ajustar la escala tipográfica (titular 40-56px/600/-0.02em, eyebrow
+- [x] 8.3 Ajustar la escala tipográfica (titular 40-56px/600/-0.02em, eyebrow
       13-14px/+0.08em, cuerpo 16-18px/1.6, dato 32-48px tabular, numeral `[01]` mono).
-- [ ] 8.4 Eliminar sombras (`--shadow-*`) y degradados decorativos; bordes de 1px.
-- [ ] 8.5 Un solo acento por pantalla: revisar que no queden dos colores compitiendo.
-- [ ] 8.6 Eliminar "SECOP II Monitor" del header (`index.html:31`, el
+- [x] 8.4 Eliminar sombras (`--shadow-*`) y degradados decorativos; bordes de 1px.
+- [x] 8.5 Un solo acento por pantalla: revisar que no queden dos colores compitiendo.
+- [x] 8.6 Eliminar "SECOP II Monitor" del header (`index.html:31`, el
       `<h1 class="app-title">` con el `<span class="tag-v2">`).
-- [ ] 8.7 Eliminar el bloque "SECOP Monitor v2.0" del footer (`index.html:529-535`),
+- [x] 8.7 Eliminar el bloque "SECOP Monitor v2.0" del footer (`index.html:529-535`),
       conservando la descripción funcional y la línea institucional.
-- [ ] 8.8 Aplicar la voz y el copy de §2 de `design.md` (segunda persona, eyebrow
+- [x] 8.8 Aplicar la voz y el copy de §2 de `design.md` (segunda persona, eyebrow
       en minúscula, titulares de 4-8 palabras, cada dato con número explícito).
-- [ ] 8.9 Revisar contraste mínimo 4.5:1 en todo texto.
-- [ ] 8.10 Commit: `estilo: migrar interfaz al sistema de diseño Plataforma50`.
+- [x] 8.9 Revisar contraste mínimo 4.5:1 en todo texto.
+- [x] 8.10 Commit: `estilo: migrar interfaz al sistema de diseño Plataforma50`.
 
 ## Fase 9 — Cierre de `frontend`
 

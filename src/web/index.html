@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -18,14 +18,9 @@
     <div class="login-screen" id="login-screen" hidden>
         <div class="login-card">
             <div class="login-brand">
-                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="22" r="14" fill="#39A900" />
-                    <path
-                        d="M50 42 C30 42, 15 55, 15 80 L32 80 C32 65, 40 56, 50 56 C60 56, 68 65, 68 80 L85 80 C85 55, 70 42, 50 42 Z"
-                        fill="#39A900" />
-                    <circle cx="50" cy="74" r="7" fill="#00324D" />
-                </svg>
+                <img src="plataforma50_logo.png" alt="Plataforma50" class="marca-logo" width="402" height="107">
             </div>
+
             <span class="login-eyebrow">acceso al sistema</span>
             <h1 class="login-title">Entra a tu<br>panel de monitoreo</h1>
             <p class="login-sub">Usa el correo y la contraseña de tu cuenta.</p>
@@ -42,11 +37,11 @@
                         <input type="password" id="login-contrasena"
                                autocomplete="current-password" required>
                         <button type="button" class="btn-ver-contrasena" id="btn-ver-contrasena"
-                                aria-label="Mostrar contraseña">👁</button>
+                                aria-label="Mostrar contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                 </div>
 
-                <button class="btn-sena-primary block-btn" id="btn-login" type="submit">Entrar al monitor</button>
+                <button class="btn-primario block-btn" id="btn-login" type="submit">Entrar al monitor</button>
             </form>
 
             <p class="login-error" id="login-error" hidden></p>
@@ -58,21 +53,11 @@
     <div class="app-shell" id="app-shell" hidden>
 
     <!-- Encabezado -->
-    <header class="sena-header">
+    <header class="app-header">
         <div class="header-container">
             <div class="brand-group">
-                <div class="sena-logo-badge">
-                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="50" cy="22" r="14" fill="#39A900" />
-                        <path
-                            d="M50 42 C30 42, 15 55, 15 80 L32 80 C32 65, 40 56, 50 56 C60 56, 68 65, 68 80 L85 80 C85 55, 70 42, 50 42 Z"
-                            fill="#39A900" />
-                        <circle cx="50" cy="74" r="7" fill="#00324D" />
-                    </svg>
-                </div>
-                <div class="brand-text">
-                    <h1 class="app-title">SECOP II Monitor</h1>
-                </div>
+                <img src="plataforma50_logo.png" alt="Plataforma50" class="marca-logo" width="402" height="107">
+            </div>
             </div>
             <div class="system-status-pills">
                 <div class="status-pill active" id="secop-status">
@@ -92,7 +77,7 @@
                 <div class="notificaciones-wrap">
                     <button class="btn-campana" id="btn-campana" type="button"
                             aria-haspopup="true" aria-expanded="false" aria-label="Notificaciones">
-                        <span class="campana-icono">🔔</span>
+                        <span class="campana-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
                         <span class="campana-badge" id="campana-badge" hidden>0</span>
                     </button>
                     <div class="panel-notificaciones" id="panel-notificaciones" hidden>
@@ -129,12 +114,12 @@
         <!-- Acceso denegado: se muestra si se intenta abrir un modulo sin permiso -->
         <section id="tab-denegado" class="tab-content">
             <div class="estado-vacio estado-denegado">
-                <div class="estado-icono">🔒</div>
+                <div class="estado-icono"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                 <span class="estado-eyebrow">acceso restringido</span>
                 <h2 class="estado-titulo">Tu rol no alcanza<br>para este módulo</h2>
                 <p class="estado-texto" id="denegado-detalle">Estás en una sesión con permisos limitados.
                     Pide a un administrador que amplíe tu rol si necesitas entrar aquí.</p>
-                <button class="btn-sena-action" id="btn-volver-inicio" type="button">Volver al inicio</button>
+                <button class="btn-secundario" id="btn-volver-inicio" type="button">Volver al inicio</button>
             </div>
         </section>
 
@@ -146,15 +131,15 @@
                     <p>Estado en tiempo real de la captura de oportunidades de contratación pública en la región Caribe.
                     </p>
                 </div>
-                <button class="btn-sena-action" id="btn-run-manual-sync">
-                    <span>🔄</span> Ejecutar Sincronización Manual
+                <button class="btn-secundario" id="btn-run-manual-sync">
+                    Ejecutar sincronización manual
                 </button>
             </div>
 
             <!-- KPI Cards Grid -->
             <div class="kpi-grid">
-                <div class="kpi-card sena-accent">
-                    <div class="kpi-icon">🔎</div>
+                <div class="kpi-card">
+                    <div class="kpi-numeral">[01]</div>
                     <div class="kpi-info">
                         <span class="kpi-title">Procesos Analizados Hoy</span>
                         <span class="kpi-value" id="kpi-analyzed">1,420</span>
@@ -162,8 +147,8 @@
                     </div>
                 </div>
 
-                <div class="kpi-card sena-green">
-                    <div class="kpi-icon">🎯</div>
+                <div class="kpi-card">
+                    <div class="kpi-numeral">[02]</div>
                     <div class="kpi-info">
                         <span class="kpi-title">Coincidencias Coincidentes</span>
                         <span class="kpi-value" id="kpi-matched">18</span>
@@ -171,8 +156,8 @@
                     </div>
                 </div>
 
-                <div class="kpi-card sena-blue">
-                    <div class="kpi-icon">📩</div>
+                <div class="kpi-card">
+                    <div class="kpi-numeral">[03]</div>
                     <div class="kpi-info">
                         <span class="kpi-title">Notificaciones Enviadas</span>
                         <span class="kpi-value" id="kpi-notified">18</span>
@@ -180,8 +165,8 @@
                     </div>
                 </div>
 
-                <div class="kpi-card sena-purple">
-                    <div class="kpi-icon">🏅</div>
+                <div class="kpi-card">
+                    <div class="kpi-numeral">[04]</div>
                     <div class="kpi-info">
                         <span class="kpi-title">Con Ventaja Competitiva</span>
                         <span class="kpi-value" id="kpi-advantages">6</span>
@@ -194,9 +179,9 @@
             <div class="dash-split-row">
                 <!-- Current Client Overview Card -->
                 <div class="glass-card flex-1">
-                    <div class="card-header-sena">
-                        <h3>🏢 Perfil de Monitoreo Activo</h3>
-                        <span class="badge-sena-outline">client_config.json</span>
+                    <div class="card-header">
+                        <h3>Perfil de monitoreo activo</h3>
+                        <span class="chip-contorno">client_config.json</span>
                     </div>
                     <div class="client-profile-details" id="dashboard-client-info">
                         <div class="detail-row">
@@ -235,8 +220,8 @@
 
                 <!-- Recent Activity Timeline -->
                 <div class="glass-card flex-1">
-                    <div class="card-header-sena">
-                        <h3>📜 Registro de Ejecuciones del Job</h3>
+                    <div class="card-header">
+                        <h3>Registro de ejecuciones</h3>
                         <span class="badge-live">Live Logs</span>
                     </div>
                     <div class="job-runs-list" id="job-runs-timeline">
@@ -278,56 +263,51 @@
 
             <!-- Pipeline Visual Diagram -->
             <div class="pipeline-wrapper">
-                <h3 class="pipeline-title">⚡ Pipeline de Monitoreo en 5 Fases</h3>
+                <h3 class="pipeline-title">El recorrido de cada proceso</h3>
                 <div class="pipeline-steps">
 
                     <div class="pipeline-step-card">
                         <div class="step-num">01</div>
-                        <div class="step-icon">🌐</div>
                         <h4>Extracción Socrata API</h4>
                         <p>Consulta a <code>datos.gov.co</code> mediante SODA API (endpoint <code>p6dx-8zbt.json</code>)
                             usando consultas SoQL con filtros de estado y departamentos.</p>
                         <div class="step-code">secop.py</div>
                     </div>
 
-                    <div class="pipeline-connector">➡️</div>
+                    <div class="pipeline-connector"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
 
                     <div class="pipeline-step-card">
                         <div class="step-num">02</div>
-                        <div class="step-icon">🔤</div>
                         <h4>Normalización NFD</h4>
                         <p>Elimina acentos, convierte tildes (<code>Unicode NFD</code>), fuerza minúsculas y remueve
                             caracteres especiales para garantizar comparaciones precisas.</p>
                         <div class="step-code">engine.py</div>
                     </div>
 
-                    <div class="pipeline-connector">➡️</div>
+                    <div class="pipeline-connector"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
 
                     <div class="pipeline-step-card">
                         <div class="step-num">03</div>
-                        <div class="step-icon">⚙️</div>
                         <h4>Motor de Filtros</h4>
                         <p>Evalúa coincidencias por departamento, modalidad ("Mínima Cuantía"), palabras clave de objeto
                             y códigos UNSPSC. Detecta badges de preferencia.</p>
                         <div class="step-code">FilterEngine</div>
                     </div>
 
-                    <div class="pipeline-connector">➡️</div>
+                    <div class="pipeline-connector"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
 
                     <div class="pipeline-step-card">
                         <div class="step-num">04</div>
-                        <div class="step-icon">🔐</div>
                         <h4>Deduplicación SHA-256</h4>
                         <p>Calcula un hash único (SHA-256) sobre el objeto y estado. Evita enviar notificaciones
                             repetidas al cliente mediante la tabla <code>processes</code> en Neon DB.</p>
                         <div class="step-code">compute_hash()</div>
                     </div>
 
-                    <div class="pipeline-connector">➡️</div>
+                    <div class="pipeline-connector"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
 
                     <div class="pipeline-step-card">
                         <div class="step-num">05</div>
-                        <div class="step-icon">📧</div>
                         <h4>Notificación Brevo</h4>
                         <p>Construye el correo transaccional en HTML interactivo con badges de color y llamado a la
                             acción. Registra el estado del envío en <code>notifications</code>.</p>
@@ -340,7 +320,7 @@
             <!-- Deep Dive Technical Specs Grid -->
             <div class="tech-specs-grid">
                 <div class="glass-card">
-                    <h3>🔍 Lógica Estricta de Filtrado</h3>
+                    <h3>Cuándo te avisamos</h3>
                     <p class="specs-desc">Un proceso SECOP II activa una alerta únicamente si cumple las siguientes 3
                         condiciones:</p>
                     <ul class="specs-list">
@@ -355,7 +335,7 @@
                 </div>
 
                 <div class="glass-card">
-                    <h3>🏆 Detección de Ventajas Competitivas</h3>
+                    <h3>Distintivos que detecta</h3>
                     <p class="specs-desc">El motor analiza el texto del objeto y la descripción para catalogar
                         automáticamente los criterios de desempate y ley de compras públicas:</p>
                     <div class="badge-demo-list">
@@ -385,8 +365,8 @@
                         contrataciones públicas.</p>
                 </div>
                 <div class="live-controls">
-                    <button class="btn-sena-action" id="btn-refresh-live">
-                        <span>🔄</span> Consultar API SECOP II
+                    <button class="btn-secundario" id="btn-refresh-live">
+                        Consultar SECOP II
                     </button>
                 </div>
             </div>
@@ -394,7 +374,7 @@
             <!-- Search & Filters Toolbar -->
             <div class="toolbar-card">
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <span class="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
                     <input type="text" id="live-search-input"
                         placeholder="Buscar por entidad, objeto, ciudad o ID de proceso...">
                 </div>
@@ -419,7 +399,7 @@
 
             <!-- Process Feed Table -->
             <div class="table-container-card">
-                <table class="sena-data-table" id="secop-table">
+                <table class="tabla-datos" id="secop-table">
                     <thead>
                         <tr>
                             <th>ID Proceso</th>
@@ -445,35 +425,35 @@
                     <h2>Gestión y control de usuarios</h2>
                     <p>Administra quién entra al monitor, con qué rol y qué ha hecho dentro.</p>
                 </div>
-                <button class="btn-sena-action" id="btn-nuevo-usuario" type="button">
+                <button class="btn-secundario" id="btn-nuevo-usuario" type="button">
                     <span>＋</span> Crear usuario
                 </button>
             </div>
 
             <!-- Métricas agregadas de uso -->
             <div class="kpi-grid kpi-grid-compacto" id="users-resumen">
-                <div class="kpi-card sena-accent">
+                <div class="kpi-card">
                     <div class="kpi-info">
                         <span class="kpi-title">Usuarios registrados</span>
                         <span class="kpi-value" id="um-total">—</span>
                         <span class="kpi-subtext" id="um-desglose">—</span>
                     </div>
                 </div>
-                <div class="kpi-card sena-green">
+                <div class="kpi-card">
                     <div class="kpi-info">
                         <span class="kpi-title">Cuentas activas</span>
                         <span class="kpi-value" id="um-activos">—</span>
                         <span class="kpi-subtext">Pueden iniciar sesión</span>
                     </div>
                 </div>
-                <div class="kpi-card sena-blue">
+                <div class="kpi-card">
                     <div class="kpi-info">
                         <span class="kpi-title">Accesos acumulados</span>
                         <span class="kpi-value" id="um-accesos">—</span>
                         <span class="kpi-subtext">Inicios de sesión registrados</span>
                     </div>
                 </div>
-                <div class="kpi-card sena-purple">
+                <div class="kpi-card">
                     <div class="kpi-info">
                         <span class="kpi-title">Acciones realizadas</span>
                         <span class="kpi-value" id="um-acciones">—</span>
@@ -483,7 +463,7 @@
             </div>
 
             <div class="table-container-card">
-                <table class="sena-data-table" id="users-table">
+                <table class="tabla-datos" id="users-table">
                     <thead>
                         <tr>
                             <th>Usuario</th>
@@ -546,8 +526,8 @@
                     </div>
 
                     <div class="form-actions">
-                        <button class="btn-sena-primary" id="btn-save-config">
-                            💾 Guardar Cambios en client_config.json
+                        <button class="btn-primario" id="btn-save-config">
+                            Guardar cambios
                         </button>
                     </div>
                 </form>
@@ -558,10 +538,9 @@
     </main>
 
     <!-- Pie -->
-    <footer class="sena-footer">
+    <footer class="app-footer">
         <div class="footer-container">
-            <p><strong>SECOP Monitor v2.0</strong> • Desarrollado para el seguimiento automatizado de la contratación
-                pública en Colombia.</p>
+            <p>Seguimiento automatizado de la contratación pública en Colombia.</p>
         </div>
     </footer>
     </div><!-- /app-shell -->
@@ -620,7 +599,7 @@
                     </div>
                     <p class="form-error" id="uf-error" hidden></p>
                     <div class="form-actions">
-                        <button class="btn-sena-primary" id="btn-guardar-usuario" type="button">Guardar</button>
+                        <button class="btn-primario" id="btn-guardar-usuario" type="button">Guardar</button>
                     </div>
                 </form>
             </div>
@@ -648,7 +627,7 @@
                     <p class="form-error" id="cf-error" hidden></p>
                     <p class="form-exito" id="cf-exito" hidden>Contraseña actualizada.</p>
                     <div class="form-actions">
-                        <button class="btn-sena-primary" id="btn-guardar-clave" type="button">Guardar</button>
+                        <button class="btn-primario" id="btn-guardar-clave" type="button">Guardar</button>
                     </div>
                 </form>
             </div>

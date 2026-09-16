@@ -1,0 +1,41 @@
+{
+  "artboards": [
+    { "file": "ComoFunciona.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1680, "title": "05 · ¿Cómo Funciona por Dentro?" },
+    { "file": "Notificaciones.dc.html", "x": 0, "y": 1800, "w": 1440, "h": 1320, "title": "06 · Desplegable de notificaciones" },
+    { "file": "NotificacionesMovil.dc.html", "x": 1520, "y": 1800, "w": 390, "h": 844, "title": "06b · Notificaciones — 390" },
+    { "file": "Main.dc.html", "x": 0, "y": 3240, "w": 1440, "h": 1900, "title": "07 · Gestión de Usuarios" },
+    { "file": "Configuracion.dc.html", "x": 0, "y": 5260, "w": 1440, "h": 1340, "title": "08 · Configuración del Cliente" },
+    { "file": "MonitoreoVivo.dc.html", "x": 0, "y": 6720, "w": 1440, "h": 1900, "title": "09 · Monitoreo en Vivo" }
+  ],
+  "annotations": [
+    {
+      "id": "nota-tokens",
+      "x": 1520,
+      "y": 60,
+      "w": 360,
+      "text": "Canvas B — los módulos.\n\nNo introduce tokens nuevos: todo sale del Canvas A.\n\nLo que sí deduje, porque design.md no lo cubre: el patrón de tabla densa (cabecera de 11px con tracking, filas separadas por 1px, cero zebra) y el del modal."
+    },
+    {
+      "id": "nota-antes-ahora",
+      "x": 1520,
+      "y": 420,
+      "w": 360,
+      "text": "Aquí vive el motivo de marca.\n\n«Antes / Ahora» es la estructura argumental de Plataforma50, y ¿Cómo Funciona? era el único módulo donde encaja de verdad.\n\nLas cifras de la columna Antes son estimaciones del trabajo manual: confírmalas o cámbialas."
+    },
+    {
+      "id": "nota-acento-tabla",
+      "x": 1520,
+      "y": 3300,
+      "w": 360,
+      "text": "En las tablas el azul solo marca el estado deseado.\n\nEn Gestión de Usuarios: el chip ADMIN y «Activo».\nEn Monitoreo: el punto de «Coincide».\n\nLas acciones por fila van en neutro; si compitieran con el CTA de la cabecera habría dos llamadas a la acción en la misma pantalla."
+    },
+    {
+      "id": "nota-efecto",
+      "x": 1520,
+      "y": 5320,
+      "w": 360,
+      "text": "«Efecto del cambio» es una propuesta mía, no existe en la aplicación.\n\nMuestra cuántas coincidencias darían las reglas nuevas antes de guardarlas. Si no lo quieres construir, bórralo del artboard: el resto del módulo funciona igual."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
