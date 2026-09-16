@@ -163,7 +163,6 @@ const MODULOS = [
     { id: 'dashboard', etiqueta: 'Panel de Métricas', icono: '📊', permiso: 'ver_metricas' },
     { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', icono: '🧠', permiso: 'ver_arquitectura' },
     { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', icono: '🌐', permiso: 'ver_monitoreo' },
-    { id: 'simulator', etiqueta: 'Simulador del Motor', icono: '⚡', permiso: 'probar_filtros' },
     { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' },
     { id: 'users', etiqueta: 'Gestión de Usuarios', icono: '👥', permiso: 'gestionar_usuarios' }
 ];
@@ -505,55 +504,6 @@ function renderTable() {
             if (proc) openModal(proc);
         });
     });
-}
-
-// ==========================================================================
-// 3. Simulator Controller
-// ==========================================================================
-function initSimulator() {
-    const btnSimulate = document.getElementById('btn-run-simulation');
-    if (btnSimulate) {
-        btnSimulate.addEventListener('click', runSimulation);
-    }
-}
-
-function runSimulation() {
-    const name = document.getElementById('sim-name').value;
-    const desc = document.getElementById('sim-desc').value;
-    const dept = document.getElementById('sim-dept').value;
-    const modality = document.getElementById('sim-modality').value;
-    const unspsc = document.getElementById('sim-unspsc').value;
-    const price = parseFloat(document.getElementById('sim-price').value || 0);
-
-    const process = {
-        id: "SIM-" + Math.floor(Math.random() * 10000),
-        name, description: desc, department: dept, modality, unspsc_code: unspsc, base_price: price
-    };
-
-    const res = evaluateProcessMatch(process, clientConfig);
-    const outputBox = document.getElementById('sim-results-output');
-
-    const statusHeader = res.isMatch 
-        ? `<div class="diag-header match">✅ PROCESO COINCIDE (SERÁ NOTIFICADO AL CLIENTE)</div>`
-        : `<div class="diag-header no-match">❌ PROCESO DESCHARTADO POR EL MOTOR</div>`;
-
-    const deptCheck = res.matchesDept ? `<span class="check">✔ Cumple</span> (${dept})` : `<span class="fail">✘ Fuera de zona</span> (${dept})`;
-    const modCheck = res.matchesModality ? `<span class="check">✔ Cumple</span> (${modality})` : `<span class="fail">✘ Modalidad no requerida</span>`;
-    const kwCheck = res.matchedKeyword ? `<span class="check">✔ Matcheó Palabra Clave:</span> "${res.matchedKeyword}"` : (res.matchedUnspsc ? `<span class="check">✔ Matcheó UNSPSC:</span> "${res.matchedUnspsc}"` : `<span class="fail">✘ Sin palabras clave coincidentes</span>`);
-
-    outputBox.innerHTML = `
-        ${statusHeader}
-        <div class="diag-step"><strong>1. Validación de Departamento:</strong> ${deptCheck}</div>
-        <div class="diag-step"><strong>2. Validación de Modalidad:</strong> ${modCheck}</div>
-        <div class="diag-step"><strong>3. Objeto / UNSPSC:</strong> ${kwCheck}</div>
-        <hr style="border-color:#334155;margin:12px 0;">
-        <div class="diag-step"><strong>Certificaciones Detectadas:</strong></div>
-        <ul style="padding-left:20px;color:#94A3B8;">
-            <li>Preferencia Mujer Líder: ${res.certifications.favorece_mujer_lider ? '🟢 SÍ' : '⚪ No'}</li>
-            <li>PYME Favorable: ${res.certifications.favorece_pyme ? '🟢 SÍ' : '⚪ No'}</li>
-            <li>Equidad de Género: ${res.certifications.requiere_equidad_genero ? '🟢 SÍ' : '⚪ No'}</li>
-        </ul>
-    `;
 }
 
 // ==========================================================================
