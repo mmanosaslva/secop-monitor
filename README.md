@@ -1,28 +1,87 @@
 # SECOP Monitor
 
-Monitoreo automatico de contratacion publica en SECOP II (Colombia). Detecta procesos relevantes por departamento, modalidad y keywords, y envia notificaciones por email con badges de certificacion.
+Monitoreo automático de contratación pública en SECOP II (Colombia). Detecta
+procesos relevantes por departamento, modalidad y palabras clave, y envía
+notificaciones por correo con badges de certificación.
 
-## Stack (100% gratis)
+El proyecto son **dos piezas que se levantan por separado**:
 
-- **Runtime:** Python 3.11+
-- **DB:** Neon PostgreSQL (free tier)
-- **Email:** Brevo API (free tier)
-- **Cron:** GitHub Actions (4x/dia)
-- **Fuente:** SECOP II / datos.gov.co
+| Pieza | Qué hace | Necesita base de datos |
+|-------|----------|------------------------|
+| **Motor** (`src/main.py`) | Consulta SECOP II, filtra, deduplica y envía correos. Lo dispara el cron. | Sí (Neon PostgreSQL) |
+| **Interfaz web** (`src/web_server.py`) | Panel de métricas, monitoreo en vivo, notificaciones y gestión de usuarios. | **No** |
 
-## Instalacion
+Si solo quieres ver la aplicación funcionando, levanta la interfaz web: no
+requiere base de datos ni credenciales.
+
+---
+
+## Requisitos
+
+- Python 3.11 o superior
+- Nada más para la interfaz web
+- Para el motor: una base Neon PostgreSQL y una clave de Brevo
+
+## Instalación
 
 ```bash
-git clone https://github.com/mmanoslasva/secop-monitor.git
+git clone git@github.com:mmanosaslva/secop-monitor.git
 cd secop-monitor
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Variables de entorno
+---
 
-Copiar `.env.example` a `.env` y configurar:
+## Levantar la interfaz web
+
+Es la vía rápida: **no necesita `.env` ni base de datos.**
+
+```bash
+source .venv/bin/activate
+python src/web_server.py
+```
+
+Abre <http://localhost:8080>.
+
+El puerto se cambia con la variable `PORT`, útil si el 8080 ya está ocupado:
+
+```bash
+PORT=8099 python src/web_server.py
+```
+
+> **En WSL2**, el puerto 8080 puede estar tomado por un proceso del lado Windows
+> aunque `ss -ltn` no muestre nada dentro de Linux. Si ves
+> `Address already in use` con el puerto aparentemente libre, usa otro puerto.
+
+### Entrar a la aplicación
+
+La primera pantalla pide elegir un rol. No hay contraseñas: es un MVP donde el
+rol seleccionado queda fijado en la sesión del navegador mediante una cookie
+`HttpOnly`.
+
+| Rol | Entra como | Ve |
+|-----|-----------|-----|
+| **Usuario** | Cliente Textil Caribe | Panel de Métricas (solo lectura) y ¿Cómo Funciona por Dentro?, más el desplegable de notificaciones |
+| **Administrador** | Administrador del Sistema | Todo lo anterior + Monitoreo en Vivo, Configuración del Cliente y Gestión de Usuarios |
+
+Para cambiar de rol, usa **Cerrar sesión** en el encabezado y vuelve a entrar.
+
+Los usuarios disponibles están en `config/users.json`. Un administrador puede
+crear, editar, activar/desactivar y eliminar usuarios desde la propia interfaz.
+
+---
+
+## Levantar el motor
+
+A diferencia de la interfaz, **el motor sí necesita configuración**.
+
+Copia `.env.example` a `.env` y complétalo:
+
+```bash
+cp .env.example .env
+```
 
 ```bash
 DATABASE_URL=postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require
@@ -31,70 +90,155 @@ SENDER_EMAIL=oportunidades.secop@outlook.com
 SENDER_NAME=SECOP Monitor
 ADMIN_EMAIL=tu@email.com
 STEALTH_MODE=false
+SECOP_APP_TOKEN=                  # opcional: sube el límite de la API de datos.gov.co
 ```
 
-## Uso
-
-### Ejecutar local
+Ejecución local:
 
 ```bash
+source .venv/bin/activate
 python -m src.main
 ```
 
-### Ejecutar en produccion
+En producción lo dispara GitHub Actions cuatro veces al día (00:45, 10:00,
+13:30 y 20:00 COT). Manualmente: **GitHub → Actions → SECOP Monitor → Run
+workflow**.
 
-El cron ejecuta 4 veces al dia (00:45, 10:00, 13:30, 20:00 COT).
+---
 
-Ejecutar manual: GitHub > Actions > SECOP Monitor > Run workflow.
+## Roles y permisos
 
-## Configuracion
+El control de acceso vive en `src/web_server.py`, en el mapa `PERMISOS`. El
+frontend lo replica en la función `puede()` de `app.js` **solo para decidir qué
+pintar**: la decisión que vale es la del servidor, que rechaza la petición
+aunque el botón se haya reconstruido desde el inspector.
 
-Archivo `config/client_config.json`:
+| Permiso | usuario | admin |
+|---------|:-------:|:-----:|
+| `ver_metricas` | ✅ | ✅ |
+| `ver_arquitectura` | ✅ | ✅ |
+| `ver_notificaciones` | ✅ | ✅ |
+| `ver_perfil_cliente` | ✅ | ✅ |
+| `editar_metricas` | — | ✅ |
+| `ver_monitoreo` | — | ✅ |
+| `editar_configuracion` | — | ✅ |
+| `gestionar_usuarios` | — | ✅ |
+| `probar_filtros` | — | ✅ |
+
+### Endpoints
+
+Sin sesión responden **401**; con sesión pero sin permiso, **403**.
+
+| Método y ruta | Permiso |
+|---------------|---------|
+| `POST /api/auth/login` · `POST /api/auth/logout` | público |
+| `GET /api/auth/me` | sesión activa |
+| `GET /api/stats` | público |
+| `GET /api/config` | `ver_perfil_cliente` |
+| `POST /api/config` | `editar_configuracion` |
+| `GET /api/metrics` | `ver_metricas` |
+| `POST /api/sync` | `editar_metricas` |
+| `GET /api/secop/live` | `ver_monitoreo` |
+| `POST /api/filter/test` | `probar_filtros` |
+| `GET /api/notifications` · `POST /api/notifications/read` | `ver_notificaciones` |
+| `GET\|POST /api/users` · `PUT\|DELETE /api/users/{id}` | `gestionar_usuarios` |
+
+`/api/metrics` devuelve solo conteos agregados y `/api/secop/live` la lista de
+procesos: por eso el rol usuario ve los números del panel sin poder consultar
+los procesos uno a uno.
+
+---
+
+## Configuración
+
+### `config/client_config.json` — reglas de filtrado
 
 ```json
 {
   "name": "Cliente Textil Caribe",
   "email": "cliente@email.com",
-  "departments": ["Atlantico", "Bolivar", "Magdalena", "Cordoba", "Sucre", "La Guajira", "Cesar"],
+  "departments": ["Atlántico", "Bolívar", "Magdalena", "Córdoba", "Sucre", "La Guajira", "Cesar"],
   "keywords": ["uniforme", "ropa deportiva", "vestuario", "calzado", "dotacion", "textil"],
   "unspsc_codes": ["V1.53102700", "V1.53102710"],
   "certification_keywords": ["mujer lider", "equidad de genero", "pyme"],
-  "modalidad_keywords": ["minima cuantia"]
+  "modalidad_keywords": ["mínima cuantía"]
 }
 ```
 
-### Logica de filtrado
+### `config/users.json` y `config/notifications.json`
 
-Un proceso se notifica si:
-1. Departamento esta en la lista
-2. Modalidad es "minima cuantia"
-3. Keywords o UNSPSC code matchean
+Son **semilla y estado a la vez**: se versionan con datos iniciales, pero la
+aplicación los reescribe al iniciar sesión, marcar una notificación como leída o
+gestionar usuarios. Verás cambios sin commitear tras usar la aplicación; es
+esperado en este MVP.
 
-Las certificaciones (mujer lider, equidad genero, PYME) son badges informativos, no requisito.
+### Lógica de filtrado
+
+Un proceso se notifica si cumple las tres condiciones:
+
+1. El departamento está en la lista del cliente
+2. La modalidad es "mínima cuantía"
+3. Coincide una palabra clave **o** un código UNSPSC
+
+Las certificaciones (mujer líder, equidad de género, PYME) son badges
+informativos, no un requisito.
+
+---
+
+## Tests
+
+```bash
+source .venv/bin/activate
+pytest -q
+```
+
+**105 pruebas.** El motor (filtros, notificaciones, base de datos, fuente SECOP,
+integración y aceptación) y el control de acceso del servidor web, que levanta el
+servidor real y comprueba que rechaza por HTTP, no que el botón esté oculto.
+
+> `pytest` debe ejecutarse con el intérprete del entorno virtual. Si lo invocas
+> con el Python del sistema verás `No module named pytest`; usa
+> `./.venv/bin/python -m pytest -q`.
+
+Los warnings sobre `PytestUnknownMarkWarning` (`acceptance`, `integration`,
+`slow`) son ruido conocido: faltan registrar esas marcas, no son fallos.
+
+---
 
 ## Estructura
 
 ```
 secop-monitor/
-├── .github/workflows/secop.yml    # Cron
-├── config/client_config.json      # Filtros del cliente
+├── .github/workflows/secop.yml     # Cron de GitHub Actions
+├── config/
+│   ├── client_config.json          # Reglas de filtrado
+│   ├── users.json                  # Usuarios y su uso
+│   └── notifications.json          # Notificaciones
 ├── src/
-│   ├── main.py                    # Entry point
-│   ├── config.py                  # Env vars
-│   ├── sources/secop.py           # SECOP API
-│   ├── filters/engine.py          # Motor de filtros
-│   ├── database/connection.py     # Neon DB
-│   ├── database/models.py         # CRUD
-│   └── notifications/email.py     # Brevo email
+│   ├── main.py                     # Punto de entrada del motor
+│   ├── config.py                   # Variables de entorno
+│   ├── web_server.py               # Servidor web, sesiones y permisos
+│   ├── web/
+│   │   ├── index.html              # Interfaz
+│   │   ├── app.js                  # Lógica y control de permisos del render
+│   │   └── styles.css              # Estilos
+│   ├── sources/secop.py            # API de SECOP II
+│   ├── filters/engine.py           # Motor de filtros
+│   ├── database/                   # Neon DB y CRUD
+│   └── notifications/email.py      # Correo vía Brevo
 ├── tests/
-├── requirements.txt
-└── .env
+├── design.md                       # Sistema de diseño Plataforma50
+├── TAREAS.md                       # Plan de trabajo por fases
+└── prompts.md                      # Prompts de ejecución
 ```
 
-## Tests
+## Ramas
 
-```bash
-pytest tests/ -v
-```
+| Rama | Contenido |
+|------|-----------|
+| `main` | Motor, tests y configuración. **No contiene la interfaz web.** |
+| `frontend` | Rama de trabajo: interfaz completa con roles y permisos |
+| `simulador` | Archivo del Simulador del Motor, retirado de la interfaz |
+| `monitoreo` | Prevista: solo el módulo de Monitoreo en Vivo |
 
-53 tests: filtros, notificaciones, DB, SECOP, integracion, aceptacion.
+El plan de trabajo y su estado están en [`TAREAS.md`](./TAREAS.md).
