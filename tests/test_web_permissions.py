@@ -18,18 +18,63 @@ from src import web_server
 # ==========================================================================
 # Infraestructura de pruebas
 # ==========================================================================
+# Juego de datos propio de las pruebas. No se copia de config/ ni de data/:
+# asi los asertos no dependen de lo que alguien haya hecho usando la aplicacion.
+USUARIOS_DE_PRUEBA = {
+    "usuarios": [
+        {"id": "u-001", "nombre": "Administrador del Sistema",
+         "correo": "admin@secopmonitor.co", "rol": "admin", "estado": "activo",
+         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
+        {"id": "u-002", "nombre": "Cliente Textil Caribe",
+         "correo": "cliente@secopmonitor.co", "rol": "usuario", "estado": "activo",
+         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
+        {"id": "u-003", "nombre": "Analista de Contratacion",
+         "correo": "analista@secopmonitor.co", "rol": "usuario", "estado": "activo",
+         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
+        {"id": "u-004", "nombre": "Supervisora Regional",
+         "correo": "supervisora@secopmonitor.co", "rol": "admin", "estado": "inactivo",
+         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
+    ]
+}
+
+NOTIFICACIONES_DE_PRUEBA = {
+    "notificaciones": [
+        {"id": "n-004", "titulo": "Dotacion laboral textil", "entidad": "SENA Atlantico",
+         "ubicacion": "Barranquilla", "valor_base": 55000000,
+         "modalidad": "Minima cuantia", "fecha": "2026-09-15T20:00:00+00:00",
+         "leida": False},
+        {"id": "n-003", "titulo": "Calzado de proteccion", "entidad": "Alcaldia de Soledad",
+         "ubicacion": "Soledad", "valor_base": 28500000,
+         "modalidad": "Minima cuantia", "fecha": "2026-09-15T13:30:00+00:00",
+         "leida": False},
+        {"id": "n-002", "titulo": "Uniforme escolar", "entidad": "Gobernacion de Bolivar",
+         "ubicacion": "Cartagena", "valor_base": 45000000,
+         "modalidad": "Minima cuantia", "fecha": "2026-09-15T10:00:00+00:00",
+         "leida": True},
+        {"id": "n-001", "titulo": "Vestuario institucional", "entidad": "Gobernacion del Magdalena",
+         "ubicacion": "Santa Marta", "valor_base": 61200000,
+         "modalidad": "Minima cuantia", "fecha": "2026-09-14T20:00:00+00:00",
+         "leida": True},
+    ]
+}
+
+
 @pytest.fixture()
 def usuarios_temporales(tmp_path, monkeypatch):
-    """Copia users.json a un temporal para no mutar el archivo del repo."""
+    """Escribe el juego de usuarios de prueba en un archivo temporal."""
     destino = tmp_path / "users.json"
-    shutil.copy(web_server.USERS_PATH, destino)
+    destino.write_text(
+        json.dumps(USUARIOS_DE_PRUEBA, ensure_ascii=False), encoding="utf-8")
     monkeypatch.setattr(web_server, "USERS_PATH", str(destino))
     return destino
 
 
 @pytest.fixture()
 def config_temporal(tmp_path, monkeypatch):
-    """Copia client_config.json para que los POST no toquen el archivo real."""
+    """Copia client_config.json para que los POST no toquen el archivo real.
+
+    Este si se copia del repo: client_config.json es configuracion, no estado
+    que la aplicacion reescriba sola."""
     destino = tmp_path / "client_config.json"
     shutil.copy(web_server.CONFIG_PATH, destino)
     monkeypatch.setattr(web_server, "CONFIG_PATH", str(destino))
@@ -38,9 +83,10 @@ def config_temporal(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def notificaciones_temporales(tmp_path, monkeypatch):
-    """Copia notifications.json para no mutar el archivo del repo."""
+    """Escribe el juego de notificaciones de prueba en un archivo temporal."""
     destino = tmp_path / "notifications.json"
-    shutil.copy(web_server.NOTIFICATIONS_PATH, destino)
+    destino.write_text(
+        json.dumps(NOTIFICACIONES_DE_PRUEBA, ensure_ascii=False), encoding="utf-8")
     monkeypatch.setattr(web_server, "NOTIFICATIONS_PATH", str(destino))
     return destino
 

@@ -25,3 +25,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Estado en ejecucion de la aplicacion web (se siembra desde config/)
+data/

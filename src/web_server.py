@@ -28,8 +28,27 @@ except ModuleNotFoundError as e:
 PORT = int(os.environ.get("PORT", 8080))
 WEB_DIR = os.path.join(os.path.dirname(__file__), "web")
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "config", "client_config.json")
-USERS_PATH = os.path.join(PROJECT_ROOT, "config", "users.json")
-NOTIFICATIONS_PATH = os.path.join(PROJECT_ROOT, "config", "notifications.json")
+# Semilla versionada vs estado en ejecucion.
+# config/ guarda la semilla inicial y NO se toca; data/ guarda lo que la
+# aplicacion escribe (accesos, acciones, notificaciones leidas) y esta fuera
+# del control de versiones. Asi usar la aplicacion no ensucia el repo ni
+# rompe las pruebas.
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+SEED_DIR = os.path.join(PROJECT_ROOT, "config")
+USERS_PATH = os.path.join(DATA_DIR, "users.json")
+NOTIFICATIONS_PATH = os.path.join(DATA_DIR, "notifications.json")
+
+
+def sembrar_datos() -> None:
+    """Copia la semilla a data/ la primera vez que se arranca."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    for nombre in ("users.json", "notifications.json"):
+        destino = os.path.join(DATA_DIR, nombre)
+        if not os.path.exists(destino):
+            origen = os.path.join(SEED_DIR, nombre)
+            with open(origen, "r", encoding="utf-8") as f_in, \
+                 open(destino, "w", encoding="utf-8") as f_out:
+                f_out.write(f_in.read())
 
 COOKIE_NAME = "secop_sid"
 
@@ -706,16 +725,16 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
         })
 
 
-class ServidorReutilizable(socketserver.TCPServer):
-    """TCPServer que reutiliza la direccion al reiniciar.
-
-    Sin esto, tras apagar el servidor el puerto queda en TIME_WAIT y el
-    siguiente arranque falla con "Address already in use" durante ~60s.
+class ServidorReutilizable(socketserver.ThreadingTCPServer):
+    """ThreadingTCPServer que reutiliza la direccion al reiniciar y atiende
+    peticiones en hilos concurrentes para evitar bloqueos del navegador.
     """
     allow_reuse_address = True
+    daemon_threads = True
 
 
 def run_server(port=PORT):
+    sembrar_datos()
     server_address = ('', port)
     httpd = ServidorReutilizable(server_address, SecopMonitorHandler)
     print("===========================================================")
