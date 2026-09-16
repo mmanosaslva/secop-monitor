@@ -6,6 +6,8 @@
       "correo": "admin@secopmonitor.co",
       "rol": "admin",
       "estado": "activo",
+      "password_hash": "10c64740766ebed79180ba5393a2d48d6ce237754b96368c8eb9ae4b1293c7fe",
+      "salt": "a623b31723bc02313918f7626d1e3a07",
       "ultimo_acceso": null,
       "accesos": 0,
       "acciones": 0
@@ -16,6 +18,8 @@
       "correo": "cliente@secopmonitor.co",
       "rol": "usuario",
       "estado": "activo",
+      "password_hash": "749f843eb1087d99bc5d940c18a0a3b82eab1ad756b36e2ab03783b196eabd62",
+      "salt": "5be25983c7e6a575df2038cd96eac061",
       "ultimo_acceso": null,
       "accesos": 0,
       "acciones": 0
@@ -26,6 +30,8 @@
       "correo": "analista@secopmonitor.co",
       "rol": "usuario",
       "estado": "activo",
+      "password_hash": "59192731243d5d7e357e8ea07393fce1b2b54740efd65835be50c22f615d8c67",
+      "salt": "de3cbf260639c64fe74229b440f5b17e",
       "ultimo_acceso": null,
       "accesos": 0,
       "acciones": 0
@@ -36,6 +42,8 @@
       "correo": "supervisora@secopmonitor.co",
       "rol": "admin",
       "estado": "inactivo",
+      "password_hash": "7d36037a58d85c04cfafc5bd3036e11ddf2268427676f6d5b73168f0415b2a66",
+      "salt": "d439051a3cc0d6203f6e30a947786a3a",
       "ultimo_acceso": null,
       "accesos": 0,
       "acciones": 0

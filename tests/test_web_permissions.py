@@ -20,20 +20,35 @@ from src import web_server
 # ==========================================================================
 # Juego de datos propio de las pruebas. No se copia de config/ ni de data/:
 # asi los asertos no dependen de lo que alguien haya hecho usando la aplicacion.
+CLAVE_ADMIN = "Admin2026*"
+CLAVE_CLIENTE = "Cliente2026*"
+CLAVE_ANALISTA = "Analista2026*"
+CLAVE_SUPERVISORA = "Supervisora2026*"
+
+
+def _con_clave(usuario, contrasena):
+    usuario["password_hash"], usuario["salt"] = web_server.hash_contrasena(contrasena)
+    return usuario
+
+
 USUARIOS_DE_PRUEBA = {
     "usuarios": [
-        {"id": "u-001", "nombre": "Administrador del Sistema",
-         "correo": "admin@secopmonitor.co", "rol": "admin", "estado": "activo",
-         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
-        {"id": "u-002", "nombre": "Cliente Textil Caribe",
-         "correo": "cliente@secopmonitor.co", "rol": "usuario", "estado": "activo",
-         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
-        {"id": "u-003", "nombre": "Analista de Contratacion",
-         "correo": "analista@secopmonitor.co", "rol": "usuario", "estado": "activo",
-         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
-        {"id": "u-004", "nombre": "Supervisora Regional",
-         "correo": "supervisora@secopmonitor.co", "rol": "admin", "estado": "inactivo",
-         "ultimo_acceso": None, "accesos": 0, "acciones": 0},
+        _con_clave({"id": "u-001", "nombre": "Administrador del Sistema",
+                    "correo": "admin@secopmonitor.co", "rol": "admin",
+                    "estado": "activo", "ultimo_acceso": None,
+                    "accesos": 0, "acciones": 0}, CLAVE_ADMIN),
+        _con_clave({"id": "u-002", "nombre": "Cliente Textil Caribe",
+                    "correo": "cliente@secopmonitor.co", "rol": "usuario",
+                    "estado": "activo", "ultimo_acceso": None,
+                    "accesos": 0, "acciones": 0}, CLAVE_CLIENTE),
+        _con_clave({"id": "u-003", "nombre": "Analista de Contratacion",
+                    "correo": "analista@secopmonitor.co", "rol": "usuario",
+                    "estado": "activo", "ultimo_acceso": None,
+                    "accesos": 0, "acciones": 0}, CLAVE_ANALISTA),
+        _con_clave({"id": "u-004", "nombre": "Supervisora Regional",
+                    "correo": "supervisora@secopmonitor.co", "rol": "admin",
+                    "estado": "inactivo", "ultimo_acceso": None,
+                    "accesos": 0, "acciones": 0}, CLAVE_SUPERVISORA),
     ]
 }
 
@@ -95,6 +110,7 @@ def notificaciones_temporales(tmp_path, monkeypatch):
 def servidor(usuarios_temporales, config_temporal, notificaciones_temporales):
     """Servidor real en un puerto efimero, apagado al terminar la prueba."""
     web_server.SESSIONS.clear()
+    web_server._intentos_fallidos.clear()
     httpd = socketserver.TCPServer(("127.0.0.1", 0), web_server.SecopMonitorHandler)
     hilo = threading.Thread(target=httpd.serve_forever, daemon=True)
     hilo.start()
@@ -102,6 +118,7 @@ def servidor(usuarios_temporales, config_temporal, notificaciones_temporales):
     httpd.shutdown()
     httpd.server_close()
     web_server.SESSIONS.clear()
+    web_server._intentos_fallidos.clear()
 
 
 class Cliente:
@@ -129,11 +146,10 @@ class Cliente:
         except json.JSONDecodeError:
             return resp.status, crudo
 
-    def entrar(self, rol, correo=None):
-        cuerpo = {"rol": rol}
-        if correo:
-            cuerpo["correo"] = correo
-        return self.peticion("POST", "/api/auth/login", cuerpo)
+    def entrar(self, correo, contrasena):
+        return self.peticion(
+            "POST", "/api/auth/login",
+            {"correo": correo, "contrasena": contrasena})
 
 
 @pytest.fixture()
@@ -144,7 +160,7 @@ def anonimo(servidor):
 @pytest.fixture()
 def cliente_usuario(servidor):
     c = Cliente(servidor)
-    estado, _ = c.entrar("usuario")
+    estado, _ = c.entrar("cliente@secopmonitor.co", CLAVE_CLIENTE)
     assert estado == 200
     return c
 
@@ -152,7 +168,7 @@ def cliente_usuario(servidor):
 @pytest.fixture()
 def cliente_admin(servidor):
     c = Cliente(servidor)
-    estado, _ = c.entrar("admin")
+    estado, _ = c.entrar("admin@secopmonitor.co", CLAVE_ADMIN)
     assert estado == 200
     return c
 
@@ -186,14 +202,50 @@ def test_rol_desconocido_no_puede_nada():
 # ==========================================================================
 # Autenticacion
 # ==========================================================================
-def test_login_con_rol_invalido_es_rechazado(anonimo):
-    estado, cuerpo = anonimo.entrar("superadmin")
+def test_hash_de_contrasena_no_es_reversible():
+    """La contrasena no se guarda nunca en claro, y cada hash lleva su salt."""
+    h1, s1 = web_server.hash_contrasena("MiClave2026*")
+    h2, s2 = web_server.hash_contrasena("MiClave2026*")
+    assert "MiClave2026*" not in h1
+    assert s1 != s2, "cada usuario debe tener un salt distinto"
+    assert h1 != h2, "el mismo texto con distinto salt da distinto hash"
+    assert web_server.verificar_contrasena("MiClave2026*", h1, s1)
+    assert not web_server.verificar_contrasena("MiClave2027*", h1, s1)
+
+
+def test_el_hash_nunca_sale_al_navegador(cliente_admin):
+    """usuario_publico() es una lista blanca: el hash y el salt no se exponen."""
+    _, cuerpo = cliente_admin.peticion("GET", "/api/users")
+    for u in cuerpo["usuarios"]:
+        assert "password_hash" not in u
+        assert "salt" not in u
+
+
+def test_login_sin_contrasena_es_rechazado(anonimo):
+    estado, cuerpo = anonimo.peticion(
+        "POST", "/api/auth/login", {"correo": "admin@secopmonitor.co"})
     assert estado == 400
-    assert cuerpo["codigo"] == "rol_invalido"
+    assert cuerpo["codigo"] == "faltan_datos"
+
+
+def test_login_con_contrasena_incorrecta(anonimo):
+    estado, cuerpo = anonimo.entrar("admin@secopmonitor.co", "noEsLaClave")
+    assert estado == 401
+    assert cuerpo["codigo"] == "credenciales_invalidas"
+
+
+def test_el_error_no_permite_enumerar_usuarios(anonimo):
+    """Correo inexistente y contrasena incorrecta responden identico: si no,
+    cualquiera podria descubrir que correos estan registrados."""
+    _, inexistente = anonimo.entrar("fantasma@secopmonitor.co", "loquesea")
+    otro = Cliente(anonimo.puerto)
+    _, incorrecta = otro.entrar("admin@secopmonitor.co", "loquesea")
+    assert inexistente["error"] == incorrecta["error"]
+    assert inexistente["codigo"] == incorrecta["codigo"]
 
 
 def test_login_de_usuario_devuelve_sus_permisos(anonimo):
-    estado, cuerpo = anonimo.entrar("usuario")
+    estado, cuerpo = anonimo.entrar("cliente@secopmonitor.co", CLAVE_CLIENTE)
     assert estado == 200
     assert cuerpo["usuario"]["rol"] == "usuario"
     assert "ver_metricas" in cuerpo["permisos"]
@@ -201,24 +253,41 @@ def test_login_de_usuario_devuelve_sus_permisos(anonimo):
 
 
 def test_login_de_admin_incluye_permisos_de_escritura(anonimo):
-    estado, cuerpo = anonimo.entrar("admin")
+    estado, cuerpo = anonimo.entrar("admin@secopmonitor.co", CLAVE_ADMIN)
     assert estado == 200
     assert cuerpo["usuario"]["rol"] == "admin"
     assert "editar_configuracion" in cuerpo["permisos"]
     assert "gestionar_usuarios" in cuerpo["permisos"]
 
 
+def test_el_rol_lo_decide_la_cuenta_no_quien_entra(anonimo):
+    """Ya no se elige rol al entrar: viene de la cuenta autenticada."""
+    _, cuerpo = anonimo.entrar("cliente@secopmonitor.co", CLAVE_CLIENTE)
+    assert cuerpo["usuario"]["rol"] == "usuario"
+    assert "gestionar_usuarios" not in cuerpo["permisos"]
+
+
 def test_cuenta_inactiva_no_puede_entrar(anonimo):
-    # u-004 (Supervisora Regional) esta marcada como inactiva en users.json
-    estado, cuerpo = anonimo.entrar("admin", correo="supervisora@secopmonitor.co")
+    # u-004 (Supervisora Regional) esta marcada como inactiva
+    estado, cuerpo = anonimo.entrar("supervisora@secopmonitor.co", CLAVE_SUPERVISORA)
     assert estado == 403
     assert cuerpo["codigo"] == "cuenta_inactiva"
 
 
-def test_login_con_rol_que_no_corresponde_al_usuario(anonimo):
-    estado, cuerpo = anonimo.entrar("admin", correo="cliente@secopmonitor.co")
-    assert estado == 403
-    assert cuerpo["codigo"] == "rol_no_corresponde"
+def test_se_bloquea_tras_varios_intentos_fallidos(anonimo):
+    for _ in range(web_server.MAX_INTENTOS):
+        anonimo.entrar("admin@secopmonitor.co", "claveMala")
+    estado, cuerpo = anonimo.entrar("admin@secopmonitor.co", CLAVE_ADMIN)
+    assert estado == 429
+    assert cuerpo["codigo"] == "bloqueado"
+
+
+def test_un_login_correcto_limpia_los_intentos_fallidos(anonimo):
+    for _ in range(web_server.MAX_INTENTOS - 1):
+        anonimo.entrar("admin@secopmonitor.co", "claveMala")
+    estado, _ = anonimo.entrar("admin@secopmonitor.co", CLAVE_ADMIN)
+    assert estado == 200
+    assert "admin@secopmonitor.co" not in web_server._intentos_fallidos
 
 
 def test_sin_sesion_no_hay_identidad(anonimo):
@@ -242,7 +311,7 @@ def test_cerrar_sesion_invalida_la_cookie(cliente_admin):
 
 
 def test_el_login_registra_el_acceso(anonimo, usuarios_temporales):
-    anonimo.entrar("usuario")
+    anonimo.entrar("cliente@secopmonitor.co", CLAVE_CLIENTE)
     usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
     cliente = next(u for u in usuarios if u["id"] == "u-002")
     assert cliente["accesos"] == 1
@@ -445,7 +514,8 @@ def test_el_admin_lista_usuarios_con_metricas_agregadas(cliente_admin):
 def test_el_usuario_no_puede_crear_usuarios(cliente_usuario, usuarios_temporales):
     antes = usuarios_temporales.read_text(encoding="utf-8")
     estado, _ = cliente_usuario.peticion("POST", "/api/users", {
-        "nombre": "Intruso", "correo": "intruso@x.co", "rol": "admin"})
+        "nombre": "Intruso", "correo": "intruso@x.co", "rol": "admin",
+        "contrasena": "Intruso2026*"})
     assert estado == 403
     assert usuarios_temporales.read_text(encoding="utf-8") == antes
 
@@ -453,7 +523,7 @@ def test_el_usuario_no_puede_crear_usuarios(cliente_usuario, usuarios_temporales
 def test_el_admin_crea_un_usuario(cliente_admin):
     estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
         "nombre": "Nueva Analista", "correo": "nueva@secopmonitor.co",
-        "rol": "usuario", "estado": "activo"})
+        "rol": "usuario", "estado": "activo", "contrasena": "Nueva2026*"})
     assert estado == 201
     assert cuerpo["usuario"]["id"] == "u-005"
     assert cuerpo["usuario"]["accesos"] == 0
@@ -461,14 +531,16 @@ def test_el_admin_crea_un_usuario(cliente_admin):
 
 def test_no_se_admiten_correos_duplicados(cliente_admin):
     estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
-        "nombre": "Duplicado", "correo": "admin@secopmonitor.co", "rol": "usuario"})
+        "nombre": "Duplicado", "correo": "admin@secopmonitor.co",
+        "rol": "usuario", "contrasena": "Duplicado2026*"})
     assert estado == 400
     assert cuerpo["codigo"] == "datos_invalidos"
 
 
 def test_no_se_admite_un_rol_inventado(cliente_admin):
     estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
-        "nombre": "Raro", "correo": "raro@secopmonitor.co", "rol": "superadmin"})
+        "nombre": "Raro", "correo": "raro@secopmonitor.co",
+        "rol": "superadmin", "contrasena": "Raro2026*"})
     assert estado == 400
     assert "rol" in cuerpo["error"].lower()
 
@@ -533,7 +605,8 @@ def test_editar_un_usuario_inexistente(cliente_admin):
 
 def test_gestionar_usuarios_cuenta_como_accion(cliente_admin, usuarios_temporales):
     cliente_admin.peticion("POST", "/api/users", {
-        "nombre": "Contable", "correo": "contable@secopmonitor.co", "rol": "usuario"})
+        "nombre": "Contable", "correo": "contable@secopmonitor.co",
+        "rol": "usuario", "contrasena": "Contable2026*"})
     usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
     admin = next(u for u in usuarios if u["id"] == "u-001")
     assert admin["acciones"] == 1
@@ -542,9 +615,9 @@ def test_gestionar_usuarios_cuenta_como_accion(cliente_admin, usuarios_temporale
 def test_un_usuario_creado_inactivo_no_puede_entrar(cliente_admin, servidor):
     cliente_admin.peticion("POST", "/api/users", {
         "nombre": "Pendiente", "correo": "pendiente@secopmonitor.co",
-        "rol": "usuario", "estado": "inactivo"})
+        "rol": "usuario", "estado": "inactivo", "contrasena": "Pendiente2026*"})
     otro = Cliente(servidor)
-    estado, cuerpo = otro.entrar("usuario", correo="pendiente@secopmonitor.co")
+    estado, cuerpo = otro.entrar("pendiente@secopmonitor.co", "Pendiente2026*")
     assert estado == 403
     assert cuerpo["codigo"] == "cuenta_inactiva"
 
@@ -556,3 +629,83 @@ def test_el_servidor_reutiliza_la_direccion():
     """Sin SO_REUSEADDR, apagar y volver a levantar falla con
     'Address already in use' durante el TIME_WAIT del socket (~60s)."""
     assert web_server.ServidorReutilizable.allow_reuse_address is True
+
+
+# ==========================================================================
+# Contrasenas en la gestion de usuarios y cambio propio
+# ==========================================================================
+def test_crear_usuario_sin_contrasena_es_rechazado(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Sin Clave", "correo": "sinclave@secopmonitor.co",
+        "rol": "usuario"})
+    assert estado == 400
+    assert "contraseña" in cuerpo["error"].lower()
+
+
+def test_la_contrasena_debe_tener_longitud_minima(cliente_admin):
+    estado, cuerpo = cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Debil", "correo": "debil@secopmonitor.co",
+        "rol": "usuario", "contrasena": "corta"})
+    assert estado == 400
+    assert cuerpo["codigo"] == "datos_invalidos"
+
+
+def test_el_usuario_creado_por_el_admin_puede_entrar(cliente_admin, servidor):
+    cliente_admin.peticion("POST", "/api/users", {
+        "nombre": "Recien Creada", "correo": "recien@secopmonitor.co",
+        "rol": "usuario", "contrasena": "Recien2026*"})
+    nuevo = Cliente(servidor)
+    estado, cuerpo = nuevo.entrar("recien@secopmonitor.co", "Recien2026*")
+    assert estado == 200
+    assert cuerpo["usuario"]["rol"] == "usuario"
+
+
+def test_el_admin_puede_restablecer_la_contrasena_de_otro(cliente_admin, servidor):
+    estado, _ = cliente_admin.peticion(
+        "PUT", "/api/users/u-003", {"contrasena": "Restablecida2026*"})
+    assert estado == 200
+
+    otro = Cliente(servidor)
+    assert otro.entrar("analista@secopmonitor.co", "Restablecida2026*")[0] == 200
+    tercero = Cliente(servidor)
+    assert tercero.entrar("analista@secopmonitor.co", CLAVE_ANALISTA)[0] == 401
+
+
+def test_editar_sin_contrasena_conserva_la_actual(cliente_admin, servidor):
+    estado, _ = cliente_admin.peticion(
+        "PUT", "/api/users/u-003", {"nombre": "Analista Renombrada"})
+    assert estado == 200
+    otro = Cliente(servidor)
+    assert otro.entrar("analista@secopmonitor.co", CLAVE_ANALISTA)[0] == 200
+
+
+def test_cambiar_la_propia_contrasena(cliente_usuario, servidor):
+    estado, _ = cliente_usuario.peticion("POST", "/api/auth/password", {
+        "actual": CLAVE_CLIENTE, "nueva": "NuevaClave2026*"})
+    assert estado == 200
+
+    otro = Cliente(servidor)
+    assert otro.entrar("cliente@secopmonitor.co", "NuevaClave2026*")[0] == 200
+    tercero = Cliente(servidor)
+    assert tercero.entrar("cliente@secopmonitor.co", CLAVE_CLIENTE)[0] == 401
+
+
+def test_cambiar_contrasena_exige_la_actual(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("POST", "/api/auth/password", {
+        "actual": "loquesea", "nueva": "NuevaClave2026*"})
+    assert estado == 403
+    assert cuerpo["codigo"] == "credenciales_invalidas"
+
+
+def test_cambiar_contrasena_rechaza_una_debil(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("POST", "/api/auth/password", {
+        "actual": CLAVE_CLIENTE, "nueva": "corta"})
+    assert estado == 400
+    assert cuerpo["codigo"] == "contrasena_debil"
+
+
+def test_cambiar_contrasena_exige_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("POST", "/api/auth/password", {
+        "actual": "x", "nueva": "NuevaClave2026*"})
+    assert estado == 401
+    assert cuerpo["codigo"] == "sin_sesion"

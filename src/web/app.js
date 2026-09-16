@@ -45,48 +45,131 @@ function mostrarAcceso() {
 }
 
 function initAcceso() {
-    const btnLogin = document.getElementById('btn-login');
+    const formulario = document.getElementById('login-form');
     const btnLogout = document.getElementById('btn-logout');
+    const btnVer = document.getElementById('btn-ver-contrasena');
 
-    if (btnLogin) {
-        btnLogin.addEventListener('click', iniciarSesion);
-    }
-    if (btnLogout) {
-        btnLogout.addEventListener('click', cerrarSesion);
+    if (formulario) formulario.addEventListener('submit', iniciarSesion);
+    if (btnLogout) btnLogout.addEventListener('click', cerrarSesion);
+
+    if (btnVer) {
+        btnVer.addEventListener('click', () => {
+            const campo = document.getElementById('login-contrasena');
+            const oculta = campo.type === 'password';
+            campo.type = oculta ? 'text' : 'password';
+            btnVer.setAttribute('aria-label', oculta ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            campo.focus();
+        });
     }
 }
 
-async function iniciarSesion() {
+async function iniciarSesion(evento) {
+    if (evento) evento.preventDefault();
+
     const btnLogin = document.getElementById('btn-login');
     const error = document.getElementById('login-error');
-    const seleccion = document.querySelector('input[name="rol-acceso"]:checked');
+    const correo = document.getElementById('login-correo').value.trim();
+    const contrasena = document.getElementById('login-contrasena').value;
 
     error.hidden = true;
+
+    if (!correo || !contrasena) {
+        error.textContent = 'Indica tu correo y tu contraseña.';
+        error.hidden = false;
+        return;
+    }
+
     btnLogin.disabled = true;
-    btnLogin.textContent = 'Entrando...';
+    btnLogin.textContent = 'Comprobando...';
 
     try {
         const resp = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rol: seleccion ? seleccion.value : 'usuario' })
+            body: JSON.stringify({ correo, contrasena })
         });
         const data = await resp.json();
 
         if (!resp.ok) {
-            error.textContent = data.error || 'No se pudo iniciar la sesion.';
+            error.textContent = data.error || 'No se pudo iniciar la sesión.';
             error.hidden = false;
+            document.getElementById('login-contrasena').value = '';
             return;
         }
 
         sesion = data;
         entrarALaApp();
     } catch (err) {
-        error.textContent = 'No hay conexion con el servidor. Levanta src/web_server.py e intenta de nuevo.';
+        error.textContent = 'No hay conexión con el servidor. Levanta src/web_server.py e intenta de nuevo.';
         error.hidden = false;
     } finally {
         btnLogin.disabled = false;
         btnLogin.textContent = 'Entrar al monitor';
+    }
+}
+
+// ----------------------------------------------------------------------
+// Cambio de la propia contrasena
+// ----------------------------------------------------------------------
+function initCambioClave() {
+    const abrir = document.getElementById('btn-clave');
+    const cerrar = document.getElementById('btn-close-clave-modal');
+    const guardar = document.getElementById('btn-guardar-clave');
+    const modal = document.getElementById('clave-modal');
+
+    if (abrir) abrir.addEventListener('click', abrirCambioClave);
+    if (cerrar) cerrar.addEventListener('click', cerrarCambioClave);
+    if (guardar) guardar.addEventListener('click', guardarClave);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarCambioClave();
+        });
+    }
+}
+
+function abrirCambioClave() {
+    const modal = document.getElementById('clave-modal');
+    if (!modal) return;
+    document.getElementById('cf-actual').value = '';
+    document.getElementById('cf-nueva').value = '';
+    document.getElementById('cf-error').hidden = true;
+    document.getElementById('cf-exito').hidden = true;
+    modal.classList.add('active');
+}
+
+function cerrarCambioClave() {
+    const modal = document.getElementById('clave-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function guardarClave() {
+    const error = document.getElementById('cf-error');
+    const exito = document.getElementById('cf-exito');
+    const actual = document.getElementById('cf-actual').value;
+    const nueva = document.getElementById('cf-nueva').value;
+
+    error.hidden = true;
+    exito.hidden = true;
+
+    try {
+        const resp = await fetch('/api/auth/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ actual, nueva })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            error.textContent = data.error || 'No se pudo cambiar la contraseña.';
+            error.hidden = false;
+            return;
+        }
+        exito.hidden = false;
+        document.getElementById('cf-actual').value = '';
+        document.getElementById('cf-nueva').value = '';
+    } catch (err) {
+        error.textContent = 'Sin conexión con el servidor.';
+        error.hidden = false;
     }
 }
 
@@ -110,6 +193,7 @@ function entrarALaApp() {
     renderizarNavegacion();
 
     initModal();
+    initCambioClave();
     cargarMetricas();
     if (puede('ver_monitoreo')) initLiveSECOP();
     if (puede('editar_configuracion')) initConfigEditor();
@@ -856,6 +940,14 @@ function abrirFormularioUsuario(usuario) {
     document.getElementById('uf-correo').value = usuario ? usuario.correo : '';
     document.getElementById('uf-rol').value = usuario ? usuario.rol : 'usuario';
     document.getElementById('uf-estado').value = usuario ? usuario.estado : 'activo';
+    document.getElementById('uf-contrasena').value = '';
+
+    const ayudaClave = document.getElementById('uf-contrasena-ayuda');
+    if (ayudaClave) {
+        ayudaClave.textContent = usuario
+            ? 'Déjala vacía para conservar la contraseña actual.'
+            : 'Mínimo 8 caracteres. El usuario la necesitará para entrar.';
+    }
 
     if (titulo) titulo.textContent = usuario ? 'Editar usuario' : 'Crear usuario';
     if (error) error.hidden = true;
@@ -882,6 +974,10 @@ async function guardarUsuario() {
         rol: document.getElementById('uf-rol').value,
         estado: document.getElementById('uf-estado').value
     };
+
+    // Al crear es obligatoria; al editar, vacia significa "no la cambies".
+    const contrasena = document.getElementById('uf-contrasena').value;
+    if (contrasena) datos.contrasena = contrasena;
 
     const resultado = await peticionUsuarios(
         id ? `/api/users/${id}` : '/api/users',

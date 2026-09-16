@@ -27,32 +27,31 @@
                 </svg>
             </div>
             <span class="login-eyebrow">acceso al sistema</span>
-            <h1 class="login-title">Elige con qué rol<br>quieres entrar</h1>
-            <p class="login-sub">El rol determina qué módulos ves y qué puedes modificar.</p>
+            <h1 class="login-title">Entra a tu<br>panel de monitoreo</h1>
+            <p class="login-sub">Usa el correo y la contraseña de tu cuenta.</p>
 
-            <div class="role-options" id="role-options">
-                <label class="role-option">
-                    <input type="radio" name="rol-acceso" value="usuario" checked>
-                    <span class="role-body">
-                        <span class="role-name">Usuario</span>
-                        <span class="role-desc">Panel de métricas y explicación del motor. Solo lectura: no puedes
-                            editar ni sincronizar.</span>
-                    </span>
-                </label>
-                <label class="role-option">
-                    <input type="radio" name="rol-acceso" value="admin">
-                    <span class="role-body">
-                        <span class="role-name">Administrador</span>
-                        <span class="role-desc">Todo lo del usuario, más monitoreo en vivo, configuración del cliente y
-                            gestión de usuarios.</span>
-                    </span>
-                </label>
-            </div>
+            <form id="login-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="login-correo">Correo electrónico</label>
+                    <input type="email" id="login-correo" autocomplete="username"
+                           placeholder="tu@correo.co" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-contrasena">Contraseña</label>
+                    <div class="campo-contrasena">
+                        <input type="password" id="login-contrasena"
+                               autocomplete="current-password" required>
+                        <button type="button" class="btn-ver-contrasena" id="btn-ver-contrasena"
+                                aria-label="Mostrar contraseña">👁</button>
+                    </div>
+                </div>
 
-            <button class="btn-sena-primary block-btn" id="btn-login">Entrar al monitor</button>
+                <button class="btn-sena-primary block-btn" id="btn-login" type="submit">Entrar al monitor</button>
+            </form>
+
             <p class="login-error" id="login-error" hidden></p>
-            <p class="login-note">Tu rol queda fijado en esta sesión del navegador. Puedes cerrarla cuando quieras
-                desde el encabezado.</p>
+            <p class="login-note">Tu sesión queda fijada en este navegador. El rol y los
+                permisos los determina tu cuenta, no tú.</p>
         </div>
     </div>
 
@@ -111,6 +110,7 @@
                     <span class="user-name" id="session-user-name"></span>
                     <span class="user-role-chip" id="session-user-role"></span>
                 </div>
+                <button class="btn-logout" id="btn-clave" type="button">Contraseña</button>
                 <button class="btn-logout" id="btn-logout" type="button">Cerrar sesión</button>
             </div>
         </div>
@@ -613,9 +613,42 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="uf-contrasena">Contraseña</label>
+                        <input type="password" id="uf-contrasena" autocomplete="new-password">
+                        <span class="form-ayuda" id="uf-contrasena-ayuda"></span>
+                    </div>
                     <p class="form-error" id="uf-error" hidden></p>
                     <div class="form-actions">
                         <button class="btn-sena-primary" id="btn-guardar-usuario" type="button">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de cambio de contraseña -->
+    <div class="modal-overlay" id="clave-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Cambiar mi contraseña</h3>
+                <button class="close-modal" id="btn-close-clave-modal" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="clave-form" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="cf-actual">Contraseña actual</label>
+                        <input type="password" id="cf-actual" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cf-nueva">Contraseña nueva</label>
+                        <input type="password" id="cf-nueva" autocomplete="new-password" required>
+                        <span class="form-ayuda">Mínimo 8 caracteres.</span>
+                    </div>
+                    <p class="form-error" id="cf-error" hidden></p>
+                    <p class="form-exito" id="cf-exito" hidden>Contraseña actualizada.</p>
+                    <div class="form-actions">
+                        <button class="btn-sena-primary" id="btn-guardar-clave" type="button">Guardar</button>
                     </div>
                 </form>
             </div>

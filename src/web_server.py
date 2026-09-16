@@ -1,9 +1,12 @@
 import http.server
 import socketserver
+import hashlib
+import hmac
 import json
 import os
 import secrets
 import sys
+import time
 import urllib.parse
 from datetime import datetime, timezone
 from http.cookies import SimpleCookie
@@ -39,6 +42,30 @@ USERS_PATH = os.path.join(DATA_DIR, "users.json")
 NOTIFICATIONS_PATH = os.path.join(DATA_DIR, "notifications.json")
 
 
+CONTRASENA_POR_DEFECTO = "Cambiar2026*"
+
+
+def migrar_usuarios_sin_contrasena() -> None:
+    """Da una contrasena inicial a los usuarios que aun no tienen hash.
+
+    Necesario para los datos creados antes de que existiera la autenticacion:
+    sin esto no podrian iniciar sesion nunca.
+    """
+    if not os.path.exists(USERS_PATH):
+        return
+    usuarios = leer_usuarios()
+    migrados = [u["correo"] for u in usuarios if not u.get("password_hash")]
+    if not migrados:
+        return
+    for u in usuarios:
+        if not u.get("password_hash"):
+            u["password_hash"], u["salt"] = hash_contrasena(CONTRASENA_POR_DEFECTO)
+    guardar_usuarios(usuarios)
+    print(f"[SECOP WebServer] {len(migrados)} usuario(s) sin contraseña recibieron "
+          f"la inicial '{CONTRASENA_POR_DEFECTO}'. Cambiala al entrar: "
+          + ", ".join(migrados), flush=True)
+
+
 def sembrar_datos() -> None:
     """Copia la semilla a data/ la primera vez que se arranca."""
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -51,6 +78,61 @@ def sembrar_datos() -> None:
                 f_out.write(f_in.read())
 
 COOKIE_NAME = "secop_sid"
+
+# Derivacion de contrasenas: PBKDF2-HMAC-SHA256, todo de la biblioteca estandar.
+PBKDF2_ITERACIONES = 200_000
+LONGITUD_MINIMA_CONTRASENA = 8
+
+# Freno a la fuerza bruta: tras N fallos seguidos, el correo queda bloqueado
+# unos segundos. Es en memoria, suficiente para este MVP de un solo proceso.
+MAX_INTENTOS = 5
+BLOQUEO_SEGUNDOS = 60
+_intentos_fallidos = {}  # correo -> (numero_de_fallos, momento_del_ultimo)
+
+
+def hash_contrasena(contrasena: str, salt: str = None):
+    """Devuelve (hash_hex, salt_hex). Genera salt nuevo si no se pasa uno."""
+    if salt is None:
+        salt = secrets.token_hex(16)
+    derivado = hashlib.pbkdf2_hmac(
+        "sha256", contrasena.encode("utf-8"), bytes.fromhex(salt),
+        PBKDF2_ITERACIONES)
+    return derivado.hex(), salt
+
+
+def verificar_contrasena(contrasena: str, hash_esperado: str, salt: str) -> bool:
+    """Comparacion en tiempo constante, para no filtrar informacion por el reloj."""
+    if not contrasena or not hash_esperado or not salt:
+        return False
+    try:
+        calculado, _ = hash_contrasena(contrasena, salt)
+    except ValueError:
+        return False
+    return hmac.compare_digest(calculado, hash_esperado)
+
+
+def esta_bloqueado(correo: str) -> int:
+    """Segundos que faltan para poder reintentar. 0 si no esta bloqueado."""
+    registro = _intentos_fallidos.get(correo)
+    if not registro:
+        return 0
+    fallos, ultimo = registro
+    if fallos < MAX_INTENTOS:
+        return 0
+    restante = int(BLOQUEO_SEGUNDOS - (time.time() - ultimo))
+    if restante <= 0:
+        _intentos_fallidos.pop(correo, None)
+        return 0
+    return restante
+
+
+def anotar_fallo(correo: str) -> None:
+    fallos, _ = _intentos_fallidos.get(correo, (0, 0))
+    _intentos_fallidos[correo] = (fallos + 1, time.time())
+
+
+def limpiar_fallos(correo: str) -> None:
+    _intentos_fallidos.pop(correo, None)
 
 # ==========================================================================
 # Roles y permisos — única fuente de verdad del backend.
@@ -243,6 +325,8 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_login(payload)
         elif path == "/api/auth/logout":
             self.handle_logout()
+        elif path == "/api/auth/password":
+            self.handle_change_password(payload)
         elif path == "/api/filter/test":
             self.handle_test_filter(payload)
         elif path == "/api/config":
@@ -308,6 +392,13 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             return "El estado debe ser activo o inactivo"
         if any(u["correo"].lower() == correo and u["id"] != id_actual for u in usuarios):
             return "Ya existe un usuario con ese correo"
+
+        contrasena = datos.get("contrasena")
+        if id_actual is None and not contrasena:
+            return "La contraseña es obligatoria al crear un usuario"
+        if contrasena and len(contrasena) < LONGITUD_MINIMA_CONTRASENA:
+            return (f"La contraseña debe tener al menos "
+                    f"{LONGITUD_MINIMA_CONTRASENA} caracteres")
         return None
 
     def handle_create_user(self, payload: dict):
@@ -323,12 +414,15 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         numeros = [int(u["id"].split("-")[1]) for u in usuarios if u["id"].startswith("u-")]
+        clave, salt = hash_contrasena(payload["contrasena"])
         nuevo = {
             "id": f"u-{max(numeros, default=0) + 1:03d}",
             "nombre": payload["nombre"].strip(),
             "correo": payload["correo"].strip().lower(),
             "rol": payload["rol"],
             "estado": payload.get("estado", "activo"),
+            "password_hash": clave,
+            "salt": salt,
             "ultimo_acceso": None,
             "accesos": 0,
             "acciones": 0,
@@ -355,6 +449,9 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             "correo": payload.get("correo", actual["correo"]),
             "rol": payload.get("rol", actual["rol"]),
             "estado": payload.get("estado", actual["estado"]),
+            # En la edicion la contrasena es opcional: si viene vacia, se
+            # conserva la que ya tenia.
+            "contrasena": payload.get("contrasena") or None,
         }
         error = self._validar_usuario(datos, usuarios, id_actual=user_id)
         if error:
@@ -385,6 +482,9 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             "rol": datos["rol"],
             "estado": datos["estado"],
         })
+        if datos["contrasena"]:
+            actual["password_hash"], actual["salt"] = hash_contrasena(
+                datos["contrasena"])
         guardar_usuarios(usuarios)
         registrar_accion(sesion["user_id"])
         self.send_json_response({"usuario": usuario_publico(actual)})
@@ -425,44 +525,53 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
     # Autenticacion
     # ----------------------------------------------------------------------
     def handle_login(self, payload: dict):
-        rol = payload.get("rol")
-        if rol not in PERMISOS:
+        """Autentica por correo y contrasena.
+
+        Los errores son deliberadamente genericos: distinguir "no existe ese
+        correo" de "contrasena incorrecta" permitiria enumerar usuarios.
+        """
+        correo = (payload.get("correo") or "").strip().lower()
+        contrasena = payload.get("contrasena") or ""
+
+        if not correo or not contrasena:
             self.send_json_response(
-                {"error": "Rol invalido", "codigo": "rol_invalido"}, 400)
+                {"error": "Indica tu correo y tu contraseña",
+                 "codigo": "faltan_datos"}, 400)
+            return
+
+        espera = esta_bloqueado(correo)
+        if espera:
+            self.send_json_response({
+                "error": f"Demasiados intentos fallidos. Reintenta en {espera} segundos.",
+                "codigo": "bloqueado",
+                "segundos": espera,
+            }, 429)
             return
 
         usuarios = leer_usuarios()
-        correo = (payload.get("correo") or "").strip().lower()
-        if correo:
-            elegido = next(
-                (u for u in usuarios if u["correo"].lower() == correo), None)
-            if elegido is None:
-                self.send_json_response(
-                    {"error": "No existe un usuario con ese correo",
-                     "codigo": "usuario_no_encontrado"}, 404)
-                return
-            if elegido["rol"] != rol:
-                self.send_json_response(
-                    {"error": "El usuario no tiene ese rol",
-                     "codigo": "rol_no_corresponde"}, 403)
-                return
-        else:
-            # Sin correo: entra el primer usuario activo del rol pedido.
-            elegido = next(
-                (u for u in usuarios
-                 if u["rol"] == rol and u["estado"] == "activo"), None)
-            if elegido is None:
-                self.send_json_response(
-                    {"error": "No hay usuarios activos con ese rol",
-                     "codigo": "sin_usuarios"}, 404)
-                return
+        elegido = next(
+            (u for u in usuarios if u["correo"].lower() == correo), None)
 
-        if elegido["estado"] != "activo":
+        credenciales_validas = elegido is not None and verificar_contrasena(
+            contrasena, elegido.get("password_hash"), elegido.get("salt"))
+
+        if not credenciales_validas:
+            anotar_fallo(correo)
             self.send_json_response(
-                {"error": "La cuenta esta inactiva", "codigo": "cuenta_inactiva"}, 403)
+                {"error": "Correo o contraseña incorrectos",
+                 "codigo": "credenciales_invalidas"}, 401)
             return
 
-        # Registrar el acceso
+        # La cuenta inactiva si se distingue: quien acerto la contrasena ya
+        # demostro ser el titular, y necesita saber por que no entra.
+        if elegido["estado"] != "activo":
+            self.send_json_response(
+                {"error": "Tu cuenta está desactivada. Contacta a un administrador.",
+                 "codigo": "cuenta_inactiva"}, 403)
+            return
+
+        limpiar_fallos(correo)
+
         for u in usuarios:
             if u["id"] == elegido["id"]:
                 u["ultimo_acceso"] = ahora_iso()
@@ -479,6 +588,43 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
             "usuario": usuario_publico(elegido),
             "permisos": sorted(PERMISOS[elegido["rol"]]),
         }, 200, cookie=cookie)
+
+    def handle_change_password(self, payload: dict):
+        """Cambio de la propia contrasena. Exige la actual."""
+        sesion = self.sesion_actual()
+        if sesion is None:
+            self.send_json_response(
+                {"error": "No hay sesion activa", "codigo": "sin_sesion"}, 401)
+            return
+
+        actual = payload.get("actual") or ""
+        nueva = payload.get("nueva") or ""
+
+        if len(nueva) < LONGITUD_MINIMA_CONTRASENA:
+            self.send_json_response({
+                "error": f"La nueva contraseña debe tener al menos "
+                         f"{LONGITUD_MINIMA_CONTRASENA} caracteres",
+                "codigo": "contrasena_debil"}, 400)
+            return
+
+        usuarios = leer_usuarios()
+        usuario = next((u for u in usuarios if u["id"] == sesion["user_id"]), None)
+        if usuario is None:
+            self.send_json_response(
+                {"error": "La cuenta ya no existe", "codigo": "no_encontrado"}, 404)
+            return
+
+        if not verificar_contrasena(actual, usuario.get("password_hash"),
+                                    usuario.get("salt")):
+            self.send_json_response(
+                {"error": "La contraseña actual no es correcta",
+                 "codigo": "credenciales_invalidas"}, 403)
+            return
+
+        usuario["password_hash"], usuario["salt"] = hash_contrasena(nueva)
+        guardar_usuarios(usuarios)
+        registrar_accion(usuario["id"])
+        self.send_json_response({"status": "ok"})
 
     def handle_logout(self):
         raw = self.headers.get('Cookie')
@@ -735,11 +881,12 @@ class ServidorReutilizable(socketserver.ThreadingTCPServer):
 
 def run_server(port=PORT):
     sembrar_datos()
+    migrar_usuarios_sin_contrasena()
     server_address = ('', port)
     httpd = ServidorReutilizable(server_address, SecopMonitorHandler)
-    print("===========================================================")
-    print(f"[OK] SECOP Monitor activo en http://localhost:{port}")
-    print("===========================================================")
+    print("===========================================================", flush=True)
+    print(f"[OK] SECOP Monitor activo en http://localhost:{port}", flush=True)
+    print("===========================================================", flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

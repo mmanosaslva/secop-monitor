@@ -57,24 +57,59 @@ PORT=8099 python src/web_server.py
 
 ### Entrar a la aplicación
 
-**No hay usuario ni contraseña.** La primera pantalla es una selección de rol:
-eliges Usuario o Administrador y pulsas *Entrar al monitor*. El rol queda fijado
-en la sesión del navegador mediante una cookie `HttpOnly`, y el backend
-comprueba esa sesión en cada petición.
+La aplicación pide **correo y contraseña**. El rol y los permisos los determina
+la cuenta con la que entras, no una elección en la pantalla de acceso.
 
-Es una decisión consciente de MVP: el objetivo era demostrar el **control de
-permisos**, no la autenticación. Cualquiera que abra la aplicación puede elegir
-ser administrador, así que **no la expongas a internet tal cual**.
+#### Credenciales iniciales
 
-| Rol | Entra como | Ve |
-|-----|-----------|-----|
-| **Usuario** | Cliente Textil Caribe | Panel de Métricas (solo lectura) y ¿Cómo Funciona por Dentro?, más el desplegable de notificaciones |
-| **Administrador** | Administrador del Sistema | Todo lo anterior + Monitoreo en Vivo, Configuración del Cliente y Gestión de Usuarios |
+| Correo | Contraseña | Rol | Estado |
+|--------|-----------|-----|--------|
+| `admin@secopmonitor.co` | `Admin2026*` | Administrador | Activo |
+| `cliente@secopmonitor.co` | `Cliente2026*` | Usuario | Activo |
+| `analista@secopmonitor.co` | `Analista2026*` | Usuario | Activo |
+| `supervisora@secopmonitor.co` | `Supervisora2026*` | Administrador | **Inactivo** |
 
-Para cambiar de rol, usa **Cerrar sesión** en el encabezado y vuelve a entrar.
+> La última cuenta está desactivada a propósito, para poder comprobar que una
+> cuenta inactiva no entra aunque la contraseña sea correcta.
 
-Los usuarios disponibles están en `config/users.json`. Un administrador puede
-crear, editar, activar/desactivar y eliminar usuarios desde la propia interfaz.
+**Estas credenciales son públicas: están en este README y en el repositorio.**
+Cámbialas antes de usar la aplicación con datos reales, desde *Contraseña* en
+el encabezado.
+
+#### Qué ve cada rol
+
+| Rol | Módulos |
+|-----|---------|
+| **Usuario** | Panel de Métricas (solo lectura) y ¿Cómo Funciona por Dentro?, más el desplegable de notificaciones |
+| **Administrador** | Todo lo anterior + Monitoreo en Vivo, Configuración del Cliente y Gestión de Usuarios |
+
+**Solo el administrador puede crear, editar, activar, desactivar o eliminar
+usuarios**, y es el único que puede asignar o restablecer contraseñas de otras
+cuentas. Cualquier usuario puede cambiar la suya propia.
+
+### Cómo funciona la autenticación
+
+- Las contraseñas se guardan con **PBKDF2-HMAC-SHA256**, 200 000 iteraciones y
+  un salt aleatorio distinto por usuario. Nunca se almacenan en claro ni se
+  envían al navegador.
+- La sesión es un token opaco en una cookie `HttpOnly` con `SameSite=Strict`.
+- Un correo inexistente y una contraseña incorrecta devuelven **el mismo
+  error**, para que nadie pueda averiguar qué correos están registrados.
+- Tras **5 intentos fallidos** el correo queda bloqueado **60 segundos**.
+- Mínimo de 8 caracteres al crear o cambiar una contraseña.
+
+#### Limitaciones que debes conocer
+
+Es un MVP y conviene ser explícito sobre lo que **no** hace:
+
+- Las sesiones viven en memoria: al reiniciar el servidor, todos salen.
+- El bloqueo por intentos fallidos también es en memoria y por proceso.
+- No hay recuperación de contraseña por correo. Si pierdes la del único
+  administrador, borra `data/` para volver a las credenciales iniciales.
+- La cookie no lleva `Secure` porque el servidor es HTTP. **Detrás de HTTPS hay
+  que añadirlo.**
+
+---
 
 ---
 
@@ -138,6 +173,7 @@ Sin sesión responden **401**; con sesión pero sin permiso, **403**.
 |---------------|---------|
 | `POST /api/auth/login` · `POST /api/auth/logout` | público |
 | `GET /api/auth/me` | sesión activa |
+| `POST /api/auth/password` | sesión activa (exige la contraseña actual) |
 | `GET /api/stats` | público |
 | `GET /api/config` | `ver_perfil_cliente` |
 | `POST /api/config` | `editar_configuracion` |
