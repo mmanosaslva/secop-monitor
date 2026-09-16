@@ -265,6 +265,22 @@ servidor real y comprueba que rechaza por HTTP, no que el botón esté oculto.
 Los warnings sobre `PytestUnknownMarkWarning` (`acceptance`, `integration`,
 `slow`) son ruido conocido: faltan registrar esas marcas, no son fallos.
 
+> **Algunas pruebas consultan la API real de datos.gov.co** y fallan de forma
+> intermitente cuando esa API va lenta o no devuelve datos. Están en
+> `test_integration.py`, `test_secop_source.py` y `test_acceptance.py`. Si ves
+> un fallo ahí, reintenta esa prueba sola antes de darla por regresión:
+>
+> ```bash
+> pytest tests/test_integration.py::test_api_returns_data -q
+> ```
+>
+> Para correr solo lo que no depende de la red (115 pruebas, ~35 s frente a
+> ~95 s):
+>
+> ```bash
+> pytest -q --ignore=tests/test_integration.py --ignore=tests/test_main_integration.py
+> ```
+
 ---
 
 ## Estructura

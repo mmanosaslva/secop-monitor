@@ -236,7 +236,11 @@ IMPLEMENTACIÓN EN CÓDIGO (después de aprobados los dos canvas)
 - Aplica la regla 2 en `index.html`.
 - Verifica contraste 4.5:1 en todo texto.
 - `pytest -q` debe seguir en verde: 120 pruebas. El rediseño no cambia
-  comportamiento, así que cualquier fallo señala una regresión real.
+  comportamiento, así que un fallo señala una regresión... salvo en las pruebas
+  que consultan la API real de datos.gov.co (`test_integration.py`,
+  `test_secop_source.py`, `test_acceptance.py`), que fallan de forma
+  intermitente por red. Ante un rojo, reintenta esa prueba sola antes de
+  darla por regresión.
 ```
 
 ---
