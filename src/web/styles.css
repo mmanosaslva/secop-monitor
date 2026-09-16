@@ -64,84 +64,50 @@ body {
 .app-header {
     background: var(--p50-ink);
     color: var(--p50-text);
-    padding: 18px 28px;
+    padding: 0 80px;
     border-bottom: 1px solid var(--p50-line);
 }
 
 .header-container {
     max-width: 1280px;
     margin: 0 auto;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
+    gap: 32px;
 }
 
 .brand-group {
     display: flex;
     align-items: center;
-    gap: 16px;
-}
-
-.marca {
-    background: var(--p50-surface);
-    padding: 6px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.institution-name {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--p50-accent);
-    display: block;
-}
-
-.app-title {
-    font-size: 22px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--p50-text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-shrink: 0;
 }
 
 .system-status-pills {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 20px;
+    flex-grow: 1;
+    min-width: 0;
 }
 
 .status-pill {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--p50-line);
-    padding: 6px 14px;
-    border-radius: 20px;
+    gap: 7px;
     font-size: 12px;
-    font-weight: 600;
-    border: 1px solid var(--p50-line);
+    font-weight: 400;
+    color: var(--p50-text-muted);
+    white-space: nowrap;
 }
 
 .status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
     background: var(--p50-accent);
-}
-
-.status-pill.cron {
-    background: var(--p50-surface);
-    border-color: var(--p50-line);
-    color: var(--p50-accent);
 }
 
 /* ==========================================================================
@@ -150,7 +116,7 @@ body {
 
 .nav-tabs-bar {
     background: var(--p50-ink);
-    padding: 0 28px;
+    padding: 0 80px;
     border-bottom: 1px solid var(--p50-line);
 }
 
@@ -200,9 +166,9 @@ body {
    ========================================================================== */
 
 .app-main {
-    max-width: 1280px;
-    margin: 28px auto;
-    padding: 0 20px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 56px 80px 64px;
     flex: 1;
     width: 100%;
 }
@@ -856,10 +822,10 @@ body {
 .app-footer {
     background: var(--p50-ink);
     color: var(--p50-text);
-    padding: 24px;
-    text-align: center;
+    padding: 30px 80px;
+    text-align: left;
     border-top: 1px solid var(--p50-line);
-    margin-top: 40px;
+    margin-top: 0;
 }
 
 .footer-container p {
@@ -868,7 +834,19 @@ body {
 
 /* Responsive adjust */
 @media (max-width: 768px) {
-    .header-container { flex-direction: column; align-items: flex-start; }
+    .app-header,
+    .nav-tabs-bar { padding: 0 20px; }
+    .app-main { padding: 32px 20px 40px; }
+    .app-footer { padding: 24px 20px; }
+    .header-container {
+        height: auto;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 0;
+    }
+    .system-status-pills { flex-wrap: wrap; gap: 12px; }
+    .user-controls { flex-wrap: wrap; }
     .pipeline-steps { flex-direction: column; }
     .pipeline-connector { transform: rotate(90deg); margin: 6px 0; }
     .form-row { flex-direction: column; gap: 0; }
@@ -957,6 +935,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
+    flex-shrink: 0;
 }
 
 .user-identity {
@@ -1549,7 +1528,6 @@ body {
 /* Rejilla de 12 columnas, ancho máximo 1280px (design.md §5) */
 .header-container,
 .tabs-container,
-.app-main,
 .footer-container {
     max-width: 1280px;
     margin-left: auto;
