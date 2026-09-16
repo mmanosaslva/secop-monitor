@@ -106,13 +106,13 @@ function entrarALaApp() {
     document.getElementById('app-shell').hidden = false;
 
     pintarIdentidad();
+    renderizarNavegacion();
 
-    initTabNavigation();
-    initLiveSECOP();
-    initConfigEditor();
-    initEmailPreview();
     initModal();
-    initManualSync();
+    if (puede('ver_monitoreo')) initLiveSECOP();
+    if (puede('editar_configuracion')) initConfigEditor();
+    if (puede('ver_notificaciones')) initEmailPreview();
+    if (puede('editar_metricas')) initManualSync();
 }
 
 function pintarIdentidad() {
@@ -127,25 +127,90 @@ function pintarIdentidad() {
 }
 
 // ==========================================================================
-// 1. Tab Navigation Controller
+// 1. Navegacion condicionada por rol
 // ==========================================================================
-function initTabNavigation() {
-    const tabs = document.querySelectorAll('.nav-tab');
-    const contents = document.querySelectorAll('.tab-content');
+// Cada modulo declara el permiso que exige. El nav se construye desde aqui:
+// lo que el rol no autoriza no se pinta y su seccion se saca del DOM, para que
+// no quede accesible desempolvando una clase CSS desde el inspector.
+const MODULOS = [
+    { id: 'dashboard', etiqueta: 'Panel de Métricas', icono: '📊', permiso: 'ver_metricas' },
+    { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', icono: '🧠', permiso: 'ver_arquitectura' },
+    { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', icono: '🌐', permiso: 'ver_monitoreo' },
+    { id: 'simulator', etiqueta: 'Simulador del Motor', icono: '⚡', permiso: 'probar_filtros' },
+    { id: 'config', etiqueta: 'Configuración del Cliente', icono: '⚙️', permiso: 'editar_configuracion' },
+    { id: 'email-preview', etiqueta: 'Notificación Brevo', icono: '📧', permiso: 'ver_notificaciones' }
+];
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            contents.forEach(c => c.classList.remove('active'));
+function modulosAutorizados() {
+    return MODULOS.filter(m => puede(m.permiso));
+}
 
-            tab.classList.add('active');
-            const targetId = `tab-${tab.getAttribute('data-tab')}`;
-            const targetContent = document.getElementById(targetId);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
-        });
+function renderizarNavegacion() {
+    const contenedor = document.getElementById('tabs-container');
+    const autorizados = modulosAutorizados();
+
+    // Saca del DOM las secciones que el rol no puede ver.
+    MODULOS.forEach(m => {
+        if (!puede(m.permiso)) {
+            const seccion = document.getElementById(`tab-${m.id}`);
+            if (seccion) seccion.remove();
+        }
     });
+
+    contenedor.innerHTML = autorizados.map(m => `
+        <button class="nav-tab" data-tab="${m.id}">
+            <span class="tab-icon">${m.icono}</span> ${escapeHtml(m.etiqueta)}
+        </button>
+    `).join('');
+
+    contenedor.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => abrirModulo(tab.getAttribute('data-tab')));
+    });
+
+    const volver = document.getElementById('btn-volver-inicio');
+    if (volver) {
+        volver.addEventListener('click', () => {
+            const primero = modulosAutorizados()[0];
+            if (primero) abrirModulo(primero.id);
+        });
+    }
+
+    if (autorizados.length > 0) {
+        abrirModulo(autorizados[0].id);
+    }
+}
+
+/** Unica puerta de entrada a un modulo: comprueba el permiso antes de mostrarlo. */
+function abrirModulo(id) {
+    const modulo = MODULOS.find(m => m.id === id);
+
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+    if (!modulo || !puede(modulo.permiso)) {
+        mostrarAccesoDenegado(modulo ? modulo.etiqueta : id);
+        return;
+    }
+
+    const seccion = document.getElementById(`tab-${id}`);
+    if (seccion) seccion.classList.add('active');
+
+    const tab = document.querySelector(`.nav-tab[data-tab="${id}"]`);
+    if (tab) tab.classList.add('active');
+}
+
+/** Vista de acceso denegado. Tambien la usan los 403 que devuelve el backend. */
+function mostrarAccesoDenegado(queModulo) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const denegado = document.getElementById('tab-denegado');
+    if (!denegado) return;
+
+    const detalle = document.getElementById('denegado-detalle');
+    if (detalle && queModulo) {
+        detalle.textContent = `El módulo "${queModulo}" solo está disponible para administradores. `
+            + 'Tu sesión es de rol usuario.';
+    }
+    denegado.classList.add('active');
 }
 
 // Global active client config state

@@ -100,31 +100,26 @@
     </header>
 
     <!-- Navigation Tabs -->
+    <!-- Navegacion: la renderiza app.js segun los permisos del rol.
+         No se oculta con CSS; lo no autorizado no llega al DOM. -->
     <nav class="nav-tabs-bar">
-        <div class="tabs-container">
-            <button class="nav-tab active" data-tab="dashboard">
-                <span class="tab-icon">📊</span> Panel de Métricas
-            </button>
-            <button class="nav-tab" data-tab="architecture">
-                <span class="tab-icon">🧠</span> ¿Cómo Funciona por Dentro?
-            </button>
-            <button class="nav-tab" data-tab="secop-live">
-                <span class="tab-icon">🌐</span> Monitoreo en Vivo (SECOP II)
-            </button>
-            <button class="nav-tab" data-tab="simulator">
-                <span class="tab-icon">⚡</span> Simulador del Motor
-            </button>
-            <button class="nav-tab" data-tab="config">
-                <span class="tab-icon">⚙️</span> Configuración del Cliente
-            </button>
-            <button class="nav-tab" data-tab="email-preview">
-                <span class="tab-icon">📧</span> Notificación Brevo
-            </button>
-        </div>
+        <div class="tabs-container" id="tabs-container"></div>
     </nav>
 
     <!-- Main Content Container -->
     <main class="app-main">
+
+        <!-- Acceso denegado: se muestra si se intenta abrir un modulo sin permiso -->
+        <section id="tab-denegado" class="tab-content">
+            <div class="estado-vacio estado-denegado">
+                <div class="estado-icono">🔒</div>
+                <span class="estado-eyebrow">acceso restringido</span>
+                <h2 class="estado-titulo">Tu rol no alcanza<br>para este módulo</h2>
+                <p class="estado-texto" id="denegado-detalle">Estás en una sesión con permisos limitados.
+                    Pide a un administrador que amplíe tu rol si necesitas entrar aquí.</p>
+                <button class="btn-sena-action" id="btn-volver-inicio" type="button">Volver al inicio</button>
+            </div>
+        </section>
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content active">

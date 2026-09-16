@@ -1250,3 +1250,53 @@ body {
 .btn-logout:hover {
     background: var(--sena-navy-light);
 }
+
+/* ==========================================================================
+   Estados transversales: vacio, carga y acceso denegado
+   ========================================================================== */
+
+.estado-vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 72px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+}
+
+.estado-icono {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 16px;
+}
+
+.estado-eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.estado-titulo {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--sena-navy);
+    margin: 0 0 12px 0;
+}
+
+.estado-texto {
+    max-width: 480px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0 0 24px 0;
+}
+
+.estado-denegado .estado-icono {
+    color: var(--warning);
+}
