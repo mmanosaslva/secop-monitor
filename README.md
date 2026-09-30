@@ -138,8 +138,17 @@ oscuro, una sola familia tipográfica (Archivo) y un único acento azul.
 - **Crear o editar usuario:** el botón dice lo que va a pasar (*Crear usuario*
   o *Guardar cambios*). Bajo Rol y Estado se explica qué implica cada opción, y
   la contraseña se puede mostrar u ocultar. Al editar, dejarla vacía conserva
-  la actual. El modal se cierra con *Cancelar*, con la ×, con Escape o al
-  pulsar fuera de él.
+  la actual.
+- **Cambiar mi contraseña** (ambos roles): la misma estructura que el modal de
+  usuario, con cada contraseña visible a demanda y el botón *Cambiar
+  contraseña*.
+- Los dos modales se cierran con *Cancelar*, con la ×, con Escape o al pulsar
+  fuera de ellos.
+- El encabezado, la navegación y los modales son **iguales para los dos
+  roles**. Solo cambia lo que el rol autoriza: qué pestañas aparecen y el
+  color del chip de rol.
+- `index.html` carga `styles.css` y `app.js` con `?v=<fecha>`. Cambia ese valor
+  al modificarlos para que el navegador no use una copia vieja.
 
 #### Qué datos muestra hoy
 

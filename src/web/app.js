@@ -125,14 +125,19 @@ function initCambioClave() {
     const abrir = document.getElementById('btn-clave');
     const cerrar = document.getElementById('btn-close-clave-modal');
     const guardar = document.getElementById('btn-guardar-clave');
+    const cancelar = document.getElementById('btn-cancelar-clave');
     const modal = document.getElementById('clave-modal');
 
     if (abrir) abrir.addEventListener('click', abrirCambioClave);
     if (cerrar) cerrar.addEventListener('click', cerrarCambioClave);
+    if (cancelar) cancelar.addEventListener('click', cerrarCambioClave);
     if (guardar) guardar.addEventListener('click', guardarClave);
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) cerrarCambioClave();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) cerrarCambioClave();
         });
     }
 }
@@ -140,11 +145,15 @@ function initCambioClave() {
 function abrirCambioClave() {
     const modal = document.getElementById('clave-modal');
     if (!modal) return;
-    document.getElementById('cf-actual').value = '';
-    document.getElementById('cf-nueva').value = '';
+    ['cf-actual', 'cf-nueva'].forEach(id => {
+        const campo = document.getElementById(id);
+        campo.value = '';
+        campo.type = 'password';
+    });
     document.getElementById('cf-error').hidden = true;
     document.getElementById('cf-exito').hidden = true;
     modal.classList.add('active');
+    document.getElementById('cf-actual').focus();
 }
 
 function cerrarCambioClave() {

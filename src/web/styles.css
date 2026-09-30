@@ -944,8 +944,15 @@ body {
     line-height: 1.45;
 }
 
-.formulario .form-error {
+.formulario .form-error,
+.formulario .form-exito {
     margin: 0;
+    font-size: 14px;
+}
+
+.formulario .form-exito {
+    color: var(--p50-accent-hover);
+    background: var(--p50-accent-soft);
 }
 
 .formulario .form-actions {
@@ -1093,6 +1100,7 @@ body {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     padding: 2px 9px;
+    border: 1px solid var(--p50-line);
     border-radius: 999px;
     background: var(--p50-surface);
     color: var(--p50-text-muted);
@@ -1100,6 +1108,7 @@ body {
 }
 
 .user-role-chip.is-admin {
+    border-color: var(--p50-accent-soft);
     background: var(--p50-accent-soft);
     color: var(--p50-accent-hover);
 }
