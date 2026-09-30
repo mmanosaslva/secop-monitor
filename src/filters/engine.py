@@ -1,9 +1,14 @@
 import unicodedata
 import json
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import structlog
 
 logger = structlog.get_logger()
+
+# Motivos de descarte. Son claves estables: la web las agrupa y las muestra.
+MOTIVO_DEPARTAMENTO = "departamento fuera de cobertura"
+MOTIVO_MODALIDAD = "otra modalidad de contratación"
+MOTIVO_SIN_COINCIDENCIA = "sin palabra clave ni código UNSPSC"
 
 
 class FilterEngine:
@@ -20,18 +25,27 @@ class FilterEngine:
         return text.lower().strip()
 
     def matches(self, process: Dict) -> bool:
+        return self.evaluate(process)[0]
+
+    def evaluate(self, process: Dict) -> Tuple[bool, str]:
+        """Decide si el proceso coincide y por que.
+
+        El motivo es legible para la interfaz: en una coincidencia dice que
+        regla la disparo ("palabra clave: dotacion"); en un descarte, que
+        filtro no paso ("departamento fuera de cobertura").
+        """
         department = self.normalize_text(process.get("department", ""))
         if department not in self.departments:
-            return False
+            return False, MOTIVO_DEPARTAMENTO
 
         modality_raw = process.get("modality", "")
         modality_normalized = self.normalize_text(modality_raw)
         if not any(kw in modality_normalized for kw in self.modalidad_keywords):
-            return False
+            return False, MOTIVO_MODALIDAD
 
         if process.get("unspsc_code") in self.unspsc_codes:
             logger.info("match_unspsc", process_id=process["id"], code=process.get("unspsc_code"))
-            return True
+            return True, f"código UNSPSC: {process.get('unspsc_code')}"
 
         name_normalized = self.normalize_text(process.get("name", ""))
         desc_normalized = self.normalize_text(process.get("description", ""))
@@ -39,14 +53,14 @@ class FilterEngine:
         for kw in self.keywords:
             if kw in name_normalized or kw in desc_normalized:
                 logger.info("match_keyword", process_id=process["id"], keyword=kw)
-                return True
+                return True, f"palabra clave: {kw}"
 
         for kw in self.certification_keywords:
             if kw in name_normalized or kw in desc_normalized:
                 logger.info("match_certification", process_id=process["id"], keyword=kw)
-                return True
+                return True, f"atributo especial: {kw}"
 
-        return False
+        return False, MOTIVO_SIN_COINCIDENCIA
 
     def detect_certifications(self, process: Dict) -> Dict:
         name_normalized = self.normalize_text(process.get("name", ""))

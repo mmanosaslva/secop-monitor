@@ -57,7 +57,8 @@ def save_process(conn, process: Dict, content_hash: str, certifications: Dict = 
         cursor.close()
 
 
-def mark_notified(conn, process_id: str, channel: str, status: str, error_message: str = None):
+def mark_notified(conn, process_id: str, channel: str, status: str, error_message: str = None,
+                  job_run_id: int = None, message_id: str = None):
     cursor = conn.cursor()
     try:
         if status == "sent":
@@ -67,10 +68,12 @@ def mark_notified(conn, process_id: str, channel: str, status: str, error_messag
             )
         cursor.execute(
             """
-            INSERT INTO notifications (process_id, channel, status, sent_at, error_message)
-            VALUES (%s, %s, %s, NOW(), %s)
+            INSERT INTO notifications (process_id, channel, status, sent_at, error_message,
+                job_run_id, message_id, delivery_status, delivery_updated_at)
+            VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, NOW())
             """,
-            (process_id, channel, status, error_message),
+            (process_id, channel, status, error_message, job_run_id, message_id,
+             "enviado" if status == "sent" else "fallido"),
         )
         conn.commit()
     except Exception as e:
@@ -98,9 +101,20 @@ def get_pending_notifications(conn) -> List[Dict]:
     return results
 
 
-def start_job_run(conn) -> int:
+def start_job_run(conn, meta: Dict = None) -> int:
+    """Abre la ejecucion. `meta` trae el contexto de GitHub Actions (ver
+    src/ejecucion.py); sin el, la fila queda como antes."""
+    meta = meta or {}
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO job_runs (status) VALUES ('running') RETURNING id")
+    cursor.execute(
+        """
+        INSERT INTO job_runs (status, github_run_id, github_run_url, trigger, ciclo,
+            recipient, stealth)
+        VALUES ('running', %s, %s, %s, %s, %s, %s) RETURNING id
+        """,
+        (meta.get("github_run_id"), meta.get("github_run_url"), meta.get("trigger"),
+         meta.get("ciclo"), meta.get("recipient"), meta.get("stealth")),
+    )
     job_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
@@ -149,3 +163,59 @@ def get_stats(conn) -> Dict:
 
     cursor.close()
     return stats
+
+
+def record_run_match(conn, job_run_id: int, process_id: str, is_new: bool, match_reason: str):
+    """Anota que un proceso coincidio en esta ejecucion (nuevo o ya conocido)."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO run_matches (job_run_id, process_id, is_new, match_reason)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (job_run_id, process_id) DO NOTHING
+            """,
+            (job_run_id, process_id, is_new, match_reason),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error("record_run_match_error", process_id=process_id, error=str(e))
+    finally:
+        cursor.close()
+
+
+def get_deliveries_to_refresh(conn, days: int = 7) -> List[Dict]:
+    """Correos enviados cuyo estado de entrega aun puede cambiar."""
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, message_id, delivery_status FROM notifications
+        WHERE status = 'sent' AND message_id IS NOT NULL
+          AND sent_at >= NOW() - (%s || ' days')::interval
+          AND COALESCE(delivery_status, 'enviado') IN ('enviado', 'diferido', 'entregado')
+        """,
+        (str(days),),
+    )
+    cols = [desc[0] for desc in cursor.description]
+    results = [dict(zip(cols, row)) for row in cursor.fetchall()]
+    cursor.close()
+    return results
+
+
+def update_delivery_status(conn, notification_id: int, delivery_status: str):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE notifications SET delivery_status = %s, delivery_updated_at = NOW()
+            WHERE id = %s AND delivery_status IS DISTINCT FROM %s
+            """,
+            (delivery_status, notification_id, delivery_status),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error("update_delivery_error", notification_id=notification_id, error=str(e))
+    finally:
+        cursor.close()

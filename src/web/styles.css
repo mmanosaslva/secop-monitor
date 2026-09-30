@@ -241,11 +241,6 @@ body {
     outline-offset: 3px;
 }
 
-.block-btn {
-    width: 100%;
-    margin-top: 14px;
-}
-
 /* ==========================================================================
    KPI Cards Grid
    ========================================================================== */
@@ -268,7 +263,6 @@ body {
     position: relative;
     overflow: hidden;
 }
-
 
 .kpi-numeral {
 }
@@ -338,15 +332,6 @@ body {
     font-weight: 600;
 }
 
-.badge-live {
-    font-size: 11px;
-    background: var(--p50-surface-alt);
-    color: var(--p50-text-muted);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-weight: 600;
-}
-
 /* Client details */
 .detail-row {
     margin-bottom: 14px;
@@ -392,32 +377,6 @@ body {
 }
 
 /* Timeline */
-.job-runs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.timeline-item {
-    border-left: 1px solid var(--p50-accent);
-    padding-left: 14px;
-}
-
-.time-mark {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--p50-text-muted);
-}
-
-.timeline-content strong {
-    font-size: 13px;
-    color: var(--p50-text);
-}
-
-.timeline-content p {
-    font-size: 12px;
-    color: var(--p50-text-muted);
-}
 
 /* ==========================================================================
    Architecture & Pipeline Diagram
@@ -470,11 +429,6 @@ body {
     justify-content: center;
     border: 1px solid var(--p50-accent);
     margin-bottom: 10px;
-}
-
-.step-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
 }
 
 .pipeline-step-card h4 {
@@ -583,64 +537,6 @@ body {
    Live SECOP Table & Search
    ========================================================================== */
 
-.toolbar-card {
-    background: var(--p50-surface);
-    padding: 18px 24px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--p50-line);
-    margin-bottom: 20px;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.search-box {
-    flex: 1;
-    min-width: 280px;
-    position: relative;
-}
-
-.search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--p50-text-muted);
-}
-
-.search-box input {
-    width: 100%;
-    padding: 10px 14px 10px 40px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--p50-line);
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.search-box input:focus {
-    border-color: var(--p50-accent);
-}
-
-.filter-selectors {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.filter-selectors select {
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--p50-line);
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-    background: var(--p50-surface);
-    cursor: pointer;
-}
-
 .table-container-card {
     background: var(--p50-surface);
     border-radius: var(--radius-md);
@@ -677,22 +573,10 @@ body {
     background: var(--p50-surface-alt);
 }
 
-.proc-id {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--p50-text);
-}
-
 .entity-name {
     font-weight: 600;
     color: var(--p50-text);
 
-}
-
-.location-tag {
-    font-size: 11px;
-    color: var(--p50-text-muted);
 }
 
 .price-text {
@@ -702,32 +586,6 @@ body {
 }
 
 /* Badges */
-.badge-status {
-    display: inline-block;
-    font-size: 11px;
-    margin-bottom: 4px;
-}
-
-.badge-minima {
-    background: var(--p50-accent-soft);
-    color: var(--p50-accent);
-}
-
-.btn-view-detail {
-    background: var(--p50-surface);
-    border: none;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-view-detail:hover {
-    background: var(--p50-ink);
-}
 
 /* ==========================================================================
    Modal Overlay
@@ -881,13 +739,6 @@ body {
     color: var(--p50-text);
 }
 
-.label-ayuda {
-    display: block;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--p50-text-muted);
-}
-
 .formulario input,
 .formulario select {
     width: 100%;
@@ -997,7 +848,6 @@ body {
     .formulario .form-actions .btn-primario,
     .formulario .form-actions .btn-secundario { width: 100%; }
 }
-
 
 /* ==========================================================================
    Pantalla de acceso y control de sesion
@@ -1190,18 +1040,6 @@ body {
 }
 
 /* Modo solo lectura (rol usuario) */
-.chip-solo-lectura {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--warning);
-    background: var(--warning-bg);
-    border-radius: 999px;
-}
 
 .tabla-aviso {
     text-align: center;
@@ -1406,51 +1244,6 @@ body {
 }
 
 /* Correo transaccional mostrado al abrir una notificacion */
-.correo-cabecera {
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    background: var(--p50-surface);
-    border-radius: var(--radius-sm);
-}
-
-.correo-marca {
-    font-size: 13px;
-    color: var(--p50-accent);
-    letter-spacing: 0.04em;
-}
-
-.correo-asunto {
-    margin: 6px 0 0 0;
-    font-size: 15px;
-    color: var(--p50-text);
-}
-
-.correo-badges {
-    margin-bottom: 14px;
-}
-
-.correo-tabla {
-    margin-bottom: 16px;
-}
-
-.correo-ventaja {
-    padding: 14px;
-    margin-bottom: 18px;
-    background: var(--p50-accent-soft);
-    border-left: 1px solid var(--p50-accent);
-    border-radius: var(--radius-sm);
-}
-
-.correo-ventaja p {
-    margin: 6px 0 0 0;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--p50-text-muted);
-}
-
-.correo-cta {
-    text-align: center;
-}
 
 /* ==========================================================================
    Gestion de usuarios (solo admin)
@@ -1710,48 +1503,9 @@ body {
 }
 
 /* Distintivos y marca de coincidencia de la tabla de procesos */
-.badge-status {
-    display: inline-block;
-    padding: 3px 9px;
-    margin-right: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--p50-text-muted);
-    background: transparent;
-    border: 1px solid var(--p50-line);
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
-.marca-coincide,
-.marca-no-coincide {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-}
-
-.marca-coincide {
-    font-weight: 600;
-    color: var(--p50-accent);
-}
-
-.marca-no-coincide {
-    color: var(--p50-text-muted);
-}
-
-.marca-coincide::before,
-.marca-no-coincide::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: currentColor;
-}
 
 /* Iconos: todos SVG, heredan el color del contenedor */
 .campana-icono svg,
-.search-icon svg,
 .estado-icono svg,
 .panel-vacio-icono svg,
 .pipeline-connector svg,
@@ -1870,4 +1624,792 @@ body {
     line-height: 1.6;
     color: var(--p50-text-muted);
     text-wrap: pretty;
+}
+
+/* ==========================================================================
+   Actividad del monitor
+   El dia es la pieza central: hora programada (marca hueca) frente a hora
+   real (punto de acento). Es la dupla Antes / Ahora de la marca aplicada a un
+   dato vivo: lo que se planeo y lo que GitHub hizo.
+   ========================================================================== */
+
+/* Un color por estado, siempre acompañado de texto */
+.estado-completado { --estado: var(--p50-accent); }
+.estado-en_curso { --estado: var(--p50-accent-hover); }
+.estado-en_cola,
+.estado-esperando,
+.estado-programado,
+.estado-desconocido { --estado: var(--p50-text-muted); }
+.estado-fallido,
+.estado-interrumpido { --estado: var(--danger); }
+.estado-omitido { --estado: var(--warning); }
+
+.insignia-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--estado, var(--p50-text-muted));
+    white-space: nowrap;
+}
+
+.insignia-estado::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--estado, var(--p50-text-muted));
+}
+
+.estado-esperando .insignia-estado::before,
+.estado-programado .insignia-estado::before,
+.estado-en_cola .insignia-estado::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--estado);
+}
+
+.actualizado {
+    font-size: 13px;
+    color: var(--p50-text-muted);
+    white-space: nowrap;
+}
+
+.enlace-accion {
+    padding: 0;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--p50-accent-hover);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    transition: text-decoration-color 0.15s ease;
+}
+
+.enlace-accion:hover {
+    text-decoration-color: currentColor;
+}
+
+.enlace-accion:focus-visible {
+    outline: 2px solid var(--p50-accent-hover);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+.aviso-actividad {
+    margin-bottom: 24px;
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--warning);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-line);
+    border-radius: var(--radius-md);
+}
+
+.aviso-actividad.es-error {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: var(--danger-line);
+}
+
+.aviso-actividad[hidden] {
+    display: none;
+}
+
+/* --- El dia -------------------------------------------------------------- */
+.dia {
+    padding: 28px 0 32px;
+    border-top: 1px solid var(--p50-line);
+    border-bottom: 1px solid var(--p50-line);
+}
+
+.dia-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 24px;
+    margin-bottom: 28px;
+}
+
+.dia-cabecera h3 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.dia-siguiente {
+    font-size: 15px;
+    color: var(--p50-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.dia-eje {
+    position: relative;
+    height: 44px;
+    margin: 0 8px 28px;
+}
+
+.eje-linea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 12px;
+    height: 1px;
+    background: var(--p50-line);
+}
+
+.eje-hora {
+    position: absolute;
+    top: 26px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--p50-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.eje-hora.es-inicio { transform: none; }
+.eje-hora.es-fin { transform: translateX(-100%); }
+
+.eje-programado,
+.eje-real {
+    position: absolute;
+    top: 12px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.eje-programado {
+    width: 13px;
+    height: 13px;
+    background: var(--p50-ink);
+    box-shadow: inset 0 0 0 1.5px var(--p50-text-muted);
+}
+
+.eje-real {
+    width: 13px;
+    height: 13px;
+    background: var(--estado);
+    box-shadow: 0 0 0 3px var(--p50-ink);
+    z-index: 1;
+}
+
+/* Tramo que GitHub tardo en correr el ciclo */
+.eje-retraso {
+    position: absolute;
+    top: 11px;
+    height: 3px;
+    background: var(--p50-accent-soft);
+}
+
+.eje-ahora {
+    position: absolute;
+    top: -4px;
+    width: 1px;
+    height: 32px;
+    background: var(--p50-text);
+}
+
+.eje-ahora::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--p50-text);
+}
+
+.eje-real.estado-en_curso {
+    animation: pulso-en-curso 1.6s ease-out infinite;
+}
+
+@keyframes pulso-en-curso {
+    0% { box-shadow: 0 0 0 3px var(--p50-ink), 0 0 0 3px var(--p50-accent); }
+    100% { box-shadow: 0 0 0 3px var(--p50-ink), 0 0 0 12px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eje-real.estado-en_curso { animation: none; }
+}
+
+.dia-ciclos {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ciclo-boton {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px;
+    font-family: inherit;
+    text-align: left;
+    color: var(--p50-text);
+    background: transparent;
+    border: 1px solid var(--p50-line);
+    border-top: 2px solid var(--estado);
+    border-radius: var(--radius-md);
+}
+
+button.ciclo-boton {
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+button.ciclo-boton:hover {
+    background: var(--p50-surface);
+}
+
+button.ciclo-boton[aria-pressed="true"] {
+    background: var(--p50-surface);
+    border-color: var(--p50-text-muted);
+    border-top-color: var(--estado);
+}
+
+button.ciclo-boton:focus-visible,
+.celda-ciclo:focus-visible,
+.coincidencia-abrir:focus-visible {
+    outline: 2px solid var(--p50-accent-hover);
+    outline-offset: 2px;
+}
+
+.ciclo-hora {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.ciclo-meta,
+.ciclo-conteo {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--p50-text-muted);
+}
+
+.dia-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--p50-text-muted);
+}
+
+.dia-leyenda span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dia-leyenda span::before {
+    content: "";
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+
+.leyenda-programado::before { box-shadow: inset 0 0 0 1.5px var(--p50-text-muted); }
+.leyenda-real::before { background: var(--p50-accent); }
+.dia-leyenda .leyenda-ahora::before {
+    width: 1px;
+    height: 14px;
+    border-radius: 0;
+    background: var(--p50-text);
+}
+
+/* --- Ejecucion seleccionada ------------------------------------------------ */
+.ejecucion {
+    padding: 32px 0;
+    border-bottom: 1px solid var(--p50-line);
+    transition: opacity 0.15s ease;
+}
+
+.ejecucion.is-cargando {
+    opacity: 0.5;
+}
+
+.ejecucion-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 24px;
+}
+
+.ejecucion-cabecera h3 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.ejecucion-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--p50-text-muted);
+}
+
+.ejecucion-tecnico {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--p50-text-muted);
+}
+
+.ejecucion-error {
+    margin-top: 16px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-radius: var(--radius-sm);
+}
+
+.ejecucion-vacia {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--p50-text-muted);
+}
+
+.ejecucion-vacia strong {
+    font-size: 16px;
+    color: var(--p50-text);
+}
+
+.datos-fila {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 28px;
+    border-top: 1px solid var(--p50-line);
+}
+
+.dato {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px 0 0;
+}
+
+.dato + .dato {
+    padding-left: 20px;
+    border-left: 1px solid var(--p50-line);
+}
+
+.dato-valor {
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dato-etiqueta {
+    font-size: 13px;
+    color: var(--p50-text-muted);
+}
+
+.descartes,
+.coincidencias {
+    margin-top: 32px;
+}
+
+.descartes h4,
+.coincidencias h4 {
+    margin-bottom: 14px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.descartes ul,
+.coincidencias ul {
+    list-style: none;
+}
+
+.descartes li {
+    position: relative;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--p50-text-muted);
+}
+
+.descarte-barra {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--parte);
+    background: var(--p50-surface-alt);
+    border-radius: var(--radius-sm);
+}
+
+.descarte-texto {
+    position: relative;
+}
+
+.descarte-texto strong {
+    color: var(--p50-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.coincidencias-nota,
+.coincidencias-vacio {
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--p50-text-muted);
+    max-width: 65ch;
+}
+
+.coincidencia {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 220px);
+    align-items: center;
+    gap: 8px 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--p50-line);
+}
+
+.coincidencia-abrir {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 0;
+    font-family: inherit;
+    text-align: left;
+    color: var(--p50-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.coincidencia-nombre {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.coincidencia-abrir:hover .coincidencia-nombre {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.coincidencia-meta {
+    font-size: 13px;
+    color: var(--p50-text-muted);
+}
+
+.coincidencia-valor {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.coincidencia-lado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 13px;
+}
+
+.insignia-nuevo {
+    padding: 2px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--p50-accent-hover);
+    background: var(--p50-accent-soft);
+    border-radius: 999px;
+}
+
+.correo-estado {
+    color: var(--p50-text);
+}
+
+.correo-estado.es-problema {
+    color: var(--danger);
+}
+
+.correo-estado.es-neutro,
+.coincidencia-motivo {
+    color: var(--p50-text-muted);
+}
+
+.coincidencia-motivo {
+    flex-basis: 100%;
+}
+
+/* --- Historial ------------------------------------------------------------- */
+.historial {
+    padding: 32px 0;
+}
+
+.historial h3 {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.historial-scroll {
+    overflow-x: auto;
+}
+
+.historial-tabla {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.historial-tabla th,
+.historial-tabla td {
+    padding: 4px;
+    text-align: left;
+    border-bottom: 1px solid var(--p50-line);
+}
+
+.historial-tabla thead th {
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--p50-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.historial-tabla tbody th {
+    padding: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.celda-ciclo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--p50-text);
+    font-variant-numeric: tabular-nums;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+button.celda-ciclo {
+    cursor: pointer;
+}
+
+button.celda-ciclo:hover,
+button.celda-ciclo[aria-pressed="true"] {
+    background: var(--p50-surface);
+    border-color: var(--p50-line);
+}
+
+.celda-ciclo.es-inerte {
+    color: var(--p50-text-muted);
+}
+
+.punto-estado {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--estado);
+}
+
+.estado-esperando .punto-estado,
+.estado-programado .punto-estado,
+.estado-en_cola .punto-estado {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--estado);
+}
+
+.ejecuciones-todas {
+    margin-top: 8px;
+}
+
+.ejecuciones-todas[hidden] {
+    display: none;
+}
+
+.ejecuciones-todas summary {
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ejecuciones-todas summary:focus-visible {
+    outline: 2px solid var(--p50-accent-hover);
+    outline-offset: 2px;
+}
+
+.ejecuciones-todas a {
+    color: var(--p50-accent-hover);
+}
+
+/* --- Resumen de ciclos del panel ------------------------------------------ */
+.ciclos-resumen {
+    list-style: none;
+}
+
+.ciclo-resumen {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--p50-line);
+}
+
+.ciclo-resumen:first-child {
+    border-top: none;
+}
+
+.ciclo-resumen-hora {
+    width: 52px;
+    flex-shrink: 0;
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ciclo-resumen-cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.ciclo-resumen-meta,
+.ciclos-resumen-aviso {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--p50-text-muted);
+}
+
+/* --- Configuracion de solo lectura ----------------------------------------- */
+.config-lectura {
+    display: flex;
+    flex-direction: column;
+}
+
+.config-fila {
+    display: grid;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 8px 32px;
+    padding: 18px 0;
+    border-top: 1px solid var(--p50-line);
+}
+
+.config-fila:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.config-fila dt {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--p50-text);
+}
+
+.config-ayuda {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--p50-text-muted);
+}
+
+.config-fila dd {
+    font-size: 15px;
+    color: var(--p50-text);
+    overflow-wrap: anywhere;
+}
+
+.config-vacio {
+    color: var(--p50-text-muted);
+}
+
+/* --- Campana: alertas del cron para el admin ------------------------------ */
+.notif-tipo {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--p50-accent-hover);
+}
+
+.notif-item.es-alerta .notif-tipo {
+    color: var(--warning);
+}
+
+.notif-item.es-alerta .notif-punto {
+    background: var(--warning);
+}
+
+.notif-item.es-alerta.leida .notif-punto {
+    background: var(--p50-line);
+}
+
+/* --- Modal de proceso ------------------------------------------------------ */
+.modal-proceso-titulo {
+    margin-bottom: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--p50-text);
+}
+
+.modal-proceso-meta {
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--p50-text-muted);
+}
+
+.modal-proceso-tabla {
+    margin-bottom: 18px;
+}
+
+.modal-proceso-acciones {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+@media (max-width: 960px) {
+    .dia-ciclos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .datos-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dato:nth-child(3) { padding-left: 0; border-left: none; }
+    .coincidencia { grid-template-columns: minmax(0, 1fr) auto; }
+    .coincidencia-lado { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+    /* El eje de 24 h no cabe legible: cada ciclo cuenta su propia hora */
+    .dia-eje { display: none; }
+    .dia-leyenda { display: none; }
+    .dia-ciclos { grid-template-columns: minmax(0, 1fr); }
+    .ciclo-hora { font-size: 26px; }
+    .dato-valor { font-size: 32px; }
+    .config-fila { grid-template-columns: minmax(0, 1fr); }
+    .coincidencia { grid-template-columns: minmax(0, 1fr); }
 }

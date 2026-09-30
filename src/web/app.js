@@ -208,41 +208,15 @@ function entrarALaApp() {
     document.getElementById('app-shell').hidden = false;
 
     pintarIdentidad();
-    aplicarModoSoloLectura();
     renderizarNavegacion();
 
     initModal();
     initCambioClave();
+    cargarConfiguracion();
     cargarMetricas();
-    if (puede('ver_monitoreo')) initLiveSECOP();
-    if (puede('editar_configuracion')) initConfigEditor();
+    if (puede('ver_actividad')) initActividad();
     if (puede('ver_notificaciones')) initNotificaciones();
-    if (puede('editar_metricas')) initManualSync();
     if (puede('gestionar_usuarios')) initGestionUsuarios();
-}
-
-/**
- * Saca del DOM los controles de escritura cuando el rol no los autoriza.
- * No basta con ocultarlos: un control oculto sigue siendo pulsable desde el
- * inspector. Aqui se elimina, y ademas el backend rechaza la peticion.
- */
-function aplicarModoSoloLectura() {
-    if (puede('editar_metricas')) return;
-
-    const sync = document.getElementById('btn-run-manual-sync');
-    if (sync) sync.remove();
-
-    const panel = document.getElementById('tab-dashboard');
-    if (panel) {
-        panel.classList.add('is-readonly');
-        const banner = panel.querySelector('.section-banner .banner-text');
-        if (banner) {
-            const aviso = document.createElement('span');
-            aviso.className = 'chip-solo-lectura';
-            aviso.textContent = 'Solo lectura';
-            banner.appendChild(aviso);
-        }
-    }
 }
 
 function pintarIdentidad() {
@@ -265,8 +239,8 @@ function pintarIdentidad() {
 const MODULOS = [
     { id: 'dashboard', etiqueta: 'Panel de Métricas', permiso: 'ver_metricas' },
     { id: 'architecture', etiqueta: '¿Cómo Funciona por Dentro?', permiso: 'ver_arquitectura' },
-    { id: 'secop-live', etiqueta: 'Monitoreo en Vivo (SECOP II)', permiso: 'ver_monitoreo' },
-    { id: 'config', etiqueta: 'Configuración del Cliente', permiso: 'editar_configuracion' },
+    { id: 'actividad', etiqueta: 'Actividad del Monitor', permiso: 'ver_actividad' },
+    { id: 'config', etiqueta: 'Configuración del Cliente', permiso: 'ver_configuracion' },
     { id: 'users', etiqueta: 'Gestión de Usuarios', permiso: 'gestionar_usuarios' }
 ];
 
@@ -340,298 +314,583 @@ function mostrarAccesoDenegado(queModulo) {
     denegado.classList.add('active');
 }
 
-// Global active client config state
-let clientConfig = {
-    name: "Cliente Textil Caribe",
-    email: "cliente@email.com",
-    departments: ["Atlantico", "Bolivar", "Magdalena", "Cordoba", "Sucre", "La Guajira", "Cesar"],
-    keywords: ["uniforme", "ropa deportiva", "vestuario", "calzado", "dotacion", "textil"],
-    unspsc_codes: ["V1.53102700", "V1.53102710"],
-    certification_keywords: ["mujer lider", "equidad de genero", "pyme"],
-    modalidad_keywords: ["minima cuantia"]
+// ==========================================================================
+// 2. Datos del monitor (solo lectura)
+// ==========================================================================
+// Todo sale de lo que registro el cron en la base de datos y de GitHub
+// Actions. La interfaz no lanza ejecuciones ni cambia filtros.
+
+const ESTADOS_CICLO = {
+    completado: 'Completado',
+    en_curso: 'En curso',
+    en_cola: 'En cola en GitHub',
+    esperando: 'Esperando a GitHub',
+    programado: 'Programado',
+    fallido: 'Falló',
+    interrumpido: 'Sin terminar',
+    omitido: 'No se ejecutó',
+    desconocido: 'Sin datos'
 };
 
-let fetchedProcesses = [];
+const ESTADOS_CORREO = {
+    enviado: 'Enviado',
+    entregado: 'Entregado',
+    abierto: 'Abierto por el cliente',
+    diferido: 'Entrega diferida',
+    rebotado: 'Rebotó',
+    bloqueado: 'Bloqueado',
+    spam: 'Marcado como spam',
+    fallido: 'No se pudo enviar'
+};
 
-// Text Normalizer (replicates FilterEngine logic in JS)
-function normalizeText(text) {
-    if (!text) return '';
-    return text.normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim();
+const CORREOS_CON_PROBLEMA = ['rebotado', 'bloqueado', 'spam', 'fallido'];
+
+const ORIGENES = { programado: 'Programado', manual: 'Manual', local: 'Local (pruebas)' };
+
+// Colombia no tiene horario de verano: UTC-5 todo el año.
+const OFFSET_COT_MS = -5 * 60 * 60 * 1000;
+
+function fechaCot(iso) {
+    return new Date(new Date(iso).getTime() + OFFSET_COT_MS);
 }
 
-// FilterEngine Match Evaluator
-function evaluateProcessMatch(process, config) {
-    const depts = config.departments.map(d => normalizeText(d));
-    const kws = config.keywords.map(k => normalizeText(k));
-    const certKws = config.certification_keywords.map(k => normalizeText(k));
-    const modKws = config.modalidad_keywords.map(k => normalizeText(k));
-
-    const deptNorm = normalizeText(process.department);
-    const modNorm = normalizeText(process.modality);
-    const nameNorm = normalizeText(process.name);
-    const descNorm = normalizeText(process.description);
-
-    const matchesDept = depts.includes(deptNorm);
-    const matchesModality = modKws.some(kw => modNorm.includes(kw));
-
-    let matchedKeyword = null;
-    let matchedUnspsc = null;
-
-    if (config.unspsc_codes.includes(process.unspsc_code)) {
-        matchedUnspsc = process.unspsc_code;
-    }
-
-    for (let kw of kws) {
-        if (nameNorm.includes(kw) || descNorm.includes(kw)) {
-            matchedKeyword = kw;
-            break;
-        }
-    }
-
-    if (!matchedKeyword && !matchedUnspsc) {
-        for (let kw of certKws) {
-            if (nameNorm.includes(kw) || descNorm.includes(kw)) {
-                matchedKeyword = `cert:${kw}`;
-                break;
-            }
-        }
-    }
-
-    const isMatch = matchesDept && matchesModality && (matchedKeyword !== null || matchedUnspsc !== null);
-
-    // Certification detection
-    const fullText = `${nameNorm} ${descNorm}`;
-    const certs = {
-        favorece_mujer_lider: ['mujer lider', 'empresa de mujeres'].some(k => fullText.includes(k)),
-        favorece_pyme: ['pyme', 'pequeña empresa', 'microempresa'].some(k => fullText.includes(k)),
-        requiere_equidad_genero: ['equidad de genero', 'genero'].some(k => fullText.includes(k))
-    };
-
-    return {
-        isMatch,
-        matchesDept,
-        matchesModality,
-        matchedKeyword,
-        matchedUnspsc,
-        certifications: certs
-    };
+/** "15:55" en hora de Colombia. */
+function horaCot(iso) {
+    if (!iso) return '';
+    const d = fechaCot(iso);
+    return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
 }
 
-// ==========================================================================
-// 2. Live SECOP II Explorador
-// ==========================================================================
-function initLiveSECOP() {
-    const btnRefresh = document.getElementById('btn-refresh-live');
-    const searchInput = document.getElementById('live-search-input');
-    const deptSelect = document.getElementById('filter-dept-select');
-    const matchSelect = document.getElementById('filter-match-only');
-
-    btnRefresh.addEventListener('click', loadLiveSecopData);
-    searchInput.addEventListener('input', renderTable);
-    deptSelect.addEventListener('change', renderTable);
-    matchSelect.addEventListener('change', renderTable);
-
-    loadLiveSecopData();
+/** "2026-09-29" en hora de Colombia. */
+function diaCot(iso) {
+    return fechaCot(iso).toISOString().slice(0, 10);
 }
 
-async function loadLiveSecopData() {
-    const tableBody = document.getElementById('secop-table-body');
-    tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">Consultando procesos en SECOP II…</td></tr>`;
-
-    try {
-        // Solo a traves del backend. Antes habia un fallback que consultaba
-        // datos.gov.co directamente desde el navegador cuando la API fallaba:
-        // eso convertia un 403 del servidor en datos igualmente servidos, es
-        // decir, saltaba el control de permisos. El 403 ahora se respeta.
-        const resp = await fetch('/api/secop/live');
-
-        if (resp.status === 403 || resp.status === 401) {
-            mostrarAccesoDenegado('Monitoreo en Vivo (SECOP II)');
-            return;
-        }
-        if (!resp.ok) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">
-                No se pudo consultar SECOP II. Reintenta con "Consultar API SECOP II".</td></tr>`;
-            return;
-        }
-
-        const data = await resp.json();
-
-        // Process data through filter engine logic
-        fetchedProcesses = data.map(p => {
-            const evalRes = evaluateProcessMatch(p, clientConfig);
-            return {
-                ...p,
-                is_matched: evalRes.isMatch,
-                certifications: evalRes.certifications,
-                evalDetails: evalRes
-            };
-        });
-
-        updateKpis();
-        renderTable();
-
-    } catch (err) {
-        console.error('Error fetching SECOP data:', err);
-        // Display sample data on error
-        fetchedProcesses = generateMockProcesses();
-        updateKpis();
-        renderTable();
-    }
+/** Minutos desde la medianoche de Colombia, para ubicar en el eje del dia. */
+function minutoDelDia(iso) {
+    const d = fechaCot(iso);
+    return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
-function updateKpis() {
-    const total = fetchedProcesses.length;
-    const matched = fetchedProcesses.filter(p => p.is_matched).length;
-    const advantages = fetchedProcesses.filter(p => Object.values(p.certifications).some(v => v)).length;
-
-    pintarKpis({
-        analizados: total,
-        coincidencias: matched,
-        notificados: matched,
-        con_ventaja: advantages
+function nombreDia(fecha) {
+    const [a, m, d] = fecha.split('-').map(Number);
+    return new Date(Date.UTC(a, m - 1, d, 12)).toLocaleDateString('es-CO', {
+        weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'
     });
+}
+
+function duracionTexto(minutos) {
+    if (minutos < 60) return `${minutos} min`;
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return m ? `${h} h ${m} min` : `${h} h`;
+}
+
+function numero(valor) {
+    return valor === null || valor === undefined ? '—' : Number(valor).toLocaleString('es-CO');
+}
+
+// --------------------------------------------------------------------------
+// Configuracion del cliente: la leen el panel y la pestaña de configuracion
+// --------------------------------------------------------------------------
+let clientConfig = { name: '' };
+
+async function cargarConfiguracion() {
+    try {
+        const resp = await fetch('/api/config');
+        if (!resp.ok) return;
+        clientConfig = await resp.json();
+    } catch (err) {
+        return;
+    }
+    const texto = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = valor || '—';
+    };
+    const chips = (id, lista, clase) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = (lista || []).length
+            ? lista.map(v => `<span class="${clase}">${escapeHtml(v)}</span>`).join('')
+            : '<span class="config-vacio">Ninguno</span>';
+    };
+
+    texto('dash-client-name', clientConfig.name);
+    texto('dash-client-email', clientConfig.email);
+    texto('dash-client-depts-label', `Departamentos (${(clientConfig.departments || []).length})`);
+    chips('dash-client-depts', clientConfig.departments, 'tag-dept');
+    chips('dash-client-keywords', clientConfig.keywords, 'tag-kw');
+
+    texto('cfg-name', clientConfig.name);
+    texto('cfg-email', clientConfig.email);
+    chips('cfg-departments', clientConfig.departments, 'tag-dept');
+    chips('cfg-modalidad', clientConfig.modalidad_keywords, 'tag-kw');
+    chips('cfg-keywords', clientConfig.keywords, 'tag-kw');
+    chips('cfg-unspsc', clientConfig.unspsc_codes, 'tag-kw');
+    chips('cfg-certifications', clientConfig.certification_keywords, 'tag-kw');
+}
+
+// --------------------------------------------------------------------------
+// Panel de metricas
+// --------------------------------------------------------------------------
+async function cargarMetricas() {
+    if (!document.getElementById('tab-dashboard')) return;
+    try {
+        const resp = await fetch('/api/metrics');
+        if (!resp.ok) {
+            marcarMetricasNoDisponibles(await mensajeDeError(resp));
+            return;
+        }
+        pintarKpis(await resp.json());
+    } catch (err) {
+        marcarMetricasNoDisponibles('Sin conexión con el servidor.');
+    }
 }
 
 function pintarKpis(m) {
     const asignar = (id, valor) => {
         const el = document.getElementById(id);
-        if (el) el.textContent = Number(valor).toLocaleString('es-CO');
+        if (el) el.textContent = numero(valor);
     };
     asignar('kpi-analyzed', m.analizados);
     asignar('kpi-matched', m.coincidencias);
+    asignar('kpi-new', m.nuevas);
     asignar('kpi-notified', m.notificados);
-    asignar('kpi-advantages', m.con_ventaja);
+
+    const sub = (id, texto) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = texto;
+    };
+    sub('kpi-analyzed-sub', m.ultimo_ciclo
+        ? `En el ciclo de las ${horaCot(m.ultimo_ciclo)} (${nombreDia(diaCot(m.ultimo_ciclo))})`
+        : 'Aún no hay ciclos registrados');
+    sub('kpi-new-sub', m.con_ventaja
+        ? `Últimos 7 días · ${numero(m.con_ventaja)} con ventaja competitiva`
+        : 'Últimos 7 días');
+    sub('kpi-notified-sub', m.correos_con_problema
+        ? `Últimos 7 días · ${numero(m.correos_con_problema)} con problemas de entrega`
+        : 'Últimos 7 días');
+
+    const act = document.getElementById('dash-actualizado');
+    if (act) act.textContent = `Actualizado a las ${horaCot(m.actualizado)}`;
 }
 
-/**
- * Carga los KPIs agregados del panel.
- * El rol usuario no puede pedir la lista de procesos (/api/secop/live exige
- * ver_monitoreo), pero si los conteos: para eso existe /api/metrics.
- */
-async function cargarMetricas() {
-    const panel = document.getElementById('tab-dashboard');
-    if (!panel) return;
-
-    try {
-        const resp = await fetch('/api/metrics');
-        if (!resp.ok) {
-            marcarMetricasNoDisponibles();
-            return;
-        }
-        pintarKpis(await resp.json());
-    } catch (err) {
-        marcarMetricasNoDisponibles();
-    }
-}
-
-function marcarMetricasNoDisponibles() {
-    ['kpi-analyzed', 'kpi-matched', 'kpi-notified', 'kpi-advantages'].forEach(id => {
+function marcarMetricasNoDisponibles(mensaje) {
+    ['kpi-analyzed', 'kpi-matched', 'kpi-new', 'kpi-notified'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '—';
     });
+    const act = document.getElementById('dash-actualizado');
+    if (act) act.textContent = mensaje;
 }
 
-function renderTable() {
-    const tableBody = document.getElementById('secop-table-body');
-    const query = normalizeText(document.getElementById('live-search-input').value);
-    const deptFilter = document.getElementById('filter-dept-select').value;
-    const matchOnlyFilter = document.getElementById('filter-match-only').value;
+async function mensajeDeError(resp) {
+    try {
+        const data = await resp.json();
+        if (data.codigo === 'sin_base_de_datos') {
+            return 'Sin acceso a la base de datos del monitor.';
+        }
+        return data.error || 'No se pudo cargar.';
+    } catch (err) {
+        return 'No se pudo cargar.';
+    }
+}
 
-    const filtered = fetchedProcesses.filter(p => {
-        const matchesQuery = !query || 
-            normalizeText(p.name).includes(query) || 
-            normalizeText(p.entity_name).includes(query) || 
-            normalizeText(p.id).includes(query);
+// --------------------------------------------------------------------------
+// Actividad del monitor
+// --------------------------------------------------------------------------
+let actividad = null;          // ultima respuesta de /api/actividad
+let ejecucionSeleccionada = null;
+const INTERVALO_ACTUALIZACION_MS = 30000;
 
-        const matchesDept = !deptFilter || p.department === deptFilter;
-        const matchesMatchOnly = matchOnlyFilter !== 'matched_only' || p.is_matched;
+function initActividad() {
+    const ir = document.getElementById('btn-ir-actividad');
+    if (ir) ir.addEventListener('click', () => abrirModulo('actividad'));
 
-        return matchesQuery && matchesDept && matchesMatchOnly;
-    });
+    cargarActividad();
 
-    if (filtered.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="7" class="tabla-aviso">No se encontraron procesos con los filtros aplicados.</td></tr>`;
+    // Se actualiza sola mientras la pestaña esta a la vista. Con 4 ciclos al
+    // dia no hace falta una conexion abierta: basta con volver a preguntar.
+    setInterval(() => {
+        if (document.visibilityState !== 'visible') return;
+        cargarActividad();
+        const panel = document.getElementById('tab-dashboard');
+        if (panel && panel.classList.contains('active')) cargarMetricas();
+    }, INTERVALO_ACTUALIZACION_MS);
+}
+
+async function cargarActividad() {
+    try {
+        const resp = await fetch('/api/actividad');
+        if (resp.status === 401 || resp.status === 403) {
+            mostrarAccesoDenegado('Actividad del Monitor');
+            return;
+        }
+        if (!resp.ok) {
+            pintarActividadNoDisponible(await mensajeDeError(resp));
+            return;
+        }
+        actividad = await resp.json();
+    } catch (err) {
+        pintarActividadNoDisponible('Sin conexión con el servidor.');
         return;
     }
 
-    tableBody.innerHTML = filtered.map(p => {
-        const priceFormatted = p.base_price ? `$${Number(p.base_price).toLocaleString('es-CO')} COP` : 'No definido';
-        
-        let badgesHtml = `<span class="badge-status badge-minima">${p.modality}</span>`;
-        if (p.certifications.favorece_mujer_lider) {
-            badgesHtml += `<span class="badge-status">Mujer líder</span>`;
-        }
-        if (p.certifications.favorece_pyme) {
-            badgesHtml += `<span class="badge-status">PYME</span>`;
-        }
-        if (p.certifications.requiere_equidad_genero) {
-            badgesHtml += `<span class="badge-status">Equidad de género</span>`;
-        }
+    pintarResumenCiclos(actividad.hoy);
+    pintarAviso(actividad);
+    pintarDia(actividad);
+    pintarHistorial(actividad);
+    pintarTodas(actividad.ejecuciones);
 
-        const matchTag = p.is_matched 
-            ? `<span class="marca-coincide">Coincide</span>` 
-            : `<span class="marca-no-coincide">No coincide</span>`;
+    const act = document.getElementById('act-actualizado');
+    if (act) act.textContent = `Actualizado a las ${horaCot(actividad.ahora)}`;
 
-        return `
-            <tr>
-                <td class="proc-id">${p.id}</td>
-                <td>
-                    <div class="entity-name">${escapeHtml(p.entity_name)}</div>
-                    <div class="location-tag">${escapeHtml(p.city)}, ${escapeHtml(p.department)}</div>
-                </td>
-                <td style="max-width:320px;">
-                    <div style="font-weight:600;color:var(--p50-text);">${escapeHtml(p.name)}</div>
-                    <div style="font-size:11px;color:var(--p50-text-muted);margin-top:2px;">${matchTag}</div>
-                </td>
-                <td class="price-text">${priceFormatted}</td>
-                <td>${escapeHtml(p.modality)}</td>
-                <td>${badgesHtml}</td>
-                <td>
-                    <button class="btn-view-detail" data-id="${p.id}">Ver Detalle</button>
-                </td>
-            </tr>
-        `;
+    // La primera vez se abre la ultima ejecucion; despues se respeta lo que
+    // haya elegido la persona y solo se refresca.
+    const id = ejecucionSeleccionada ? ejecucionSeleccionada.id
+        : (actividad.ultima ? actividad.ultima.id : null);
+    if (id) {
+        cargarEjecucion(id, ejecucionSeleccionada ? ejecucionSeleccionada.contexto
+            : contextoDeEjecucion(id));
+    } else {
+        pintarSinEjecucion();
+    }
+}
+
+function pintarActividadNoDisponible(mensaje) {
+    const aviso = document.getElementById('act-aviso');
+    if (aviso) {
+        aviso.textContent = mensaje;
+        aviso.className = 'aviso-actividad es-error';
+        aviso.hidden = false;
+    }
+    const resumen = document.getElementById('dash-ciclos');
+    if (resumen) resumen.innerHTML = `<li class="ciclos-resumen-aviso">${escapeHtml(mensaje)}</li>`;
+}
+
+function pintarAviso(datos) {
+    const aviso = document.getElementById('act-aviso');
+    if (!aviso) return;
+    let texto = '';
+    let clase = 'aviso-actividad';
+    if (!datos.workflow_activo) {
+        texto = 'El cron está pausado en GitHub: no correrán nuevos ciclos hasta que se reactive.';
+        if (datos.estado_workflow === 'disabled_inactivity') {
+            texto += ' GitHub lo desactivó tras 60 días sin actividad en el repositorio.';
+        }
+        clase += ' es-error';
+    } else if (!datos.github_disponible && esAdmin()) {
+        texto = 'No se pudo consultar GitHub. Se muestra lo que registró la base de datos; '
+            + 'las ejecuciones en cola y los fallos previos a la base no aparecerán.';
+    }
+    aviso.textContent = texto;
+    aviso.className = clase;
+    aviso.hidden = !texto;
+}
+
+/** Texto de cuando corrio un ciclo, o de por que aun no. */
+function metaDeCiclo(r) {
+    const e = r.ejecucion;
+    if (r.estado === 'programado') return `Programado para las ${r.etiqueta}`;
+    if (r.estado === 'esperando') return 'GitHub suele retrasarlo varias horas';
+    if (r.estado === 'omitido') return 'GitHub no lo corrió en las 8 h siguientes';
+    if (!e || !e.inicio) return '';
+    const retraso = r.retraso_min >= 5 ? ` · ${duracionTexto(r.retraso_min)} después` : '';
+    return `Corrió a las ${horaCot(e.inicio)}${retraso}`;
+}
+
+function conteoDeCiclo(e) {
+    if (!e || e.analizados === null || e.analizados === undefined) return '';
+    const correos = e.enviados ? ` · ${numero(e.enviados)} correos` : '';
+    return `${numero(e.analizados)} analizados · ${numero(e.coincidencias)} coinciden${correos}`;
+}
+
+function pintarResumenCiclos(hoy) {
+    const lista = document.getElementById('dash-ciclos');
+    if (!lista) return;
+    lista.innerHTML = hoy.map(r => `
+        <li class="ciclo-resumen estado-${r.estado}">
+            <span class="ciclo-resumen-hora">${r.etiqueta}</span>
+            <span class="ciclo-resumen-cuerpo">
+                <span class="insignia-estado">${ESTADOS_CICLO[r.estado] || r.estado}</span>
+                <span class="ciclo-resumen-meta">${escapeHtml([metaDeCiclo(r), conteoDeCiclo(r.ejecucion)].filter(Boolean).join(' · '))}</span>
+            </span>
+        </li>
+    `).join('');
+}
+
+function pintarDia(datos) {
+    const eje = document.getElementById('act-eje');
+    const lista = document.getElementById('act-ciclos');
+    const siguiente = document.getElementById('act-siguiente');
+    if (!eje || !lista) return;
+
+    if (siguiente && datos.siguiente) {
+        const faltan = Math.max(0, Math.round((new Date(datos.siguiente) - new Date(datos.ahora)) / 60000));
+        siguiente.textContent = `Siguiente ciclo: ${horaCot(datos.siguiente)}, en ${duracionTexto(faltan)}`;
+    }
+
+    // Eje de 24 h: marca hueca en la hora programada, punto en la hora real
+    // y, entre ambos, el tramo que GitHub tardo en correrlo.
+    const hoy = diaCot(datos.ahora);
+    const pct = min => `${(min / 1440 * 100).toFixed(3)}%`;
+    let marcas = '';
+    [0, 6, 12, 18, 24].forEach(h => {
+        const extremo = h === 0 ? ' es-inicio' : h === 24 ? ' es-fin' : '';
+        marcas += `<span class="eje-hora${extremo}" style="left:${pct(h * 60)}">${String(h).padStart(2, '0')}:00</span>`;
+    });
+    datos.hoy.forEach(r => {
+        const inicio = minutoDelDia(r.programado);
+        marcas += `<span class="eje-programado estado-${r.estado}" style="left:${pct(inicio)}"></span>`;
+        const e = r.ejecucion;
+        if (e && e.inicio) {
+            const real = diaCot(e.inicio) === hoy ? minutoDelDia(e.inicio) : 1440;
+            if (real > inicio) {
+                marcas += `<span class="eje-retraso" style="left:${pct(inicio)};width:${pct(real - inicio)}"></span>`;
+            }
+            marcas += `<span class="eje-real estado-${r.estado}" style="left:${pct(real)}"></span>`;
+        }
+    });
+    marcas += `<span class="eje-ahora" style="left:${pct(minutoDelDia(datos.ahora))}"></span>`;
+    eje.innerHTML = `<span class="eje-linea"></span>${marcas}`;
+
+    lista.innerHTML = datos.hoy.map(r => {
+        const e = r.ejecucion;
+        const elegible = e && e.id;
+        const etiqueta = `
+            <span class="ciclo-hora">${r.etiqueta}</span>
+            <span class="insignia-estado">${ESTADOS_CICLO[r.estado] || r.estado}</span>
+            <span class="ciclo-meta">${escapeHtml(metaDeCiclo(r))}</span>
+            <span class="ciclo-conteo">${escapeHtml(conteoDeCiclo(e))}</span>`;
+        return `<li class="ciclo estado-${r.estado}">${elegible
+            ? `<button type="button" class="ciclo-boton" data-id="${e.id}" data-contexto="Ciclo de las ${r.etiqueta} · hoy">${etiqueta}</button>`
+            : `<div class="ciclo-boton es-inerte">${etiqueta}</div>`}</li>`;
     }).join('');
 
-    // Attach click listeners to view detail buttons
-    document.querySelectorAll('.btn-view-detail').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const procId = e.target.getAttribute('data-id');
-            const proc = fetchedProcesses.find(p => p.id === procId);
-            if (proc) openModal(proc);
+    lista.querySelectorAll('.ciclo-boton[data-id]').forEach(b => {
+        b.addEventListener('click', () => cargarEjecucion(Number(b.dataset.id), b.dataset.contexto));
+    });
+    marcarSeleccion();
+}
+
+function pintarHistorial(datos) {
+    const tabla = document.getElementById('act-historial');
+    if (!tabla) return;
+    const ranuras = [...datos.hoy, ...datos.historial];
+    const dias = [...new Set(ranuras.map(r => r.fecha))].sort().reverse();
+    const etiquetas = datos.hoy.map(r => r.etiqueta);
+
+    const celda = r => {
+        if (!r) return '<td></td>';
+        const e = r.ejecucion;
+        const texto = e && e.inicio ? horaCot(e.inicio) : (ESTADOS_CICLO[r.estado] || r.estado);
+        const titulo = `${ESTADOS_CICLO[r.estado] || r.estado}. ${metaDeCiclo(r)}. ${conteoDeCiclo(e)}`;
+        const contenido = `<span class="punto-estado" aria-hidden="true"></span><span>${escapeHtml(texto)}</span>`;
+        return e && e.id
+            ? `<td class="estado-${r.estado}"><button type="button" class="celda-ciclo" data-id="${e.id}"
+                   data-contexto="Ciclo de las ${r.etiqueta} · ${nombreDia(r.fecha)}" title="${escapeHtml(titulo)}"
+                   aria-label="${r.etiqueta}, ${nombreDia(r.fecha)}: ${escapeHtml(titulo)}">${contenido}</button></td>`
+            : `<td class="estado-${r.estado}"><span class="celda-ciclo es-inerte" title="${escapeHtml(titulo)}">${contenido}</span></td>`;
+    };
+
+    tabla.innerHTML = `
+        <thead><tr><th scope="col">Día</th>${etiquetas.map(t => `<th scope="col">${t}</th>`).join('')}</tr></thead>
+        <tbody>${dias.map(dia => `
+            <tr>
+                <th scope="row">${dia === diaCot(datos.ahora) ? 'Hoy' : nombreDia(dia)}</th>
+                ${etiquetas.map(t => celda(ranuras.find(r => r.fecha === dia && r.etiqueta === t))).join('')}
+            </tr>`).join('')}
+        </tbody>`;
+
+    tabla.querySelectorAll('.celda-ciclo[data-id]').forEach(b => {
+        b.addEventListener('click', () => {
+            cargarEjecucion(Number(b.dataset.id), b.dataset.contexto);
+            document.getElementById('act-ejecucion').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+    marcarSeleccion();
+}
+
+function pintarTodas(ejecuciones) {
+    const bloque = document.getElementById('act-todas');
+    const cuerpo = document.getElementById('act-todas-cuerpo');
+    if (!bloque || !cuerpo) return;
+    if (!ejecuciones) {
+        bloque.hidden = true;
+        return;
+    }
+    bloque.hidden = false;
+    cuerpo.innerHTML = ejecuciones.map(e => `
+        <tr class="estado-${e.estado}">
+            <td>${e.inicio ? `${nombreDia(diaCot(e.inicio))}, ${horaCot(e.inicio)}` : '—'}</td>
+            <td>${ORIGENES[e.origen] || e.origen}</td>
+            <td><span class="insignia-estado">${ESTADOS_CICLO[e.estado] || e.estado}</span></td>
+            <td>${numero(e.analizados)}</td>
+            <td>${numero(e.coincidencias)}</td>
+            <td>${numero(e.enviados)}${e.fallidos ? ` · ${numero(e.fallidos)} fallidos` : ''}</td>
+            <td>${e.github_url ? `<a href="${escapeHtml(e.github_url)}" target="_blank" rel="noopener">Ver log</a>` : '—'}</td>
+        </tr>
+    `).join('');
+}
+
+function contextoDeEjecucion(id) {
+    if (!actividad) return '';
+    const r = [...actividad.hoy, ...actividad.historial].find(x => x.ejecucion && x.ejecucion.id === id);
+    if (!r) return 'Última ejecución';
+    const dia = r.fecha === diaCot(actividad.ahora) ? 'hoy' : nombreDia(r.fecha);
+    return `Ciclo de las ${r.etiqueta} · ${dia}`;
+}
+
+function marcarSeleccion() {
+    const id = ejecucionSeleccionada ? String(ejecucionSeleccionada.id) : null;
+    document.querySelectorAll('#tab-actividad [data-id]').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.id === id));
+    });
+}
+
+function pintarSinEjecucion() {
+    const destino = document.getElementById('act-ejecucion');
+    if (!destino) return;
+    destino.innerHTML = `
+        <div class="ejecucion-vacia">
+            <strong>Aún no hay ejecuciones registradas</strong>
+            <span>Cuando el cron complete su primer ciclo, aquí verás qué analizó y qué correos envió.</span>
+        </div>`;
+}
+
+async function cargarEjecucion(id, contexto) {
+    const destino = document.getElementById('act-ejecucion');
+    if (!destino) return;
+    const cambio = !ejecucionSeleccionada || ejecucionSeleccionada.id !== id;
+    ejecucionSeleccionada = { id, contexto };
+    marcarSeleccion();
+    if (cambio) destino.classList.add('is-cargando');
+
+    try {
+        const resp = await fetch(`/api/actividad/ejecucion/${id}`);
+        if (!resp.ok) {
+            destino.innerHTML = `<p class="ejecucion-error">${escapeHtml(await mensajeDeError(resp))}</p>`;
+            return;
+        }
+        pintarEjecucion(await resp.json(), contexto);
+    } catch (err) {
+        destino.innerHTML = '<p class="ejecucion-error">Sin conexión con el servidor.</p>';
+    } finally {
+        destino.classList.remove('is-cargando');
+    }
+}
+
+function pintarEjecucion(datos, contexto) {
+    const destino = document.getElementById('act-ejecucion');
+    const e = datos.ejecucion;
+
+    const meta = [];
+    if (e.inicio) meta.push(`Corrió el ${nombreDia(diaCot(e.inicio))} a las ${horaCot(e.inicio)}`);
+    if (e.duracion_s !== undefined) meta.push(`duró ${e.duracion_s < 60 ? `${e.duracion_s} s` : duracionTexto(Math.round(e.duracion_s / 60))}`);
+
+    const tecnico = [];
+    if (e.origen) tecnico.push(ORIGENES[e.origen] || e.origen);
+    if (e.destinatario) tecnico.push(`Correos a ${e.destinatario}`);
+    if (e.silencioso) tecnico.push('Modo silencioso: esta ejecución no envía correos');
+    const log = e.github_url
+        ? `<a class="enlace-accion" href="${escapeHtml(e.github_url)}" target="_blank" rel="noopener">Ver log en GitHub</a>`
+        : '';
+
+    const dato = (valor, etiqueta) => `
+        <div class="dato">
+            <span class="dato-valor">${numero(valor)}</span>
+            <span class="dato-etiqueta">${etiqueta}</span>
+        </div>`;
+
+    const error = e.error
+        ? `<p class="ejecucion-error">${escapeHtml(e.error)}</p>`
+        : (e.estado === 'fallido' || e.estado === 'interrumpido')
+            ? '<p class="ejecucion-error">La ejecución no terminó bien. El detalle está en el log de GitHub.</p>'
+            : '';
+
+    destino.innerHTML = `
+        <div class="ejecucion-cabecera">
+            <div>
+                <h3>${escapeHtml(contexto || 'Ejecución')}</h3>
+                <p class="ejecucion-meta">
+                    <span class="insignia-estado estado-${e.estado}">${ESTADOS_CICLO[e.estado] || e.estado}</span>
+                    ${escapeHtml(meta.join(' · '))}
+                </p>
+                ${tecnico.length ? `<p class="ejecucion-tecnico">${escapeHtml(tecnico.join(' · '))}</p>` : ''}
+            </div>
+            ${log}
+        </div>
+        ${error}
+        <div class="datos-fila">
+            ${dato(e.analizados, 'procesos analizados')}
+            ${dato(e.coincidencias, 'coinciden con tus filtros')}
+            ${dato(e.nuevos, 'nuevos (no avisados antes)')}
+            ${dato(e.enviados, e.fallidos ? `correos enviados · ${numero(e.fallidos)} fallidos` : 'correos enviados')}
+        </div>
+        ${pintarDescartes(e)}
+        ${pintarCoincidencias(datos)}
+    `;
+    destino.querySelectorAll('.coincidencia-abrir').forEach(b => {
+        b.addEventListener('click', () => {
+            const p = datos.coincidencias.find(c => c.id === b.dataset.id);
+            if (p) openModal(p);
         });
     });
 }
 
-// ==========================================================================
-// 4. Config Editor
-// ==========================================================================
-function initConfigEditor() {
-    const btnSave = document.getElementById('btn-save-config');
-    if (btnSave) {
-        btnSave.addEventListener('click', () => {
-            clientConfig.name = document.getElementById('cfg-name').value;
-            clientConfig.email = document.getElementById('cfg-email').value;
-            clientConfig.departments = document.getElementById('cfg-departments').value.split(',').map(s => s.trim());
-            clientConfig.keywords = document.getElementById('cfg-keywords').value.split(',').map(s => s.trim());
-            clientConfig.unspsc_codes = document.getElementById('cfg-unspsc').value.split(',').map(s => s.trim());
-            clientConfig.certification_keywords = document.getElementById('cfg-certifications').value.split(',').map(s => s.trim());
+function pintarDescartes(e) {
+    const descartes = e.descartes;
+    if (!descartes || !e.analizados) return '';
+    const filas = Object.entries(descartes).sort((a, b) => b[1] - a[1]);
+    if (!filas.length) return '';
+    return `
+        <div class="descartes">
+            <h4>Por qué se descartaron los demás</h4>
+            <ul>${filas.map(([motivo, n]) => `
+                <li>
+                    <span class="descarte-barra" style="--parte:${(n / e.analizados * 100).toFixed(1)}%"></span>
+                    <span class="descarte-texto"><strong>${numero(n)}</strong> ${escapeHtml(motivo)}</span>
+                </li>`).join('')}
+            </ul>
+        </div>`;
+}
 
-            // Update UI displays
-            document.getElementById('dash-client-name').textContent = clientConfig.name;
-            document.getElementById('dash-client-email').textContent = clientConfig.email;
-            
-            document.getElementById('dash-client-depts').innerHTML = clientConfig.departments.map(d => `<span class="tag-dept">${d}</span>`).join('');
-            document.getElementById('dash-client-keywords').innerHTML = clientConfig.keywords.map(k => `<span class="tag-kw">${k}</span>`).join('');
-
-            alert('Configuración del cliente actualizada.');
-            loadLiveSecopData();
-        });
+function pintarCoincidencias(datos) {
+    const lista = datos.coincidencias;
+    const nota = datos.detalle_completo ? '' : `
+        <p class="coincidencias-nota">Esta ejecución es anterior al registro detallado: se conocen sus
+            totales y los procesos nuevos que detectó, pero no el resto de sus coincidencias.</p>`;
+    if (!lista.length) {
+        return `<div class="coincidencias">${nota}
+            <p class="coincidencias-vacio">${datos.detalle_completo
+                ? 'Ningún proceso coincidió con tus filtros en este ciclo.'
+                : 'Esta ejecución no detectó procesos nuevos.'}</p></div>`;
     }
+    return `
+        <div class="coincidencias">
+            <h4>Procesos que coincidieron</h4>
+            ${nota}
+            <ul>${lista.map(c => {
+                const correo = c.delivery_status || (c.email_status === 'failed' ? 'fallido' : null);
+                const estadoCorreo = correo
+                    ? `<span class="correo-estado ${CORREOS_CON_PROBLEMA.includes(correo) ? 'es-problema' : ''}">${ESTADOS_CORREO[correo] || correo}</span>`
+                    : `<span class="correo-estado es-neutro">${c.is_new ? 'Sin correo' : 'Ya avisado antes'}</span>`;
+                return `
+                <li class="coincidencia">
+                    <button type="button" class="coincidencia-abrir" data-id="${escapeHtml(c.id)}">
+                        <span class="coincidencia-nombre">${escapeHtml(c.name)}</span>
+                        <span class="coincidencia-meta">${escapeHtml([c.entity_name, [c.city, c.department].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</span>
+                    </button>
+                    <span class="coincidencia-valor">${formatearPesos(c.base_price)}</span>
+                    <span class="coincidencia-lado">
+                        ${c.is_new ? '<span class="insignia-nuevo">Nuevo</span>' : ''}
+                        ${estadoCorreo}
+                        ${c.match_reason ? `<span class="coincidencia-motivo">${escapeHtml(c.match_reason)}</span>` : ''}
+                    </span>
+                </li>`;
+            }).join('')}
+            </ul>
+        </div>`;
 }
 
 // ==========================================================================
@@ -654,6 +913,11 @@ function initNotificaciones() {
         boton.setAttribute('aria-expanded', String(!abierto));
         if (!abierto) cargarNotificaciones();
     });
+
+    // El cron corre 4 veces al dia; el badge se revisa cada minuto.
+    setInterval(() => {
+        if (document.visibilityState === 'visible') cargarNotificaciones();
+    }, 60000);
 
     // Cierre al hacer clic fuera
     document.addEventListener('click', (e) => {
@@ -700,6 +964,13 @@ function actualizarBadge(sinLeer) {
     badge.hidden = sinLeer === 0;
 }
 
+const TIPOS_NOTIFICACION = {
+    oportunidad: 'Oportunidad nueva',
+    ciclo_fallido: 'Ciclo con fallo',
+    ciclo_omitido: 'Ciclo no ejecutado',
+    correo_problema: 'Correo no entregado'
+};
+
 function pintarNotificaciones(lista, mensajeError) {
     const contenedor = document.getElementById('panel-lista');
     const nota = document.getElementById('panel-nota');
@@ -714,23 +985,34 @@ function pintarNotificaciones(lista, mensajeError) {
     if (lista.length === 0) {
         contenedor.innerHTML = `<div class="panel-vacio">
             <span class="panel-vacio-icono"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
-            <strong>Sin notificaciones</strong>
-            <span>Cuando el motor encuentre una oportunidad que coincida, aparecerá aquí.</span>
+            <strong>Sin novedades en los últimos 14 días</strong>
+            <span>Cuando el cron encuentre una oportunidad que coincida, aparecerá aquí.</span>
         </div>`;
         if (nota) nota.textContent = '';
         return;
     }
 
-    contenedor.innerHTML = lista.map(n => `
-        <button class="notif-item ${n.leida ? 'leida' : 'sin-leer'}" data-id="${escapeHtml(n.id)}" type="button">
+    contenedor.innerHTML = lista.map(n => {
+        const alerta = n.tipo !== 'oportunidad';
+        let meta;
+        if (alerta) {
+            meta = n.detalle || '';
+        } else {
+            const correo = n.correo ? ` · Correo: ${ESTADOS_CORREO[n.correo] || n.correo}` : '';
+            meta = `${n.entidad || ''} · ${formatearPesos(n.valor_base)}${correo}`;
+        }
+        return `
+        <button class="notif-item ${n.leida ? 'leida' : 'sin-leer'} ${alerta ? 'es-alerta' : ''}"
+                data-id="${escapeHtml(n.id)}" type="button">
             <span class="notif-punto" aria-hidden="true"></span>
             <span class="notif-cuerpo">
+                <span class="notif-tipo">${TIPOS_NOTIFICACION[n.tipo] || ''}</span>
                 <span class="notif-titulo">${escapeHtml(n.titulo)}</span>
-                <span class="notif-meta">${escapeHtml(n.entidad)} · ${formatearPesos(n.valor_base)}</span>
+                <span class="notif-meta">${escapeHtml(meta)}</span>
                 <span class="notif-fecha">${formatearFecha(n.fecha)}</span>
             </span>
-        </button>
-    `).join('');
+        </button>`;
+    }).join('');
 
     contenedor.querySelectorAll('.notif-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -762,58 +1044,28 @@ async function marcarNotificacion(id) {
     }
 }
 
-/** Abre el correo tal como lo recibe el cliente, reutilizando el generador. */
+/** Una oportunidad abre su proceso; una alerta lleva a la actividad del cron. */
 function abrirDetalleNotificacion(notif) {
-    const modal = document.getElementById('process-modal');
-    const contenido = document.getElementById('modal-content');
-    const titulo = document.getElementById('modal-title');
-    if (!modal || !contenido) return;
-
-    if (titulo) titulo.textContent = 'Notificación enviada al cliente';
-    contenido.innerHTML = construirCorreoHtml(notif);
-    modal.classList.add('active');
-
     const panel = document.getElementById('panel-notificaciones');
     if (panel) panel.hidden = true;
-}
+    const boton = document.getElementById('btn-campana');
+    if (boton) boton.setAttribute('aria-expanded', 'false');
 
-/**
- * Generador del correo transaccional. Viene de initEmailPreview(), que era un
- * modulo entero del nav; ahora es el detalle de una notificacion concreta.
- */
-function construirCorreoHtml(notif) {
-    return `
-        <div class="correo-mockup">
-            <div class="correo-cabecera">
-                <strong class="correo-marca">SECOP Monitor</strong>
-                <h3 class="correo-asunto">Nueva oportunidad detectada para ${escapeHtml(clientConfig.name)}</h3>
-            </div>
-
-            <div class="correo-badges">
-                <span class="badge-status badge-minima">${escapeHtml(notif.modalidad || 'Mínima cuantía')}</span>
-            </div>
-
-            <table class="tabla-datos correo-tabla">
-                <tr><td><strong>Entidad</strong></td><td>${escapeHtml(notif.entidad)}</td></tr>
-                <tr><td><strong>Objeto</strong></td><td>${escapeHtml(notif.titulo)}</td></tr>
-                <tr><td><strong>Ubicación</strong></td><td>${escapeHtml(notif.ubicacion)}</td></tr>
-                <tr><td><strong>Valor base</strong></td><td class="price-text">${formatearPesos(notif.valor_base)}</td></tr>
-                <tr><td><strong>Modalidad</strong></td><td>${escapeHtml(notif.modalidad)}</td></tr>
-            </table>
-
-            <div class="correo-ventaja">
-                <strong>Ventaja competitiva para tu empresa</strong>
-                <p>Este proceso valora empresas lideradas por mujeres y certificación PYME.
-                   Tus acreditaciones te dan preferencia en la adjudicación.</p>
-            </div>
-
-            <div class="correo-cta">
-                <a href="https://www.datos.gov.co" target="_blank" rel="noopener" class="btn-secundario">
-                    Ver proceso en SECOP II
-                </a>
-            </div>
-        </div>
-    `;
+    if (notif.tipo === 'oportunidad') {
+        const [city, department] = (notif.ubicacion || '').split(', ');
+        openModal({
+            id: notif.proceso_id,
+            name: notif.titulo,
+            entity_name: notif.entidad,
+            city, department,
+            base_price: notif.valor_base,
+            modality: notif.modalidad,
+            url: notif.url,
+            delivery_status: notif.correo
+        });
+        return;
+    }
+    if (puede('ver_actividad')) abrirModulo('actividad');
 }
 
 function formatearPesos(valor) {
@@ -1118,62 +1370,32 @@ function initModal() {
 function openModal(process) {
     const modal = document.getElementById('process-modal');
     const content = document.getElementById('modal-content');
+    const titulo = document.getElementById('modal-title');
+    if (titulo) titulo.textContent = 'Proceso en SECOP II';
+
+    const correo = process.delivery_status
+        || (process.email_status === 'failed' ? 'fallido' : null);
+    const fila = (etiqueta, valor) => valor
+        ? `<tr><td><strong>${etiqueta}</strong></td><td>${valor}</td></tr>` : '';
 
     content.innerHTML = `
-        <h4 style="color:var(--p50-text);font-size:16px;margin-bottom:10px;">${escapeHtml(process.name)}</h4>
-        <div style="font-size:12px;color:var(--p50-text-muted);margin-bottom:16px;">ID: ${escapeHtml(process.id)} | Entidad: ${escapeHtml(process.entity_name)}</div>
-        
-        <table class="tabla-datos" style="margin-bottom:16px;">
-            <tr><td><strong>Departamento:</strong></td><td>${escapeHtml(process.department)}</td></tr>
-            <tr><td><strong>Ciudad:</strong></td><td>${escapeHtml(process.city)}</td></tr>
-            <tr><td><strong>Valor Estimado:</strong></td><td class="price-text">$${Number(process.base_price).toLocaleString('es-CO')} COP</td></tr>
-            <tr><td><strong>Modalidad:</strong></td><td>${escapeHtml(process.modality)}</td></tr>
-            <tr><td><strong>Código UNSPSC:</strong></td><td>${escapeHtml(process.unspsc_code)}</td></tr>
+        <h4 class="modal-proceso-titulo">${escapeHtml(process.name)}</h4>
+        <p class="modal-proceso-meta">${escapeHtml(process.id)} · ${escapeHtml(process.entity_name)}</p>
+        <table class="tabla-datos modal-proceso-tabla">
+            ${fila('Departamento', escapeHtml(process.department))}
+            ${fila('Ciudad', escapeHtml(process.city))}
+            ${fila('Valor base', `<span class="price-text">${formatearPesos(process.base_price)}</span>`)}
+            ${fila('Modalidad', escapeHtml(process.modality))}
+            ${fila('Por qué coincidió', escapeHtml(process.match_reason))}
+            ${fila('Correo al cliente', correo ? escapeHtml(ESTADOS_CORREO[correo] || correo) : '')}
         </table>
-
-        <div style="margin-top:16px;text-align:right;">
-            <a href="${process.url || 'https://www.datos.gov.co'}" target="_blank" class="btn-secundario">
-                Abrir en SECOP II
-            </a>
-        </div>
+        ${process.url && /^https?:\/\//.test(process.url) ? `
+        <div class="modal-proceso-acciones">
+            <a href="${escapeHtml(process.url)}" target="_blank" rel="noopener" class="btn-secundario">Abrir en SECOP II</a>
+        </div>` : ''}
     `;
 
     modal.classList.add('active');
-}
-
-function initManualSync() {
-    const btnSync = document.getElementById('btn-run-manual-sync');
-    if (!btnSync) return;
-
-    btnSync.addEventListener('click', async () => {
-        const original = 'Ejecutar sincronización manual';
-        btnSync.disabled = true;
-        btnSync.innerHTML = 'Sincronizando…';
-
-        try {
-            const resp = await fetch('/api/sync', { method: 'POST' });
-
-            if (resp.status === 403 || resp.status === 401) {
-                mostrarAccesoDenegado('Sincronización manual');
-                return;
-            }
-            if (!resp.ok) {
-                btnSync.innerHTML = 'No se pudo sincronizar';
-            } else {
-                const data = await resp.json();
-                btnSync.innerHTML = `${data.procesos} procesos sincronizados`;
-                cargarMetricas();
-                if (puede('ver_monitoreo')) loadLiveSecopData();
-            }
-        } catch (err) {
-            btnSync.innerHTML = 'Sin conexión con el servidor';
-        } finally {
-            setTimeout(() => {
-                btnSync.disabled = false;
-                btnSync.innerHTML = original;
-            }, 2500);
-        }
-    });
 }
 
 // Helpers
@@ -1184,51 +1406,4 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-}
-
-function generateMockProcesses() {
-    return [
-        {
-            id: "CO1.REQ.5891024",
-            entity_name: "SERVICIO NACIONAL DE APRENDIZAJE SENA",
-            department: "Atlantico",
-            city: "Barranquilla",
-            name: "Suministro de vestuario deportivo y dotación textil para instructores",
-            description: "Adquisición de camisetas, sudaderas y uniformes institucionales. Incluye criterio de mujer lider y pyme.",
-            modality: "Mínima cuantía",
-            base_price: 32000000,
-            unspsc_code: "V1.53102700",
-            is_matched: true,
-            certifications: { favorece_mujer_lider: true, favorece_pyme: true, requiere_equidad_genero: false },
-            url: "https://www.datos.gov.co"
-        },
-        {
-            id: "CO1.REQ.5891115",
-            entity_name: "ALCALDIA MUNICIPAL DE SOLEDAD",
-            department: "Atlantico",
-            city: "Soledad",
-            name: "Dotación de calzado y prendas de protección laboral para el personal operativo",
-            description: "Compra de botas de seguridad y calzado de trabajo.",
-            modality: "Mínima cuantía",
-            base_price: 28500000,
-            unspsc_code: "V1.53102710",
-            is_matched: true,
-            certifications: { favorece_mujer_lider: false, favorece_pyme: true, requiere_equidad_genero: true },
-            url: "https://www.datos.gov.co"
-        },
-        {
-            id: "CO1.REQ.5892010",
-            entity_name: "GOBERNACION DEL BOLIVAR",
-            department: "Bolivar",
-            city: "Cartagena",
-            name: "Adquisición de uniforme escolar e insumos textiles para programa social",
-            description: "Dotaciones de vestuario para comunidades vulnerables.",
-            modality: "Mínima cuantía",
-            base_price: 45000000,
-            unspsc_code: "V1.53102700",
-            is_matched: true,
-            certifications: { favorece_mujer_lider: true, favorece_pyme: false, requiere_equidad_genero: true },
-            url: "https://www.datos.gov.co"
-        }
-    ];
 }

@@ -4,6 +4,7 @@ Estas pruebas levantan el servidor real en un puerto libre y hablan con el por
 HTTP, para verificar lo que importa: que el backend RECHAZA la peticion cuando
 el rol no autoriza, sin depender de que el frontend haya ocultado el boton.
 """
+import contextlib
 import json
 import shutil
 import socketserver
@@ -52,26 +53,53 @@ USUARIOS_DE_PRUEBA = {
     ]
 }
 
-NOTIFICACIONES_DE_PRUEBA = {
-    "notificaciones": [
-        {"id": "n-004", "titulo": "Dotacion laboral textil", "entidad": "SENA Atlantico",
-         "ubicacion": "Barranquilla", "valor_base": 55000000,
-         "modalidad": "Minima cuantia", "fecha": "2026-09-15T20:00:00+00:00",
-         "leida": False},
-        {"id": "n-003", "titulo": "Calzado de proteccion", "entidad": "Alcaldia de Soledad",
-         "ubicacion": "Soledad", "valor_base": 28500000,
-         "modalidad": "Minima cuantia", "fecha": "2026-09-15T13:30:00+00:00",
-         "leida": False},
-        {"id": "n-002", "titulo": "Uniforme escolar", "entidad": "Gobernacion de Bolivar",
-         "ubicacion": "Cartagena", "valor_base": 45000000,
-         "modalidad": "Minima cuantia", "fecha": "2026-09-15T10:00:00+00:00",
-         "leida": True},
-        {"id": "n-001", "titulo": "Vestuario institucional", "entidad": "Gobernacion del Magdalena",
-         "ubicacion": "Santa Marta", "valor_base": 61200000,
-         "modalidad": "Minima cuantia", "fecha": "2026-09-14T20:00:00+00:00",
-         "leida": True},
+class ActividadFalsa:
+    """Sustituye las consultas a la base del motor (Neon) por datos fijos.
+
+    Guarda en memoria que evento vio cada usuario, como haria la tabla
+    notification_reads, para probar la campana sin base de datos real.
+    """
+
+    EVENTOS = [
+        {"id": "op:CO1.REQ.4", "tipo": "oportunidad", "titulo": "Dotacion laboral textil",
+         "fecha": "2026-09-15T20:00:00+00:00"},
+        {"id": "op:CO1.REQ.3", "tipo": "oportunidad", "titulo": "Calzado de proteccion",
+         "fecha": "2026-09-15T13:30:00+00:00"},
     ]
-}
+    ALERTAS = [
+        {"id": "omitido:2026-09-15:20:00", "tipo": "ciclo_omitido",
+         "titulo": "El ciclo de las 20:00 no se ejecuto", "fecha": "2026-09-16T04:00:00+00:00"},
+    ]
+
+    def __init__(self):
+        self.leidos = {}
+
+    def panel(self, conn, ahora, es_admin):
+        datos = {"hoy": [], "historial": [], "ultima": {"id": 7, "analizados": 34}}
+        if es_admin:
+            datos["ejecuciones"] = [{"id": 7, "github_url": "https://github.com/x/y/actions/runs/1"}]
+        return datos
+
+    def detalle(self, conn, job_id, es_admin):
+        if job_id != 7:
+            return None
+        ejecucion = {"id": 7, "analizados": 34}
+        if es_admin:
+            ejecucion["descartes"] = {"sin palabra clave ni código UNSPSC": 31}
+        return {"ejecucion": ejecucion, "coincidencias": [], "detalle_completo": True}
+
+    def metricas(self, conn, ahora):
+        return {"analizados": 34, "coincidencias": 3, "notificados": 2, "nuevas": 2,
+                "con_ventaja": 1, "correos_con_problema": 0, "ultimo_ciclo": None,
+                "actualizado": "2026-09-15T20:00:00+00:00"}
+
+    def eventos_de(self, conn, ahora, es_admin, user_id):
+        eventos = self.EVENTOS + (self.ALERTAS if es_admin else [])
+        vistos = self.leidos.get(user_id, set())
+        return [{**e, "leida": e["id"] in vistos} for e in eventos]
+
+    def marcar_leidos(self, conn, user_id, claves):
+        self.leidos.setdefault(user_id, set()).update(claves)
 
 
 @pytest.fixture()
@@ -97,17 +125,23 @@ def config_temporal(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def notificaciones_temporales(tmp_path, monkeypatch):
-    """Escribe el juego de notificaciones de prueba en un archivo temporal."""
-    destino = tmp_path / "notifications.json"
-    destino.write_text(
-        json.dumps(NOTIFICACIONES_DE_PRUEBA, ensure_ascii=False), encoding="utf-8")
-    monkeypatch.setattr(web_server, "NOTIFICATIONS_PATH", str(destino))
-    return destino
+def base_falsa(monkeypatch):
+    """La web consulta la base del motor a traves de conexion_motor() y del
+    modulo actividad: ambos se sustituyen para no tocar Neon."""
+    falsa = ActividadFalsa()
+
+    @contextlib.contextmanager
+    def conexion():
+        yield object()
+
+    monkeypatch.setattr(web_server, "conexion_motor", conexion)
+    for nombre in ("panel", "detalle", "metricas", "eventos_de", "marcar_leidos"):
+        monkeypatch.setattr(web_server.actividad, nombre, getattr(falsa, nombre))
+    return falsa
 
 
 @pytest.fixture()
-def servidor(usuarios_temporales, config_temporal, notificaciones_temporales):
+def servidor(usuarios_temporales, config_temporal, base_falsa):
     """Servidor real en un puerto efimero, apagado al terminar la prueba."""
     web_server.SESSIONS.clear()
     web_server._intentos_fallidos.clear()
@@ -176,17 +210,24 @@ def cliente_admin(servidor):
 # ==========================================================================
 # Mapa de permisos
 # ==========================================================================
-def test_usuario_no_tiene_permisos_de_escritura():
-    assert not web_server.puede("usuario", "editar_configuracion")
-    assert not web_server.puede("usuario", "editar_metricas")
+def test_usuario_no_tiene_permisos_de_admin():
     assert not web_server.puede("usuario", "gestionar_usuarios")
-    assert not web_server.puede("usuario", "ver_monitoreo")
+    assert not web_server.puede("usuario", "ver_detalle_tecnico")
+    assert not web_server.puede("usuario", "ver_configuracion")
 
 
 def test_usuario_tiene_sus_permisos_de_lectura():
     assert web_server.puede("usuario", "ver_metricas")
     assert web_server.puede("usuario", "ver_arquitectura")
     assert web_server.puede("usuario", "ver_notificaciones")
+    assert web_server.puede("usuario", "ver_actividad")
+
+
+def test_ningun_rol_puede_modificar_el_monitor():
+    """La interfaz es una ventana de solo lectura sobre el cron."""
+    for rol in ("usuario", "admin"):
+        for permiso in ("editar_configuracion", "editar_metricas", "ver_monitoreo"):
+            assert not web_server.puede(rol, permiso)
 
 
 def test_admin_hereda_todo_lo_del_usuario():
@@ -249,14 +290,15 @@ def test_login_de_usuario_devuelve_sus_permisos(anonimo):
     assert estado == 200
     assert cuerpo["usuario"]["rol"] == "usuario"
     assert "ver_metricas" in cuerpo["permisos"]
-    assert "editar_configuracion" not in cuerpo["permisos"]
+    assert "ver_actividad" in cuerpo["permisos"]
+    assert "ver_detalle_tecnico" not in cuerpo["permisos"]
 
 
-def test_login_de_admin_incluye_permisos_de_escritura(anonimo):
+def test_login_de_admin_incluye_sus_permisos(anonimo):
     estado, cuerpo = anonimo.entrar("admin@secopmonitor.co", CLAVE_ADMIN)
     assert estado == 200
     assert cuerpo["usuario"]["rol"] == "admin"
-    assert "editar_configuracion" in cuerpo["permisos"]
+    assert "ver_detalle_tecnico" in cuerpo["permisos"]
     assert "gestionar_usuarios" in cuerpo["permisos"]
 
 
@@ -321,28 +363,14 @@ def test_el_login_registra_el_acceso(anonimo, usuarios_temporales):
 # ==========================================================================
 # Endpoints protegidos
 # ==========================================================================
-def test_guardar_configuracion_exige_sesion(anonimo):
-    estado, cuerpo = anonimo.peticion("POST", "/api/config", {"name": "X"})
-    assert estado == 401
-    assert cuerpo["codigo"] == "sin_sesion"
-
-
-def test_usuario_no_puede_guardar_configuracion(cliente_usuario, config_temporal):
+def test_nadie_puede_guardar_la_configuracion(cliente_admin, config_temporal):
+    """Ni siquiera el admin: se cambia en el repositorio, no desde la web."""
     antes = config_temporal.read_text(encoding="utf-8")
-    estado, cuerpo = cliente_usuario.peticion("POST", "/api/config", {"name": "Pirata"})
-    assert estado == 403
-    assert cuerpo["codigo"] == "sin_permiso"
-    # Y sobre todo: el archivo no cambio.
-    assert config_temporal.read_text(encoding="utf-8") == antes
-
-
-def test_admin_si_puede_guardar_configuracion(cliente_admin, config_temporal):
     estado, cuerpo = cliente_admin.peticion(
         "POST", "/api/config", {"name": "Cliente de prueba", "keywords": []})
-    assert estado == 200
-    assert cuerpo["status"] == "ok"
-    guardado = json.loads(config_temporal.read_text(encoding="utf-8"))
-    assert guardado["name"] == "Cliente de prueba"
+    assert estado == 405
+    assert cuerpo["codigo"] == "solo_lectura"
+    assert config_temporal.read_text(encoding="utf-8") == antes
 
 
 def test_usuario_no_puede_probar_filtros(cliente_usuario):
@@ -352,10 +380,9 @@ def test_usuario_no_puede_probar_filtros(cliente_usuario):
     assert cuerpo["codigo"] == "sin_permiso"
 
 
-def test_usuario_no_puede_ver_el_monitoreo_en_vivo(cliente_usuario):
-    estado, cuerpo = cliente_usuario.peticion("GET", "/api/secop/live")
-    assert estado == 403
-    assert cuerpo["permiso"] == "ver_monitoreo"
+def test_la_consulta_directa_a_secop_ya_no_existe(cliente_admin):
+    estado, _ = cliente_admin.peticion("GET", "/api/secop/live")
+    assert estado == 404
 
 
 def test_usuario_si_puede_leer_el_perfil_del_cliente(cliente_usuario):
@@ -370,71 +397,71 @@ def test_leer_el_perfil_exige_sesion(anonimo):
 
 
 # ==========================================================================
-# Metricas y sincronizacion manual (Fase 3)
+# Metricas y actividad del monitor (lectura de la base del cron)
 # ==========================================================================
-@pytest.fixture()
-def sin_red(monkeypatch):
-    """Evita salir a internet: sustituye la consulta real por datos fijos."""
-    procesos = [
-        {"is_matched": True, "certifications": {"favorece_pyme": True}},
-        {"is_matched": True, "certifications": {"favorece_pyme": False}},
-        {"is_matched": False, "certifications": {"favorece_pyme": False}},
-    ]
-    monkeypatch.setattr(
-        web_server.SecopMonitorHandler, "_consultar_procesos",
-        lambda self: procesos)
-    return procesos
-
-
 def test_las_metricas_exigen_sesion(anonimo):
     estado, cuerpo = anonimo.peticion("GET", "/api/metrics")
     assert estado == 401
     assert cuerpo["codigo"] == "sin_sesion"
 
 
-def test_el_usuario_si_puede_leer_las_metricas(cliente_usuario, sin_red):
+def test_el_usuario_si_puede_leer_las_metricas(cliente_usuario):
     estado, cuerpo = cliente_usuario.peticion("GET", "/api/metrics")
     assert estado == 200
-    assert cuerpo["analizados"] == 3
-    assert cuerpo["coincidencias"] == 2
-    assert cuerpo["con_ventaja"] == 1
+    assert cuerpo["analizados"] == 34
+    assert cuerpo["coincidencias"] == 3
 
 
-def test_las_metricas_no_exponen_la_lista_de_procesos(cliente_usuario, sin_red):
-    """El usuario ve los numeros, no los procesos: esa es la diferencia
-    entre ver_metricas y ver_monitoreo."""
-    _, cuerpo = cliente_usuario.peticion("GET", "/api/metrics")
-    assert set(cuerpo) == {
-        "analizados", "coincidencias", "notificados", "con_ventaja", "actualizado"}
+def test_la_sincronizacion_manual_ya_no_existe(cliente_admin):
+    estado, _ = cliente_admin.peticion("POST", "/api/sync")
+    assert estado == 404
 
 
-def test_el_usuario_no_puede_lanzar_la_sincronizacion(cliente_usuario, sin_red):
-    estado, cuerpo = cliente_usuario.peticion("POST", "/api/sync")
-    assert estado == 403
-    assert cuerpo["permiso"] == "editar_metricas"
-
-
-def test_el_admin_si_puede_lanzar_la_sincronizacion(cliente_admin, sin_red):
-    estado, cuerpo = cliente_admin.peticion("POST", "/api/sync")
-    assert estado == 200
-    assert cuerpo["procesos"] == 3
-
-
-def test_la_sincronizacion_cuenta_como_accion_del_usuario(
-        cliente_admin, sin_red, usuarios_temporales):
-    cliente_admin.peticion("POST", "/api/sync")
-    usuarios = json.loads(usuarios_temporales.read_text(encoding="utf-8"))["usuarios"]
-    admin = next(u for u in usuarios if u["id"] == "u-001")
-    assert admin["acciones"] == 1
-
-
-def test_la_sincronizacion_sin_sesion_es_rechazada(anonimo):
-    estado, _ = anonimo.peticion("POST", "/api/sync")
+def test_la_actividad_exige_sesion(anonimo):
+    estado, cuerpo = anonimo.peticion("GET", "/api/actividad")
     assert estado == 401
 
 
+def test_el_cliente_ve_la_actividad_sin_detalle_tecnico(cliente_usuario):
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/actividad")
+    assert estado == 200
+    assert cuerpo["ultima"]["analizados"] == 34
+    assert "ejecuciones" not in cuerpo
+
+
+def test_el_admin_ve_la_actividad_con_detalle_tecnico(cliente_admin):
+    _, cuerpo = cliente_admin.peticion("GET", "/api/actividad")
+    assert cuerpo["ejecuciones"][0]["github_url"].startswith("https://github.com/")
+
+
+def test_detalle_de_una_ejecucion(cliente_usuario, cliente_admin):
+    _, del_cliente = cliente_usuario.peticion("GET", "/api/actividad/ejecucion/7")
+    _, del_admin = cliente_admin.peticion("GET", "/api/actividad/ejecucion/7")
+    assert "descartes" not in del_cliente["ejecucion"]
+    assert del_admin["ejecucion"]["descartes"]
+
+
+def test_detalle_de_una_ejecucion_inexistente(cliente_usuario):
+    estado, _ = cliente_usuario.peticion("GET", "/api/actividad/ejecucion/999")
+    assert estado == 404
+    estado, _ = cliente_usuario.peticion("GET", "/api/actividad/ejecucion/abc")
+    assert estado == 400
+
+
+def test_sin_base_de_datos_la_actividad_lo_dice(cliente_usuario, monkeypatch):
+    @contextlib.contextmanager
+    def sin_base():
+        raise web_server.SinBaseDeDatos()
+        yield
+
+    monkeypatch.setattr(web_server, "conexion_motor", sin_base)
+    estado, cuerpo = cliente_usuario.peticion("GET", "/api/actividad")
+    assert estado == 503
+    assert cuerpo["codigo"] == "sin_base_de_datos"
+
+
 # ==========================================================================
-# Notificaciones (Fase 4) — disponibles para los dos roles
+# Notificaciones — lo que hizo el cron, visto por cada usuario
 # ==========================================================================
 def test_las_notificaciones_exigen_sesion(anonimo):
     estado, cuerpo = anonimo.peticion("GET", "/api/notifications")
@@ -442,28 +469,34 @@ def test_las_notificaciones_exigen_sesion(anonimo):
     assert cuerpo["codigo"] == "sin_sesion"
 
 
-def test_el_usuario_puede_ver_sus_notificaciones(cliente_usuario):
+def test_el_cliente_ve_solo_oportunidades(cliente_usuario):
     estado, cuerpo = cliente_usuario.peticion("GET", "/api/notifications")
     assert estado == 200
-    assert len(cuerpo["notificaciones"]) == 4
+    assert {n["tipo"] for n in cuerpo["notificaciones"]} == {"oportunidad"}
     assert cuerpo["sin_leer"] == 2
 
 
-def test_el_admin_tambien_puede_verlas(cliente_admin):
-    estado, cuerpo = cliente_admin.peticion("GET", "/api/notifications")
-    assert estado == 200
-    assert cuerpo["sin_leer"] == 2
+def test_el_admin_ve_tambien_las_alertas_del_cron(cliente_admin):
+    _, cuerpo = cliente_admin.peticion("GET", "/api/notifications")
+    assert "ciclo_omitido" in {n["tipo"] for n in cuerpo["notificaciones"]}
+    assert cuerpo["sin_leer"] == 3
 
 
 def test_marcar_una_notificacion_como_leida(cliente_usuario):
     estado, cuerpo = cliente_usuario.peticion(
-        "POST", "/api/notifications/read", {"id": "n-004"})
+        "POST", "/api/notifications/read", {"id": "op:CO1.REQ.4"})
     assert estado == 200
     assert cuerpo["sin_leer"] == 1
 
     _, lista = cliente_usuario.peticion("GET", "/api/notifications")
-    marcada = next(n for n in lista["notificaciones"] if n["id"] == "n-004")
+    marcada = next(n for n in lista["notificaciones"] if n["id"] == "op:CO1.REQ.4")
     assert marcada["leida"] is True
+
+
+def test_lo_leido_es_de_cada_usuario(cliente_usuario, cliente_admin):
+    cliente_usuario.peticion("POST", "/api/notifications/read")
+    _, del_admin = cliente_admin.peticion("GET", "/api/notifications")
+    assert del_admin["sin_leer"] == 3
 
 
 def test_marcar_todas_como_leidas(cliente_usuario):
@@ -474,16 +507,21 @@ def test_marcar_todas_como_leidas(cliente_usuario):
 
 def test_marcar_una_notificacion_inexistente(cliente_usuario):
     estado, cuerpo = cliente_usuario.peticion(
-        "POST", "/api/notifications/read", {"id": "n-999"})
+        "POST", "/api/notifications/read", {"id": "op:no-existe"})
     assert estado == 404
     assert cuerpo["codigo"] == "no_encontrada"
 
 
-def test_marcar_sin_sesion_es_rechazado(anonimo, notificaciones_temporales):
-    antes = notificaciones_temporales.read_text(encoding="utf-8")
+def test_el_cliente_no_puede_marcar_alertas_de_admin(cliente_usuario):
+    estado, _ = cliente_usuario.peticion(
+        "POST", "/api/notifications/read", {"id": "omitido:2026-09-15:20:00"})
+    assert estado == 404
+
+
+def test_marcar_sin_sesion_es_rechazado(anonimo, base_falsa):
     estado, _ = anonimo.peticion("POST", "/api/notifications/read")
     assert estado == 401
-    assert notificaciones_temporales.read_text(encoding="utf-8") == antes
+    assert base_falsa.leidos == {}
 
 
 # ==========================================================================

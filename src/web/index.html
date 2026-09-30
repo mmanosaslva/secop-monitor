@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=2026-09-29">
+    <link rel="stylesheet" href="styles.css?v=2026-09-30">
 </head>
 
 <body>
@@ -117,57 +117,48 @@
         <section id="tab-dashboard" class="tab-content active">
             <div class="section-banner">
                 <div class="banner-text">
-                    <h2>Resumen General del Monitoreo</h2>
-                    <p>Estado en tiempo real de la captura de oportunidades de contratación pública en la región Caribe.
-                    </p>
+                    <h2>Resumen del monitoreo</h2>
+                    <p>Lo que el monitor encontró en SECOP II, según lo que registró cada ciclo del cron.</p>
                 </div>
-                <button class="btn-secundario" id="btn-run-manual-sync">
-                    Ejecutar sincronización manual
-                </button>
+                <span class="actualizado" id="dash-actualizado"></span>
             </div>
 
-            <!-- KPI Cards Grid -->
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-numeral">[01]</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Procesos Analizados Hoy</span>
-                        <span class="kpi-value" id="kpi-analyzed">1,420</span>
-                        <span class="kpi-subtext">Consultados en datos.gov.co</span>
+                        <span class="kpi-title">Procesos analizados</span>
+                        <span class="kpi-value" id="kpi-analyzed">—</span>
+                        <span class="kpi-subtext" id="kpi-analyzed-sub">En el último ciclo</span>
                     </div>
                 </div>
-
                 <div class="kpi-card">
                     <div class="kpi-numeral">[02]</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Coincidencias Coincidentes</span>
-                        <span class="kpi-value" id="kpi-matched">18</span>
-                        <span class="kpi-subtext">Cumplen criterios de filtro</span>
+                        <span class="kpi-title">Coincidencias</span>
+                        <span class="kpi-value" id="kpi-matched">—</span>
+                        <span class="kpi-subtext">Cumplen tus filtros en el último ciclo</span>
                     </div>
                 </div>
-
                 <div class="kpi-card">
                     <div class="kpi-numeral">[03]</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Notificaciones Enviadas</span>
-                        <span class="kpi-value" id="kpi-notified">18</span>
-                        <span class="kpi-subtext">Vía Brevo API (Stealth Off)</span>
+                        <span class="kpi-title">Oportunidades nuevas</span>
+                        <span class="kpi-value" id="kpi-new">—</span>
+                        <span class="kpi-subtext" id="kpi-new-sub">Últimos 7 días</span>
                     </div>
                 </div>
-
                 <div class="kpi-card">
                     <div class="kpi-numeral">[04]</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Con Ventaja Competitiva</span>
-                        <span class="kpi-value" id="kpi-advantages">6</span>
-                        <span class="kpi-subtext">Mujer Líder / PYME / Equidad</span>
+                        <span class="kpi-title">Correos enviados</span>
+                        <span class="kpi-value" id="kpi-notified">—</span>
+                        <span class="kpi-subtext" id="kpi-notified-sub">Últimos 7 días</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Dashboard Split Row -->
             <div class="dash-split-row">
-                <!-- Current Client Overview Card -->
                 <div class="glass-card flex-1">
                     <div class="card-header">
                         <h3>Perfil de monitoreo activo</h3>
@@ -175,68 +166,32 @@
                     </div>
                     <div class="client-profile-details" id="dashboard-client-info">
                         <div class="detail-row">
-                            <span class="detail-label">Cliente:</span>
-                            <span class="detail-val highlight" id="dash-client-name">Cliente Textil Caribe</span>
+                            <span class="detail-label">Cliente</span>
+                            <span class="detail-val highlight" id="dash-client-name">—</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Correo Destino:</span>
-                            <span class="detail-val" id="dash-client-email">cliente@email.com</span>
+                            <span class="detail-label">Correo destino</span>
+                            <span class="detail-val" id="dash-client-email">—</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Departamentos (7):</span>
-                            <div class="tags-container" id="dash-client-depts">
-                                <span class="tag-dept">Atlántico</span>
-                                <span class="tag-dept">Bolívar</span>
-                                <span class="tag-dept">Magdalena</span>
-                                <span class="tag-dept">Córdoba</span>
-                                <span class="tag-dept">Sucre</span>
-                                <span class="tag-dept">La Guajira</span>
-                                <span class="tag-dept">Cesar</span>
-                            </div>
+                            <span class="detail-label" id="dash-client-depts-label">Departamentos</span>
+                            <div class="tags-container" id="dash-client-depts"></div>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Palabras Clave:</span>
-                            <div class="tags-container" id="dash-client-keywords">
-                                <span class="tag-kw">uniforme</span>
-                                <span class="tag-kw">ropa deportiva</span>
-                                <span class="tag-kw">vestuario</span>
-                                <span class="tag-kw">calzado</span>
-                                <span class="tag-kw">dotacion</span>
-                                <span class="tag-kw">textil</span>
-                            </div>
+                            <span class="detail-label">Palabras clave</span>
+                            <div class="tags-container" id="dash-client-keywords"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity Timeline -->
                 <div class="glass-card flex-1">
                     <div class="card-header">
-                        <h3>Registro de ejecuciones</h3>
-                        <span class="badge-live">Live Logs</span>
+                        <h3>Ciclos de hoy</h3>
+                        <button class="enlace-accion" id="btn-ir-actividad" type="button">Ver actividad</button>
                     </div>
-                    <div class="job-runs-list" id="job-runs-timeline">
-                        <div class="timeline-item success">
-                            <div class="time-mark">Hoy 20:00 COT</div>
-                            <div class="timeline-content">
-                                <strong>Job #104 Completado Exitosamente</strong>
-                                <p>Procesos escaneados: 350 | Coincidencias: 4 | Emails: 4</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item success">
-                            <div class="time-mark">Hoy 13:30 COT</div>
-                            <div class="timeline-content">
-                                <strong>Job #103 Completado Exitosamente</strong>
-                                <p>Procesos escaneados: 410 | Coincidencias: 5 | Emails: 5</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item success">
-                            <div class="time-mark">Hoy 10:00 COT</div>
-                            <div class="timeline-content">
-                                <strong>Job #102 Completado Exitosamente</strong>
-                                <p>Procesos escaneados: 380 | Coincidencias: 6 | Emails: 6</p>
-                            </div>
-                        </div>
-                    </div>
+                    <ol class="ciclos-resumen" id="dash-ciclos">
+                        <li class="ciclos-resumen-aviso">Cargando…</li>
+                    </ol>
                 </div>
             </div>
         </section>
@@ -346,66 +301,64 @@
             </div>
         </section>
 
-        <!-- TAB 3: MONITOREO EN VIVO (SECOP II) -->
-        <section id="tab-secop-live" class="tab-content">
+        <!-- TAB 3: ACTIVIDAD DEL MONITOR (solo lectura) -->
+        <section id="tab-actividad" class="tab-content">
             <div class="section-banner">
                 <div class="banner-text">
-                    <h2>Explorador de Licitaciones en Vivo SECOP II</h2>
-                    <p>Conexión en directo con los datos abiertos de datos.gov.co. Filtra, inspecciona y busca
-                        contrataciones públicas.</p>
+                    <h2>Actividad del monitor</h2>
+                    <p>Cada ciclo del cron de GitHub Actions: cuándo corrió, qué analizó y qué correos envió.</p>
                 </div>
-                <div class="live-controls">
-                    <button class="btn-secundario" id="btn-refresh-live">
-                        Consultar SECOP II
-                    </button>
-                </div>
+                <span class="actualizado" id="act-actualizado" aria-live="polite"></span>
             </div>
 
-            <!-- Search & Filters Toolbar -->
-            <div class="toolbar-card">
-                <div class="search-box">
-                    <span class="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
-                    <input type="text" id="live-search-input"
-                        placeholder="Buscar por entidad, objeto, ciudad o ID de proceso...">
-                </div>
-                <div class="filter-selectors">
-                    <select id="filter-dept-select">
-                        <option value="">Todos los Departamentos</option>
-                        <option value="Atlantico">Atlántico</option>
-                        <option value="Bolivar">Bolívar</option>
-                        <option value="Magdalena">Magdalena</option>
-                        <option value="Cordoba">Córdoba</option>
-                        <option value="Sucre">Sucre</option>
-                        <option value="La Guajira">La Guajira</option>
-                        <option value="Cesar">Cesar</option>
-                    </select>
+            <div class="aviso-actividad" id="act-aviso" role="status" hidden></div>
 
-                    <select id="filter-match-only">
-                        <option value="all">Todos los Procesos</option>
-                        <option value="matched_only" selected>Solo Coincidencias con Cliente</option>
-                    </select>
+            <!-- El dia: hora programada frente a hora real de cada ciclo -->
+            <section class="dia" aria-labelledby="dia-titulo">
+                <div class="dia-cabecera">
+                    <h3 id="dia-titulo">Hoy</h3>
+                    <p class="dia-siguiente" id="act-siguiente"></p>
                 </div>
-            </div>
+                <div class="dia-eje" id="act-eje" aria-hidden="true"></div>
+                <ol class="dia-ciclos" id="act-ciclos"></ol>
+                <p class="dia-leyenda" aria-hidden="true">
+                    <span class="leyenda-programado">Hora programada</span>
+                    <span class="leyenda-real">Hora en que corrió</span>
+                    <span class="leyenda-ahora">Ahora</span>
+                </p>
+            </section>
 
-            <!-- Process Feed Table -->
-            <div class="table-container-card">
-                <table class="tabla-datos" id="secop-table">
-                    <thead>
-                        <tr>
-                            <th>ID Proceso</th>
-                            <th>Entidad & Ubicación</th>
-                            <th>Objeto de Contratación</th>
-                            <th>Valor Base (COP)</th>
-                            <th>Modalidad</th>
-                            <th>Badges / Atributos</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="secop-table-body">
-                        <!-- Filled by JS -->
-                    </tbody>
-                </table>
-            </div>
+            <!-- Ejecucion seleccionada (por defecto, la ultima) -->
+            <section class="ejecucion" id="act-ejecucion" aria-live="polite"></section>
+
+            <!-- Historial de los ultimos dias -->
+            <section class="historial" aria-labelledby="historial-titulo">
+                <h3 id="historial-titulo">Últimos 7 días</h3>
+                <div class="historial-scroll">
+                    <table class="historial-tabla" id="act-historial"></table>
+                </div>
+            </section>
+
+            <!-- Solo admin: todas las ejecuciones, incluidas las manuales y locales -->
+            <details class="ejecuciones-todas" id="act-todas" hidden>
+                <summary>Todas las ejecuciones registradas</summary>
+                <div class="table-container-card">
+                    <table class="tabla-datos">
+                        <thead>
+                            <tr>
+                                <th>Inicio</th>
+                                <th>Origen</th>
+                                <th>Estado</th>
+                                <th>Analizados</th>
+                                <th>Coincidencias</th>
+                                <th>Correos</th>
+                                <th>Log</th>
+                            </tr>
+                        </thead>
+                        <tbody id="act-todas-cuerpo"></tbody>
+                    </table>
+                </div>
+            </details>
         </section>
 
         <!-- TAB: GESTIÓN DE USUARIOS (solo admin) -->
@@ -470,60 +423,56 @@
             </div>
         </section>
 
-        <!-- TAB 5: CONFIGURACIÓN DEL CLIENTE -->
+        <!-- TAB 5: CONFIGURACIÓN DEL CLIENTE (solo lectura) -->
         <section id="tab-config" class="tab-content">
             <div class="section-banner">
                 <div class="banner-text">
-                    <h2>Gestor de Configuración del Cliente</h2>
-                    <p>Administra las reglas de filtrado de <code>client_config.json</code> directamente desde la
-                        interfaz visual.</p>
+                    <h2>Configuración del cliente</h2>
+                    <p>Los filtros con los que el cron decide de qué procesos avisar. Aquí solo se consultan:
+                        se cambian en <code>config/client_config.json</code> del repositorio.</p>
                 </div>
+                <a class="btn-secundario" target="_blank" rel="noopener"
+                   href="https://github.com/mmanosaslva/secop-monitor/blob/main/config/client_config.json">Ver archivo en GitHub</a>
             </div>
 
             <div class="glass-card">
-                <form id="config-editor-form" class="formulario" onsubmit="return false;">
-                    <div class="form-row">
-                        <div class="form-group flex-1">
-                            <label for="cfg-name">Nombre del cliente / empresa</label>
-                            <input type="text" id="cfg-name" value="Cliente Textil Caribe">
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="cfg-email">Correo electrónico de destino</label>
-                            <input type="email" id="cfg-email" value="cliente@email.com">
-                        </div>
+                <dl class="config-lectura">
+                    <div class="config-fila">
+                        <dt>Cliente / empresa</dt>
+                        <dd id="cfg-name">—</dd>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cfg-departments">Departamentos monitoreados <span class="label-ayuda">separados por coma</span></label>
-                        <input type="text" id="cfg-departments"
-                            value="Atlantico, Bolivar, Magdalena, Cordoba, Sucre, La Guajira, Cesar">
+                    <div class="config-fila">
+                        <dt>Correo que recibe las alertas</dt>
+                        <dd id="cfg-email">—</dd>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cfg-keywords">Palabras clave de productos / servicios <span class="label-ayuda">separadas por coma</span></label>
-                        <input type="text" id="cfg-keywords"
-                            value="uniforme, ropa deportiva, vestuario, calzado, dotacion, textil">
+                    <div class="config-fila">
+                        <dt>Departamentos monitoreados
+                            <span class="config-ayuda">Un proceso de otro departamento se descarta.</span></dt>
+                        <dd class="tags-container" id="cfg-departments"></dd>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cfg-unspsc">Códigos UNSPSC de interés <span class="label-ayuda">separados por coma</span></label>
-                        <input type="text" id="cfg-unspsc" value="V1.53102700, V1.53102710">
+                    <div class="config-fila">
+                        <dt>Modalidad
+                            <span class="config-ayuda">Solo se revisan procesos de esta modalidad.</span></dt>
+                        <dd class="tags-container" id="cfg-modalidad"></dd>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cfg-certifications">Palabras clave para atributos especiales / certificaciones <span class="label-ayuda">separadas por coma</span></label>
-                        <input type="text" id="cfg-certifications" value="mujer lider, equidad de genero, pyme">
+                    <div class="config-fila">
+                        <dt>Palabras clave de productos / servicios
+                            <span class="config-ayuda">Basta con que una aparezca en el objeto o la descripción.</span></dt>
+                        <dd class="tags-container" id="cfg-keywords"></dd>
                     </div>
-
-                    <div class="form-actions">
-                        <button class="btn-primario" id="btn-save-config">
-                            Guardar cambios
-                        </button>
+                    <div class="config-fila">
+                        <dt>Códigos UNSPSC de interés
+                            <span class="config-ayuda">Hacen coincidir el proceso aunque no aparezca ninguna palabra clave.</span></dt>
+                        <dd class="tags-container" id="cfg-unspsc"></dd>
                     </div>
-                </form>
+                    <div class="config-fila">
+                        <dt>Atributos especiales / certificaciones
+                            <span class="config-ayuda">También hacen coincidir el proceso.</span></dt>
+                        <dd class="tags-container" id="cfg-certifications"></dd>
+                    </div>
+                </dl>
             </div>
         </section>
-
 
     </main>
 
@@ -647,7 +596,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=2026-09-29"></script>
+    <script src="app.js?v=2026-09-30"></script>
 </body>
 
 </html>

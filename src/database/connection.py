@@ -81,6 +81,7 @@ def init_db(conn):
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
     """)
+    migrar_trazabilidad(cursor)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_processes_status ON processes(status);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_processes_department ON processes(department);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_processes_detected ON processes(detected_at);")
@@ -90,3 +91,55 @@ def init_db(conn):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_runs_started ON job_runs(started_at);")
     cursor.close()
     logger.info("database_initialized")
+
+
+def migrar_trazabilidad(cursor):
+    """Columnas y tablas para seguir cada ejecucion del cron desde la web.
+
+    Solo agrega (IF NOT EXISTS): se puede correr sobre una base con datos sin
+    perder nada, y el motor la ejecuta al arrancar cada ciclo.
+    """
+    # Que ejecucion de GitHub Actions fue, que ciclo cubria y que resumio.
+    for columna in (
+        "github_run_id BIGINT",
+        "github_run_url TEXT",
+        "trigger TEXT",
+        "ciclo TEXT",
+        "recipient TEXT",
+        "stealth BOOLEAN",
+        "processes_new INT DEFAULT 0",
+        "discard_summary JSONB DEFAULT '{}'::jsonb",
+    ):
+        cursor.execute(f"ALTER TABLE job_runs ADD COLUMN IF NOT EXISTS {columna};")
+
+    # Cada correo sabe que ejecucion lo envio y que dijo Brevo despues.
+    for columna in (
+        "job_run_id INT",
+        "message_id TEXT",
+        "delivery_status TEXT",
+        "delivery_updated_at TIMESTAMPTZ",
+    ):
+        cursor.execute(f"ALTER TABLE notifications ADD COLUMN IF NOT EXISTS {columna};")
+
+    # Procesos que coincidieron en cada ejecucion. Los descartados no se
+    # guardan uno a uno (serian miles por dia): se resumen en discard_summary.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS run_matches (
+            job_run_id INT NOT NULL REFERENCES job_runs(id),
+            process_id TEXT NOT NULL REFERENCES processes(id),
+            is_new BOOLEAN NOT NULL DEFAULT FALSE,
+            match_reason TEXT,
+            PRIMARY KEY (job_run_id, process_id)
+        );
+    """)
+
+    # Lo unico que escribe la web: que evento ya vio cada usuario.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notification_reads (
+            user_id TEXT NOT NULL,
+            event_key TEXT NOT NULL,
+            read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (user_id, event_key)
+        );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_notifications_run ON notifications(job_run_id);")

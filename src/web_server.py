@@ -8,6 +8,7 @@ import secrets
 import sys
 import time
 import urllib.parse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from http.cookies import SimpleCookie
 from typing import Dict, Optional
@@ -19,9 +20,7 @@ if PROJECT_ROOT not in sys.path:
 
 # Safe imports for dependencies that might be missing in local system python
 try:
-    from src.sources.secop import SecopDataSource
     from src.filters.engine import FilterEngine, load_config
-    from src.config import SECOP_APP_TOKEN
     HAS_BACKEND_DEPS = True
 except ModuleNotFoundError as e:
     HAS_BACKEND_DEPS = False
@@ -39,7 +38,49 @@ CONFIG_PATH = os.path.join(PROJECT_ROOT, "config", "client_config.json")
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 SEED_DIR = os.path.join(PROJECT_ROOT, "config")
 USERS_PATH = os.path.join(DATA_DIR, "users.json")
-NOTIFICATIONS_PATH = os.path.join(DATA_DIR, "notifications.json")
+
+# Base de datos del motor (Neon). La web la LEE para mostrar lo que hizo el
+# cron; solo escribe que notificaciones vio cada usuario.
+try:
+    from src.config import DATABASE_URL
+    from src.database.connection import get_connection, migrar_trazabilidad
+    from src import actividad
+except ModuleNotFoundError:
+    DATABASE_URL = None
+
+
+class SinBaseDeDatos(Exception):
+    """La web no tiene DATABASE_URL: no hay de donde leer la actividad."""
+
+
+@contextmanager
+def conexion_motor():
+    if not DATABASE_URL:
+        raise SinBaseDeDatos()
+    conn = get_connection(DATABASE_URL)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def preparar_base() -> None:
+    """Crea (si faltan) las columnas y tablas de trazabilidad. Solo agrega.
+
+    El cron las crea tambien, pero corre el codigo de main: hasta que este
+    cambio llegue alli, la web no puede esperar a que el cron migre.
+    """
+    if not DATABASE_URL:
+        print("[SECOP WebServer] Sin DATABASE_URL: la actividad del monitor no "
+              "estara disponible.", flush=True)
+        return
+    try:
+        with conexion_motor() as conn:
+            cursor = conn.cursor()
+            migrar_trazabilidad(cursor)
+            cursor.close()
+    except Exception as e:
+        print(f"[SECOP WebServer] No se pudo preparar la base: {e}", flush=True)
 
 
 CONTRASENA_POR_DEFECTO = "Cambiar2026*"
@@ -69,7 +110,7 @@ def migrar_usuarios_sin_contrasena() -> None:
 def sembrar_datos() -> None:
     """Copia la semilla a data/ la primera vez que se arranca."""
     os.makedirs(DATA_DIR, exist_ok=True)
-    for nombre in ("users.json", "notifications.json"):
+    for nombre in ("users.json",):
         destino = os.path.join(DATA_DIR, nombre)
         if not os.path.exists(destino):
             origen = os.path.join(SEED_DIR, nombre)
@@ -139,17 +180,20 @@ def limpiar_fallos(correo: str) -> None:
 # El frontend replica este mapa en app.js (funcion puede()), pero la decision
 # que vale es esta: el render puede ocultar, solo el backend autoriza.
 # ==========================================================================
+# La interfaz es una ventana de solo lectura sobre el cron: ningun rol puede
+# lanzarlo ni cambiar lo que filtra. El admin ve mas detalle y gestiona las
+# cuentas de la propia aplicacion.
 PERMISOS_USUARIO = {
     "ver_metricas",
     "ver_arquitectura",
     "ver_notificaciones",
     "ver_perfil_cliente",
+    "ver_actividad",
 }
 
 PERMISOS_ADMIN = PERMISOS_USUARIO | {
-    "editar_metricas",
-    "ver_monitoreo",
-    "editar_configuracion",
+    "ver_detalle_tecnico",
+    "ver_configuracion",
     "gestionar_usuarios",
     "probar_filtros",
 }
@@ -198,16 +242,6 @@ def usuario_publico(usuario: dict) -> dict:
         "accesos": usuario.get("accesos", 0),
         "acciones": usuario.get("acciones", 0),
     }
-
-
-def leer_notificaciones() -> list:
-    with open(NOTIFICATIONS_PATH, "r", encoding="utf-8") as f:
-        return json.load(f).get("notificaciones", [])
-
-
-def guardar_notificaciones(notificaciones: list) -> None:
-    with open(NOTIFICATIONS_PATH, "w", encoding="utf-8") as f:
-        json.dump({"notificaciones": notificaciones}, f, ensure_ascii=False, indent=2)
 
 
 def registrar_accion(user_id: str) -> None:
@@ -292,12 +326,12 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
 
         if path == "/api/auth/me":
             self.handle_auth_me()
-        elif path == "/api/stats":
-            self.handle_get_stats()
         elif path == "/api/config":
             self.handle_get_config()
-        elif path == "/api/secop/live":
-            self.handle_live_secop()
+        elif path == "/api/actividad":
+            self.handle_actividad()
+        elif path.startswith("/api/actividad/ejecucion/"):
+            self.handle_detalle_ejecucion(path.rsplit("/", 1)[-1])
         elif path == "/api/metrics":
             self.handle_get_metrics()
         elif path == "/api/notifications":
@@ -330,9 +364,11 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/filter/test":
             self.handle_test_filter(payload)
         elif path == "/api/config":
-            self.handle_save_config(payload)
-        elif path == "/api/sync":
-            self.handle_manual_sync()
+            self.send_json_response({
+                "error": "La configuración es de solo lectura: se cambia en "
+                         "config/client_config.json del repositorio.",
+                "codigo": "solo_lectura",
+            }, 405)
         elif path == "/api/notifications/read":
             self.handle_mark_notification(payload)
         elif path == "/api/users":
@@ -660,63 +696,6 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
     # ----------------------------------------------------------------------
     # Datos SECOP
     # ----------------------------------------------------------------------
-    def handle_live_secop(self):
-        if self.exigir("ver_monitoreo") is None:
-            return
-        try:
-            self.send_json_response(self._consultar_procesos())
-        except Exception as e:
-            self.send_json_response({"error": str(e)}, 500)
-
-    def _consultar_procesos(self) -> list:
-        """Trae los procesos de SECOP II y los pasa por el motor de filtros."""
-        if HAS_BACKEND_DEPS:
-            config = load_config(CONFIG_PATH)
-            source = SecopDataSource(app_token=SECOP_APP_TOKEN)
-            departments = config.get("departments", [])
-            raw_processes = source.fetch_processes(
-                departments=departments, modality="Mínima cuantía", max_results=50)
-
-            engine = FilterEngine(config)
-            results = []
-            for p in raw_processes:
-                p["is_matched"] = engine.matches(p)
-                p["certifications"] = engine.detect_certifications(p)
-                results.append(p)
-            return results
-
-        # Standard library fetch directly from datos.gov.co API
-        import urllib.request
-        config = self._read_config_file()
-        depts = ",".join(f"'{d}'" for d in config.get("departments", ["Atlantico", "Bolivar"]))
-        url = f"https://www.datos.gov.co/resource/p6dx-8zbt.json?$where=departamento_entidad%20IN%20({urllib.parse.quote(depts)})%20AND%20estado_del_procedimiento='Publicado'&amp;$limit=30"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            raw_data = json.loads(response.read().decode('utf-8'))
-
-        results = []
-        for r in raw_data:
-            texto = (r.get("nombre_del_procedimiento", "") + r.get("descripci_n_del_procedimiento", "")).lower()
-            results.append({
-                "id": r.get("id_del_proceso", "CO1.REQ.000"),
-                "entity_name": r.get("entidad", ""),
-                "department": r.get("departamento_entidad", ""),
-                "city": r.get("ciudad_entidad", ""),
-                "name": r.get("nombre_del_procedimiento", ""),
-                "description": r.get("descripci_n_del_procedimiento", ""),
-                "modality": r.get("modalidad_de_contratacion", "Mínima cuantía"),
-                "base_price": float(r.get("precio_base", 0) or 0),
-                "unspsc_code": r.get("codigo_principal_de_categoria", ""),
-                "url": r.get("urlproceso", {}).get("url", "") if isinstance(r.get("urlproceso"), dict) else str(r.get("urlproceso", "")),
-                "is_matched": True,
-                "certifications": {
-                    "favorece_mujer_lider": "mujer" in texto,
-                    "favorece_pyme": "pyme" in texto,
-                    "requiere_equidad_genero": "genero" in texto,
-                }
-            })
-        return results
-
     def _read_config_file(self):
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -727,18 +706,6 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
         try:
             config = self._read_config_file()
             self.send_json_response(config)
-        except Exception as e:
-            self.send_json_response({"error": str(e)}, 500)
-
-    def handle_save_config(self, payload: dict):
-        sesion = self.exigir("editar_configuracion")
-        if sesion is None:
-            return
-        try:
-            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-                json.dump(payload, f, ensure_ascii=False, indent=2)
-            registrar_accion(sesion["user_id"])
-            self.send_json_response({"status": "ok", "message": "Configuración guardada en client_config.json"})
         except Exception as e:
             self.send_json_response({"error": str(e)}, 500)
 
@@ -769,106 +736,107 @@ class SecopMonitorHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_json_response({"error": str(e)}, 500)
 
-    def handle_get_metrics(self):
-        """KPIs agregados del panel.
+    # ----------------------------------------------------------------------
+    # Actividad del monitor (lectura de la base del cron)
+    # ----------------------------------------------------------------------
+    def _con_base(self, consulta):
+        """Ejecuta `consulta(conn)` y traduce los fallos a respuestas claras."""
+        try:
+            with conexion_motor() as conn:
+                return True, consulta(conn)
+        except SinBaseDeDatos:
+            self.send_json_response({
+                "error": "La interfaz no tiene acceso a la base de datos del monitor.",
+                "codigo": "sin_base_de_datos",
+            }, 503)
+        except Exception as e:
+            self.send_json_response({
+                "error": f"No se pudo consultar la base de datos del monitor: {e}",
+                "codigo": "base_no_disponible",
+            }, 503)
+        return False, None
 
-        El rol usuario necesita los NUMEROS del panel de metricas pero no la
-        lista de procesos: por eso este endpoint devuelve solo conteos y exige
-        ver_metricas, mientras /api/secop/live exige ver_monitoreo.
+    def handle_actividad(self):
+        sesion = self.exigir("ver_actividad")
+        if sesion is None:
+            return
+        es_admin = puede(sesion["rol"], "ver_detalle_tecnico")
+        ahora = datetime.now(timezone.utc)
+        ok, datos = self._con_base(lambda conn: actividad.panel(conn, ahora, es_admin))
+        if ok:
+            self.send_json_response(datos)
+
+    def handle_detalle_ejecucion(self, job_id: str):
+        sesion = self.exigir("ver_actividad")
+        if sesion is None:
+            return
+        if not job_id.isdigit():
+            self.send_json_response({"error": "Ejecución no válida"}, 400)
+            return
+        es_admin = puede(sesion["rol"], "ver_detalle_tecnico")
+        ok, datos = self._con_base(lambda conn: actividad.detalle(conn, int(job_id), es_admin))
+        if not ok:
+            return
+        if datos is None:
+            self.send_json_response({"error": "No existe esa ejecución"}, 404)
+            return
+        self.send_json_response(datos)
+
+    def handle_get_metrics(self):
+        """KPIs del panel, calculados sobre lo que registro el cron.
+
+        Devuelve solo conteos: el detalle de cada proceso vive en la vista de
+        actividad.
         """
         if self.exigir("ver_metricas") is None:
             return
-        try:
-            procesos = self._consultar_procesos()
-        except Exception as e:
-            self.send_json_response(
-                {"error": f"No se pudo consultar SECOP II: {e}",
-                 "codigo": "fuente_no_disponible"}, 503)
-            return
+        ahora = datetime.now(timezone.utc)
+        ok, datos = self._con_base(lambda conn: actividad.metricas(conn, ahora))
+        if ok:
+            self.send_json_response(datos)
 
-        coincidencias = [p for p in procesos if p.get("is_matched")]
-        con_ventaja = [
-            p for p in procesos
-            if any((p.get("certifications") or {}).values())
-        ]
-        self.send_json_response({
-            "analizados": len(procesos),
-            "coincidencias": len(coincidencias),
-            "notificados": len(coincidencias),
-            "con_ventaja": len(con_ventaja),
-            "actualizado": ahora_iso(),
-        })
-
-    def handle_manual_sync(self):
-        """Sincronizacion manual: muta estado, por eso exige editar_metricas."""
-        sesion = self.exigir("editar_metricas")
-        if sesion is None:
-            return
-        try:
-            procesos = self._consultar_procesos()
-        except Exception as e:
-            self.send_json_response(
-                {"error": f"No se pudo consultar SECOP II: {e}",
-                 "codigo": "fuente_no_disponible"}, 503)
-            return
-        registrar_accion(sesion["user_id"])
-        self.send_json_response({
-            "status": "ok",
-            "procesos": len(procesos),
-            "actualizado": ahora_iso(),
-        })
+    def _eventos(self, conn, sesion):
+        return actividad.eventos_de(
+            conn, datetime.now(timezone.utc),
+            puede(sesion["rol"], "ver_detalle_tecnico"), sesion["user_id"])
 
     def handle_get_notifications(self):
-        """Lista de notificaciones. Disponible para los dos roles."""
-        if self.exigir("ver_notificaciones") is None:
+        """Lo que hizo el cron desde la ultima visita. Ambos roles."""
+        sesion = self.exigir("ver_notificaciones")
+        if sesion is None:
             return
-        try:
-            notificaciones = leer_notificaciones()
-        except Exception as e:
-            self.send_json_response({"error": str(e)}, 500)
-            return
-        self.send_json_response({
-            "notificaciones": notificaciones,
-            "sin_leer": sum(1 for n in notificaciones if not n.get("leida")),
-        })
+        ok, eventos = self._con_base(lambda conn: self._eventos(conn, sesion))
+        if ok:
+            self.send_json_response({
+                "notificaciones": eventos,
+                "sin_leer": sum(1 for n in eventos if not n["leida"]),
+            })
 
     def handle_mark_notification(self, payload: dict):
-        """Marca una notificacion como leida, o todas si no se indica cual."""
-        if self.exigir("ver_notificaciones") is None:
+        """Marca un evento como visto por este usuario, o todos los actuales."""
+        sesion = self.exigir("ver_notificaciones")
+        if sesion is None:
             return
-        try:
-            notificaciones = leer_notificaciones()
-        except Exception as e:
-            self.send_json_response({"error": str(e)}, 500)
-            return
-
         objetivo = payload.get("id")
-        if objetivo:
-            if not any(n["id"] == objetivo for n in notificaciones):
-                self.send_json_response(
-                    {"error": "No existe esa notificacion",
-                     "codigo": "no_encontrada"}, 404)
-                return
-            for n in notificaciones:
-                if n["id"] == objetivo:
-                    n["leida"] = True
-        else:
-            for n in notificaciones:
-                n["leida"] = True
 
-        guardar_notificaciones(notificaciones)
-        self.send_json_response({
-            "status": "ok",
-            "sin_leer": sum(1 for n in notificaciones if not n.get("leida")),
-        })
+        def marcar(conn):
+            eventos = self._eventos(conn, sesion)
+            claves = [e["id"] for e in eventos]
+            if objetivo is not None:
+                if objetivo not in claves:
+                    return None
+                claves = [objetivo]
+            actividad.marcar_leidos(conn, sesion["user_id"], claves)
+            return len([e for e in eventos if not e["leida"] and e["id"] not in claves])
 
-    def handle_get_stats(self):
-        self.send_json_response({
-            "status": "online",
-            "db_connected": True,
-            "secop_api": "https://www.datos.gov.co/resource/p6dx-8zbt.json",
-            "cron_schedule": "00:45, 10:00, 13:30, 20:00 COT"
-        })
+        ok, sin_leer = self._con_base(marcar)
+        if not ok:
+            return
+        if sin_leer is None:
+            self.send_json_response(
+                {"error": "No existe esa notificacion", "codigo": "no_encontrada"}, 404)
+            return
+        self.send_json_response({"status": "ok", "sin_leer": sin_leer})
 
 
 class ServidorReutilizable(socketserver.ThreadingTCPServer):
@@ -881,6 +849,7 @@ class ServidorReutilizable(socketserver.ThreadingTCPServer):
 
 def run_server(port=PORT):
     sembrar_datos()
+    preparar_base()
     migrar_usuarios_sin_contrasena()
     server_address = ('', port)
     httpd = ServidorReutilizable(server_address, SecopMonitorHandler)

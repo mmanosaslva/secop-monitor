@@ -9,7 +9,7 @@ El proyecto son **dos piezas que se levantan por separado**:
 | Pieza | Qué hace | Necesita base de datos |
 |-------|----------|------------------------|
 | **Motor** (`src/main.py`) | Consulta SECOP II, filtra, deduplica y envía correos. Lo dispara el cron. | Sí (Neon PostgreSQL) |
-| **Interfaz web** (`src/web_server.py`) | Panel de métricas, monitoreo en vivo, notificaciones y gestión de usuarios. | **No** |
+| **Interfaz web** (`src/web_server.py`) | Ventana de **solo lectura** sobre el cron: qué ciclos corrieron, qué analizaron y qué correos enviaron. Más la gestión de usuarios de la propia app. | Sí, para leer (la misma de Neon) |
 
 ---
 
@@ -62,7 +62,14 @@ pip install -r requirements.txt
 
 ## Levantar la interfaz web
 
-Es la vía rápida: **no necesita `.env` ni base de datos.**
+La interfaz **lee la base de datos del motor**: necesita `DATABASE_URL` en `.env`
+(la misma que usa el cron). Sin ella arranca igual, entra y gestiona usuarios,
+pero la actividad, las métricas y las notificaciones dicen que no hay acceso a
+la base.
+
+Al arrancar crea en esa base, si faltan, las columnas y tablas de trazabilidad
+(ver [Cómo se sigue cada ciclo](#cómo-se-sigue-cada-ciclo)). Solo agrega: no
+borra ni modifica datos.
 
 ```bash
 source .venv/bin/activate
@@ -92,8 +99,12 @@ Las credenciales iniciales están en [Inicio rápido](#inicio-rápido).
 
 | Rol | Módulos |
 |-----|---------|
-| **Usuario** | Panel de Métricas (solo lectura) y ¿Cómo Funciona por Dentro?, más el desplegable de notificaciones |
-| **Administrador** | Todo lo anterior + Monitoreo en Vivo, Configuración del Cliente y Gestión de Usuarios |
+| **Usuario** (el cliente) | Panel de Métricas, ¿Cómo Funciona por Dentro? y Actividad del Monitor, más la campana con las oportunidades encontradas |
+| **Administrador** | Todo lo anterior con detalle técnico (motivos de descarte, logs de GitHub, ejecuciones locales y manuales, alertas de ciclos fallidos u omitidos y de correos que no llegaron), más Configuración del Cliente y Gestión de Usuarios |
+
+**Nadie puede modificar el monitor desde la web**: no se lanza el cron, no se
+cambian los filtros. La configuración se consulta en la web y se cambia en
+`config/client_config.json` del repositorio.
 
 **Solo el administrador puede crear, editar, activar, desactivar o eliminar
 usuarios**, y es el único que puede asignar o restablecer contraseñas de otras
@@ -150,20 +161,73 @@ oscuro, una sola familia tipográfica (Archivo) y un único acento azul.
 - `index.html` carga `styles.css` y `app.js` con `?v=<fecha>`. Cambia ese valor
   al modificarlos para que el navegador no use una copia vieja.
 
-#### Qué datos muestra hoy
+### Actividad del monitor
 
-La interfaz **todavía no lee la base de datos del motor**:
+Es la vista central y la ven los dos roles:
 
-- *Monitoreo en vivo*, *Panel de Métricas* y *Sincronizar* consultan
-  datos.gov.co en directo en cada petición. No muestran lo que procesó el cron.
-- Las notificaciones de la campana salen de `data/notifications.json` (semilla
-  de ejemplo). El cron no escribe ahí.
-- El cron lee `config/client_config.json` del repositorio. Lo que se guarda
-  desde *Configuración del Cliente* no le llega.
+- **El día.** Un eje de 24 h con los cuatro ciclos: una marca hueca en la hora
+  programada y un punto en la hora en que GitHub lo corrió de verdad. El tramo
+  entre ambos es el retraso. Debajo, cada ciclo con su estado: *Completado*,
+  *En curso*, *En cola en GitHub*, *Esperando a GitHub*, *Programado*, *Falló*,
+  *Sin terminar* o *No se ejecutó*.
+- **La ejecución seleccionada** (por defecto, la última): procesos analizados,
+  coincidencias, nuevos y correos enviados; la lista de procesos que
+  coincidieron, con el motivo y el estado de entrega de su correo. El admin ve
+  además por qué se descartaron los demás y el enlace al log en GitHub.
+- **Últimos 7 días**, una fila por día y una columna por ciclo. Cada celda abre
+  su ejecución.
+- **Todas las ejecuciones** (solo admin), incluidas las manuales y las locales.
 
-La integración con el motor está planeada para la rama `integracion-cron`.
+La vista se actualiza sola cada 30 s mientras está abierta, y la campana cada
+minuto.
 
----
+#### Qué muestra la campana
+
+| Evento | Quién lo ve |
+|--------|-------------|
+| Oportunidad nueva, con el estado de su correo | Los dos roles |
+| Un ciclo falló o quedó sin terminar | Admin |
+| Un ciclo no se ejecutó (pasaron 8 h sin que GitHub lo corriera) | Admin |
+| Un correo no se pudo enviar, rebotó, fue bloqueado o marcado como spam | Admin |
+
+Lo leído es **de cada usuario** (tabla `notification_reads`). Es lo único que
+escribe la interfaz, y no afecta al motor.
+
+### Cómo se sigue cada ciclo
+
+La interfaz combina dos fuentes:
+
+- **GitHub Actions** dice *cuándo* corrió el workflow y cómo terminó. Se consulta
+  su API pública, con caché de 2 minutos. `GITHUB_TOKEN` es opcional y solo sube
+  el límite de 60 a 5 000 consultas por hora.
+- **La base de datos** dice *qué hizo* cada ejecución. El motor registra ahora:
+
+| Dónde | Qué |
+|-------|-----|
+| `job_runs` | Run de GitHub y su enlace, qué lo disparó, a qué ciclo corresponde, a quién se enviaron los correos, si iba en modo silencioso, cuántos procesos eran nuevos y un resumen de descartes por motivo |
+| `run_matches` | Cada proceso que coincidió en cada ejecución, si era nuevo y por qué coincidió |
+| `notifications` | Qué ejecución envió el correo, el `messageId` de Brevo y el estado de entrega |
+
+**Estado de entrega.** Al final de cada ciclo, el motor pregunta a Brevo por los
+correos de los últimos 7 días: *enviado*, *entregado*, *abierto*, *diferido*,
+*rebotado*, *bloqueado* o *spam*. Por eso el estado de un correo se actualiza en
+el ciclo siguiente. No se usa el webhook de Brevo porque la interfaz no está
+publicada en internet.
+
+**Retrasos de GitHub.** En la capa gratuita, GitHub corre los cron programados
+con 4 a 6 h de retraso (observado en este repositorio). Un ciclo sin ejecución
+aparece como *Esperando a GitHub* durante 8 h, y solo después como *No se
+ejecutó*. El margen está en `src/ciclos.py`.
+
+**Ejecuciones anteriores a este registro.** Se enlazan a su run de GitHub por la
+hora y se asignan a los ciclos en orden. De ellas se conocen los totales y los
+procesos nuevos, no todas sus coincidencias; la vista lo indica. Las filas de
+`job_runs` sin run de GitHub son ejecuciones locales (pruebas o desarrollo): el
+cliente no las ve y el admin las ve marcadas como *Local*.
+
+> **El cron corre el código de `main`.** Mientras estos cambios no lleguen a
+> `main`, los ciclos nuevos no registran el detalle: la vista funciona, pero
+> todas las ejecuciones se ven como las anteriores a este registro.
 
 ---
 
@@ -213,9 +277,9 @@ aunque el botón se haya reconstruido desde el inspector.
 | `ver_arquitectura` | ✅ | ✅ |
 | `ver_notificaciones` | ✅ | ✅ |
 | `ver_perfil_cliente` | ✅ | ✅ |
-| `editar_metricas` | — | ✅ |
-| `ver_monitoreo` | — | ✅ |
-| `editar_configuracion` | — | ✅ |
+| `ver_actividad` | ✅ | ✅ |
+| `ver_detalle_tecnico` | — | ✅ |
+| `ver_configuracion` | — | ✅ |
 | `gestionar_usuarios` | — | ✅ |
 | `probar_filtros` | — | ✅ |
 
@@ -228,19 +292,16 @@ Sin sesión responden **401**; con sesión pero sin permiso, **403**.
 | `POST /api/auth/login` · `POST /api/auth/logout` | público |
 | `GET /api/auth/me` | sesión activa |
 | `POST /api/auth/password` | sesión activa (exige la contraseña actual) |
-| `GET /api/stats` | público |
 | `GET /api/config` | `ver_perfil_cliente` |
-| `POST /api/config` | `editar_configuracion` |
+| `POST /api/config` | nadie: responde **405**, la configuración es de solo lectura |
 | `GET /api/metrics` | `ver_metricas` |
-| `POST /api/sync` | `editar_metricas` |
-| `GET /api/secop/live` | `ver_monitoreo` |
+| `GET /api/actividad` · `GET /api/actividad/ejecucion/{id}` | `ver_actividad` (con `ver_detalle_tecnico`, la respuesta incluye logs, descartes y ejecuciones locales) |
 | `POST /api/filter/test` | `probar_filtros` |
 | `GET /api/notifications` · `POST /api/notifications/read` | `ver_notificaciones` |
 | `GET\|POST /api/users` · `PUT\|DELETE /api/users/{id}` | `gestionar_usuarios` |
 
-`/api/metrics` devuelve solo conteos agregados y `/api/secop/live` la lista de
-procesos: por eso el rol usuario ve los números del panel sin poder consultar
-los procesos uno a uno.
+Sin base de datos, los endpoints de actividad, métricas y notificaciones
+responden **503** con `"codigo": "sin_base_de_datos"`.
 
 ---
 
@@ -262,10 +323,10 @@ los procesos uno a uno.
 
 ### Semilla y estado: `config/` frente a `data/`
 
-- **`config/users.json` y `config/notifications.json`** son la **semilla**
-  versionada. La aplicación no los modifica nunca.
-- **`data/`** guarda el **estado en ejecución** (accesos, acciones,
-  notificaciones leídas, usuarios creados). Está en `.gitignore`, así que usar
+- **`config/users.json`** es la **semilla** versionada. La aplicación no lo
+  modifica nunca.
+- **`data/`** guarda el **estado en ejecución** (accesos, acciones, usuarios
+  creados). Está en `.gitignore`, así que usar
   la aplicación no ensucia el repositorio.
 
 En el primer arranque, `data/` se crea copiando la semilla. Para volver al
@@ -296,9 +357,21 @@ source .venv/bin/activate
 pytest -q
 ```
 
-**105 pruebas.** El motor (filtros, notificaciones, base de datos, fuente SECOP,
-integración y aceptación) y el control de acceso del servidor web, que levanta el
-servidor real y comprueba que rechaza por HTTP, no que el botón esté oculto.
+**141 pruebas, más 2 que se saltan sin base de pruebas.** Cubren:
+
+- El motor: filtros y su motivo, notificaciones, base de datos, fuente SECOP y
+  un ciclo completo con la base, SECOP y Brevo simulados.
+- La reconstrucción de la actividad (`tests/test_actividad.py`): retrasos de
+  GitHub, ciclos omitidos, ejecuciones locales, lo que ve cada rol y que los
+  ciclos coinciden con `secop.yml`.
+- El control de acceso del servidor web, que levanta el servidor real con una
+  base falsa en memoria y comprueba que rechaza por HTTP, no que el botón esté
+  oculto.
+
+> **`tests/test_main_integration.py` necesita `TEST_DATABASE_URL`**, una base
+> **distinta de la de producción**. Antes usaba `DATABASE_URL`, y cada ejecución
+> de las pruebas dejaba filas falsas en `job_runs`. Sin esa variable, las dos
+> pruebas se saltan.
 
 > `pytest` debe ejecutarse con el intérprete del entorno virtual. Si lo invocas
 > con el Python del sistema verás `No module named pytest`; usa
@@ -316,8 +389,7 @@ Los warnings sobre `PytestUnknownMarkWarning` (`acceptance`, `integration`,
 > pytest tests/test_integration.py::test_api_returns_data -q
 > ```
 >
-> Para correr solo lo que no depende de la red (115 pruebas, ~35 s frente a
-> ~95 s):
+> Para correr solo lo que no depende de la red:
 >
 > ```bash
 > pytest -q --ignore=tests/test_integration.py --ignore=tests/test_main_integration.py
@@ -332,10 +404,12 @@ secop-monitor/
 ├── .github/workflows/secop.yml     # Cron de GitHub Actions
 ├── config/
 │   ├── client_config.json          # Reglas de filtrado
-│   ├── users.json                  # Usuarios y su uso
-│   └── notifications.json          # Notificaciones
+│   └── users.json                  # Usuarios y su uso (semilla)
 ├── src/
 │   ├── main.py                     # Punto de entrada del motor
+│   ├── ciclos.py                   # Los 4 ciclos del cron y su hora en Colombia
+│   ├── ejecucion.py                # Contexto de GitHub Actions de cada ejecución
+│   ├── actividad.py                # Reconstruye la actividad para la web (GitHub + base)
 │   ├── config.py                   # Variables de entorno
 │   ├── web_server.py               # Servidor web, sesiones y permisos
 │   ├── web/
@@ -357,10 +431,9 @@ secop-monitor/
 | Rama | Contenido |
 |------|-----------|
 | `main` | Motor, tests y configuración. **No contiene la interfaz web.** |
-| `frontend` | Rama de trabajo: interfaz completa con autenticación, roles y permisos |
+| `frontend` | Interfaz con autenticación, roles y permisos |
+| `integracion-cron` | La interfaz como ventana de solo lectura sobre el cron, y el registro detallado de cada ciclo en el motor |
+| `monitoreo-directo` | Archivo del Monitoreo en Vivo con consulta directa a SECOP, la sincronización manual y el editor de configuración, retirados en `integracion-cron`. No se fusiona. |
 | `simulador` | Archivo del Simulador del Motor, retirado de la interfaz. No se fusiona. |
-
-El Monitoreo en Vivo no es una rama: es un módulo de `frontend`, visible solo
-para el rol administrador.
 
 El plan de trabajo y su estado están en [`TAREAS.md`](./TAREAS.md).
