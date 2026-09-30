@@ -63,19 +63,6 @@
             <div class="brand-group">
                 <img src="plataforma50_logo.png" alt="Plataforma50" class="marca-logo" width="402" height="107">
             </div>
-            <div class="system-status-pills">
-                <span class="status-pill" id="secop-status">
-                    <span class="status-dot"></span>
-                    <span class="status-label">SECOP II · conectado</span>
-                </span>
-                <span class="status-pill" id="db-status">
-                    <span class="status-dot"></span>
-                    <span class="status-label">Base de datos · operativa</span>
-                </span>
-                <span class="status-pill" id="cron-status">
-                    <span class="status-label">Sincroniza 4 veces al día</span>
-                </span>
-            </div>
             <div class="user-controls" id="user-controls">
                 <div class="notificaciones-wrap">
                     <button class="btn-campana" id="btn-campana" type="button"
@@ -494,37 +481,37 @@
             </div>
 
             <div class="glass-card">
-                <form id="config-editor-form" onsubmit="return false;">
+                <form id="config-editor-form" class="formulario" onsubmit="return false;">
                     <div class="form-row">
                         <div class="form-group flex-1">
-                            <label>Nombre del Cliente / Empresa:</label>
+                            <label for="cfg-name">Nombre del cliente / empresa</label>
                             <input type="text" id="cfg-name" value="Cliente Textil Caribe">
                         </div>
                         <div class="form-group flex-1">
-                            <label>Correo Electrónico de Destino:</label>
+                            <label for="cfg-email">Correo electrónico de destino</label>
                             <input type="email" id="cfg-email" value="cliente@email.com">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Departamentos Monitoreados (Separados por coma):</label>
+                        <label for="cfg-departments">Departamentos monitoreados <span class="label-ayuda">separados por coma</span></label>
                         <input type="text" id="cfg-departments"
                             value="Atlantico, Bolivar, Magdalena, Cordoba, Sucre, La Guajira, Cesar">
                     </div>
 
                     <div class="form-group">
-                        <label>Palabras Clave de Productos / Servicios (Separadas por coma):</label>
+                        <label for="cfg-keywords">Palabras clave de productos / servicios <span class="label-ayuda">separadas por coma</span></label>
                         <input type="text" id="cfg-keywords"
                             value="uniforme, ropa deportiva, vestuario, calzado, dotacion, textil">
                     </div>
 
                     <div class="form-group">
-                        <label>Códigos UNSPSC de Interés (Separados por coma):</label>
+                        <label for="cfg-unspsc">Códigos UNSPSC de interés <span class="label-ayuda">separados por coma</span></label>
                         <input type="text" id="cfg-unspsc" value="V1.53102700, V1.53102710">
                     </div>
 
                     <div class="form-group">
-                        <label>Palabras Clave para Atributos Especiales / Certificaciones:</label>
+                        <label for="cfg-certifications">Palabras clave para atributos especiales / certificaciones <span class="label-ayuda">separadas por coma</span></label>
                         <input type="text" id="cfg-certifications" value="mujer lider, equidad de genero, pyme">
                     </div>
 
@@ -563,46 +550,57 @@
 
     <!-- Modal de crear / editar usuario -->
     <div class="modal-overlay" id="user-modal">
-        <div class="modal-card">
+        <div class="modal-card modal-formulario" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
             <div class="modal-header">
-                <h3 id="user-modal-title">Crear usuario</h3>
-                <button class="close-modal" id="btn-close-user-modal" type="button">&times;</button>
+                <div class="modal-encabezado">
+                    <h3 id="user-modal-title">Crear usuario</h3>
+                    <p class="modal-sub" id="user-modal-sub">Entrará con este correo y la contraseña que definas.</p>
+                </div>
+                <button class="close-modal" id="btn-close-user-modal" type="button" aria-label="Cerrar">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="user-form" onsubmit="return false;">
+                <form id="user-form" class="formulario" onsubmit="return false;">
                     <input type="hidden" id="uf-id">
                     <div class="form-group">
                         <label for="uf-nombre">Nombre completo</label>
-                        <input type="text" id="uf-nombre" required>
+                        <input type="text" id="uf-nombre" autocomplete="off" placeholder="Ej. Ana María Pérez" required>
                     </div>
                     <div class="form-group">
                         <label for="uf-correo">Correo electrónico</label>
-                        <input type="email" id="uf-correo" required>
+                        <input type="email" id="uf-correo" autocomplete="off" placeholder="nombre@empresa.co" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group flex-1">
                             <label for="uf-rol">Rol</label>
-                            <select id="uf-rol">
+                            <select id="uf-rol" aria-describedby="uf-rol-ayuda">
                                 <option value="usuario">Usuario</option>
                                 <option value="admin">Administrador</option>
                             </select>
+                            <span class="form-ayuda" id="uf-rol-ayuda"></span>
                         </div>
                         <div class="form-group flex-1">
                             <label for="uf-estado">Estado</label>
-                            <select id="uf-estado">
+                            <select id="uf-estado" aria-describedby="uf-estado-ayuda">
                                 <option value="activo">Activo</option>
                                 <option value="inactivo">Inactivo</option>
                             </select>
+                            <span class="form-ayuda" id="uf-estado-ayuda"></span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="uf-contrasena">Contraseña</label>
-                        <input type="password" id="uf-contrasena" autocomplete="new-password">
+                        <div class="campo-contrasena">
+                            <input type="password" id="uf-contrasena" autocomplete="new-password"
+                                   aria-describedby="uf-contrasena-ayuda">
+                            <button type="button" class="btn-ver-contrasena" data-campo="uf-contrasena"
+                                    aria-label="Mostrar contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
                         <span class="form-ayuda" id="uf-contrasena-ayuda"></span>
                     </div>
-                    <p class="form-error" id="uf-error" hidden></p>
+                    <p class="form-error" id="uf-error" role="alert" hidden></p>
                     <div class="form-actions">
-                        <button class="btn-primario" id="btn-guardar-usuario" type="button">Guardar</button>
+                        <button class="btn-secundario" id="btn-cancelar-usuario" type="button">Cancelar</button>
+                        <button class="btn-primario" id="btn-guardar-usuario" type="button">Crear usuario</button>
                     </div>
                 </form>
             </div>
@@ -611,13 +609,13 @@
 
     <!-- Modal de cambio de contraseña -->
     <div class="modal-overlay" id="clave-modal">
-        <div class="modal-card">
+        <div class="modal-card modal-formulario">
             <div class="modal-header">
                 <h3>Cambiar mi contraseña</h3>
                 <button class="close-modal" id="btn-close-clave-modal" type="button">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="clave-form" onsubmit="return false;">
+                <form id="clave-form" class="formulario" onsubmit="return false;">
                     <div class="form-group">
                         <label for="cf-actual">Contraseña actual</label>
                         <input type="password" id="cf-actual" autocomplete="current-password" required>

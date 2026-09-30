@@ -52,6 +52,16 @@ function initAcceso() {
     if (formulario) formulario.addEventListener('submit', iniciarSesion);
     if (btnLogout) btnLogout.addEventListener('click', cerrarSesion);
 
+    document.querySelectorAll('.btn-ver-contrasena[data-campo]').forEach(boton => {
+        boton.addEventListener('click', () => {
+            const campo = document.getElementById(boton.dataset.campo);
+            const oculta = campo.type === 'password';
+            campo.type = oculta ? 'text' : 'password';
+            boton.setAttribute('aria-label', oculta ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            campo.focus();
+        });
+    });
+
     if (btnVer) {
         btnVer.addEventListener('click', () => {
             const campo = document.getElementById('login-contrasena');
@@ -822,12 +832,22 @@ function initGestionUsuarios() {
     const guardar = document.getElementById('btn-guardar-usuario');
     const modal = document.getElementById('user-modal');
 
+    const cancelar = document.getElementById('btn-cancelar-usuario');
+    const rol = document.getElementById('uf-rol');
+    const estado = document.getElementById('uf-estado');
+
     if (nuevo) nuevo.addEventListener('click', () => abrirFormularioUsuario(null));
     if (cerrar) cerrar.addEventListener('click', cerrarFormularioUsuario);
+    if (cancelar) cancelar.addEventListener('click', cerrarFormularioUsuario);
     if (guardar) guardar.addEventListener('click', guardarUsuario);
+    if (rol) rol.addEventListener('change', actualizarAyudasUsuario);
+    if (estado) estado.addEventListener('change', actualizarAyudasUsuario);
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) cerrarFormularioUsuario();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) cerrarFormularioUsuario();
         });
     }
 
@@ -948,8 +968,42 @@ function abrirFormularioUsuario(usuario) {
     }
 
     if (titulo) titulo.textContent = usuario ? 'Editar usuario' : 'Crear usuario';
+    const sub = document.getElementById('user-modal-sub');
+    if (sub) {
+        sub.textContent = usuario
+            ? `Cambia los datos de acceso de ${usuario.nombre}.`
+            : 'Entrará con este correo y la contraseña que definas.';
+    }
+    const guardar = document.getElementById('btn-guardar-usuario');
+    if (guardar) guardar.textContent = usuario ? 'Guardar cambios' : 'Crear usuario';
+
+    const campoClave = document.getElementById('uf-contrasena');
+    campoClave.type = 'password';
+    campoClave.placeholder = usuario ? 'Sin cambios' : '';
+    campoClave.required = !usuario;
+
+    actualizarAyudasUsuario();
     if (error) error.hidden = true;
     modal.classList.add('active');
+    document.getElementById('uf-nombre').focus();
+}
+
+/** Explica, bajo cada selector, qué implica la opción elegida. */
+function actualizarAyudasUsuario() {
+    const rol = document.getElementById('uf-rol').value;
+    const estado = document.getElementById('uf-estado').value;
+    const ayudaRol = document.getElementById('uf-rol-ayuda');
+    const ayudaEstado = document.getElementById('uf-estado-ayuda');
+    if (ayudaRol) {
+        ayudaRol.textContent = rol === 'admin'
+            ? 'Además monitorea SECOP II, edita la configuración y gestiona usuarios.'
+            : 'Consulta métricas, arquitectura y notificaciones.';
+    }
+    if (ayudaEstado) {
+        ayudaEstado.textContent = estado === 'activo'
+            ? 'Puede iniciar sesión.'
+            : 'No podrá iniciar sesión hasta que lo actives.';
+    }
 }
 
 function cerrarFormularioUsuario() {

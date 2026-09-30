@@ -121,6 +121,39 @@ Es un MVP y conviene ser explícito sobre lo que **no** hace:
 - La cookie no lleva `Secure` porque el servidor es HTTP. **Detrás de HTTPS hay
   que añadirlo.**
 
+### La interfaz
+
+Sigue el sistema de diseño Plataforma50 ([`design.md`](./design.md)): tema
+oscuro, una sola familia tipográfica (Archivo) y un único acento azul.
+
+- **Encabezado:** el logo a la izquierda y, a la derecha, la campana de
+  notificaciones, el nombre y el rol de la sesión, *Contraseña* y *Cerrar
+  sesión*. En pantallas estrechas los controles bajan a su propia fila.
+- **Navegación:** la genera `app.js` según los permisos del rol. Cada pestaña es
+  una opción separada; la activa lleva fondo y borde azul. Si no caben, la
+  barra se desplaza en horizontal.
+- **Formularios** (configuración del cliente, crear o editar usuario, cambiar
+  contraseña): comparten la clase `.formulario`, con el label sobre el campo,
+  campos al ancho disponible y el foco visible.
+- **Crear o editar usuario:** el botón dice lo que va a pasar (*Crear usuario*
+  o *Guardar cambios*). Bajo Rol y Estado se explica qué implica cada opción, y
+  la contraseña se puede mostrar u ocultar. Al editar, dejarla vacía conserva
+  la actual. El modal se cierra con *Cancelar*, con la ×, con Escape o al
+  pulsar fuera de él.
+
+#### Qué datos muestra hoy
+
+La interfaz **todavía no lee la base de datos del motor**:
+
+- *Monitoreo en vivo*, *Panel de Métricas* y *Sincronizar* consultan
+  datos.gov.co en directo en cada petición. No muestran lo que procesó el cron.
+- Las notificaciones de la campana salen de `data/notifications.json` (semilla
+  de ejemplo). El cron no escribe ahí.
+- El cron lee `config/client_config.json` del repositorio. Lo que se guarda
+  desde *Configuración del Cliente* no le llega.
+
+La integración con el motor está planeada para la rama `integracion-cron`.
+
 ---
 
 ---
